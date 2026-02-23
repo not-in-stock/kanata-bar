@@ -223,11 +223,12 @@ services.kanata = {
 - [x] App: динамическая смена иконки при смене слоя (onLayerChange → updateIcon)
 - **Результат**: нативное управление kanata, чистый SIGTERM, без wrapper-костылей
 
-### Этап 2: Standalone отладка
-- [ ] Протестировать TCP layer tracking + смену иконок с реальным kanata
-- [ ] Sudoers fallback: start и stop полностью через sudo (без helper/SMAppService)
-- [ ] Auto-detect: SMAppService если helper зарегистрирован, иначе sudoers
-- [ ] Reload через kanata TCP API
+### Этап 2: Standalone отладка ✅ ГОТОВ
+- [x] Протестировать TCP layer tracking + смену иконок с реальным kanata
+- [x] Sudoers fallback: start и stop полностью через sudo (без helper/SMAppService)
+- [x] Auto-detect: SMAppService если helper зарегистрирован, иначе sudoers
+- [x] Reload через kanata TCP API
+- [x] Single-instance guard (NSRunningApplication)
 - **Результат**: полностью рабочее standalone приложение, оба режима работают
 
 ### Этап 3: Улучшения
