@@ -1,0 +1,132 @@
+import Foundation
+
+/// Manages the kanata process lifecycle.
+/// Start via sudo (user session → TCC dialog works).
+/// Stop via XPC helper (root → SIGTERM).
+class KanataProcess {
+    private var sudoProcess: Process?
+    private(set) var kanataPID: Int32 = -1
+    private(set) var isRunning = false
+
+    let binaryPath: String
+    let configPath: String
+    let port: UInt16
+
+    var onStateChange: ((Bool) -> Void)?
+    var onStderr: ((String) -> Void)?
+
+    init(binaryPath: String, configPath: String, port: UInt16) {
+        self.binaryPath = binaryPath
+        self.configPath = configPath
+        self.port = port
+    }
+
+    func start() {
+        guard !isRunning else { return }
+
+        // Kill any leftover kanata
+        let pkill = Process()
+        pkill.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
+        pkill.arguments = ["/usr/bin/pkill", "-x", "kanata"]
+        try? pkill.run()
+        pkill.waitUntilExit()
+
+        // Start kanata via sudo (user session context → TCC dialog will appear)
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
+        p.arguments = [binaryPath, "-c", configPath, "--port", "\(port)"]
+
+        let errPipe = Pipe()
+        p.standardError = errPipe
+        p.standardOutput = Pipe()
+
+        errPipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
+            let data = handle.availableData
+            if !data.isEmpty, let text = String(data: data, encoding: .utf8) {
+                let line = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !line.isEmpty {
+                    DispatchQueue.main.async { self?.onStderr?(line) }
+                }
+            }
+        }
+
+        p.terminationHandler = { [weak self] proc in
+            DispatchQueue.main.async {
+                self?.isRunning = false
+                self?.kanataPID = -1
+                self?.sudoProcess = nil
+                self?.onStateChange?(false)
+            }
+        }
+
+        do {
+            try p.run()
+            sudoProcess = p
+            isRunning = true
+            onStateChange?(true)
+
+            // Find kanata PID after a short delay (sudo forks kanata as child)
+            DispatchQueue.global().asyncAfter(deadline: .now() + 1.5) { [weak self] in
+                self?.findKanataPID()
+            }
+        } catch {
+            onStderr?("failed to start kanata: \(error.localizedDescription)")
+        }
+    }
+
+    func stop() {
+        guard isRunning, kanataPID > 0 else { return }
+
+        let conn = NSXPCConnection(machServiceName: HelperConfig.machServiceName, options: .privileged)
+        conn.remoteObjectInterface = NSXPCInterface(with: HelperProtocol.self)
+        conn.resume()
+
+        let proxy = conn.remoteObjectProxyWithErrorHandler { error in
+            // Helper not available — fall back to sudo kill
+            self.sudoKill()
+        } as! HelperProtocol
+
+        let pid = kanataPID
+        proxy.sendSignal(SIGTERM, toProcessID: pid) { [weak self] success, _ in
+            if !success {
+                self?.sudoKill()
+                return
+            }
+            // SIGKILL fallback after 3 seconds
+            DispatchQueue.global().asyncAfter(deadline: .now() + 3.0) {
+                proxy.isProcessAlive(pid) { alive in
+                    if alive {
+                        proxy.sendSignal(SIGKILL, toProcessID: pid) { _, _ in }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Fallback stop via sudo (when helper is not available)
+    private func sudoKill() {
+        guard kanataPID > 0 else { return }
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
+        p.arguments = ["/bin/kill", "-TERM", "\(kanataPID)"]
+        try? p.run()
+    }
+
+    private func findKanataPID() {
+        let pgrep = Process()
+        pgrep.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
+        pgrep.arguments = ["-x", "kanata"]
+        let pipe = Pipe()
+        pgrep.standardOutput = pipe
+        try? pgrep.run()
+        pgrep.waitUntilExit()
+
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        if let output = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
+           let pid = Int32(output.components(separatedBy: "\n").last ?? "") {
+            DispatchQueue.main.async {
+                self.kanataPID = pid
+            }
+        }
+    }
+}
