@@ -105,10 +105,9 @@ PLIST
 
 # --- Icon ---
 
-if [ -f Resources/AppIcon.icns ]; then
-  mkdir -p "$BUNDLE/Contents/Resources"
-  cp Resources/AppIcon.icns "$BUNDLE/Contents/Resources/"
-fi
+mkdir -p "$BUNDLE/Contents/Resources"
+[ -f Resources/AppIcon.icns ] && cp Resources/AppIcon.icns "$BUNDLE/Contents/Resources/"
+[ -f Resources/placeholder.png ] && cp Resources/placeholder.png "$BUNDLE/Contents/Resources/"
 
 # --- Compile ---
 

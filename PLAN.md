@@ -211,7 +211,7 @@ services.kanata = {
 
 ## Поэтапный план
 
-### Этап 1: Гибридная архитектура (sudo start + XPC stop) ✅ ПРОТОТИП ГОТОВ
+### Этап 1: Прототип ✅ ГОТОВ
 - [x] SMAppService с ad-hoc signed binary — **работает!**
 - [x] XPC коммуникация app ↔ helper (uid=0) — **работает!**
 - [x] TCC эксперимент: helper (root daemon) не может триггерить TCC → **start через sudo из app**
@@ -219,23 +219,26 @@ services.kanata = {
 - [x] App: `sudo kanata` start (user session, TCC dialog), XPC stop (SIGTERM + SIGKILL fallback)
 - [x] App: NSStatusItem + menu (Start/Stop/Register/Unregister/Quit)
 - [x] Quit останавливает kanata перед выходом
-- [ ] App: TCP клиент для layer tracking
-- [ ] App: динамическая смена иконки при смене слоя
-- [ ] Перенос из Tests/ в Sources/ (production structure)
-- [ ] Интеграция в kanata-darwin модуль
+- [x] App: TCP клиент для layer tracking (KanataClient)
+- [x] App: динамическая смена иконки при смене слоя (onLayerChange → updateIcon)
 - **Результат**: нативное управление kanata, чистый SIGTERM, без wrapper-костылей
 
-### Этап 2: sudoers fallback
-- [ ] Start и Stop полностью через sudo (без helper/SMAppService)
+### Этап 2: Standalone отладка
+- [ ] Протестировать TCP layer tracking + смену иконок с реальным kanata
+- [ ] Sudoers fallback: start и stop полностью через sudo (без helper/SMAppService)
 - [ ] Auto-detect: SMAppService если helper зарегистрирован, иначе sudoers
-- **Результат**: работает без одобрения в System Settings, нужен sudoers NOPASSWD
+- [ ] Reload через kanata TCP API
+- **Результат**: полностью рабочее standalone приложение, оба режима работают
 
 ### Этап 3: Улучшения
 - [ ] Autostart (launchd agent, как сейчас)
-- [ ] Reload через kanata TCP API
 - [ ] Лог-вьюер в меню (последние N строк stderr)
 - [ ] Уведомления при crash/restart
 - [ ] Dark/light mode для иконок (если нужно — текущие уже адаптивные)
+
+### Этап 4: Интеграция с kanata-darwin
+- [ ] Перенос из Tests/ в Sources/ (cleanup)
+- [ ] Интеграция в kanata-darwin модуль (опции `bar.*`)
 
 ## Оценка сложности
 
@@ -282,7 +285,15 @@ services.kanata = {
 - Helper on-demand: MachServices → launchd запускает при первом XPC-подключении
 - **Протестировано**: start, stop, quit (с auto-stop), TCC одобрение — всё работает
 
-### Эксперимент 3: Имена процессов
+### Эксперимент 3: TCC наследуется от responsible process
+
+При запуске kanata-bar из терминала, TCC Input Monitoring наследуется от терминального приложения (responsible process), а не от kanata-bar:
+- Из Ghostty (Input Monitoring включен) → `sudo kanata` → **работает**
+- Из Terminal.app (Input Monitoring выключен) → `sudo kanata` → `IOHIDDeviceOpen error: not permitted`
+
+В продакшене kanata-bar запускается как standalone `.app` (launchd agent / Finder) — TCC диалог появится для самого kanata-bar. Для отладки из терминала — запускать из терминала с Input Monitoring.
+
+### Эксперимент 4: Имена процессов
 
 - macOS `MAXCOMLEN` = 15 символов — длинные имена бинарников обрезаются в `pgrep`
 - `kanata-bar` (10) и `kanata-bar-helper` (18 → 15) — различимы
