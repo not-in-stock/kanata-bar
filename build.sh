@@ -119,7 +119,8 @@ $SWIFTC -O \
   Sources/App/KanataClient.swift \
   Sources/App/KanataProcess.swift \
   -framework AppKit \
-  -framework Network
+  -framework Network \
+  -framework ServiceManagement
 
 echo "Compiling kanata-bar-helper..."
 $SWIFTC -O \

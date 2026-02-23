@@ -32,6 +32,17 @@ class KanataClient {
         connection = nil
     }
 
+    func sendReload() {
+        guard let conn = connection, conn.state == .ready else { return }
+        let message = "{\"Reload\":{}}\n"
+        let data = message.data(using: .utf8)!
+        conn.send(content: data, completion: .contentProcessed { error in
+            if let error {
+                print("reload send error: \(error)")
+            }
+        })
+    }
+
     private func connect() {
         let conn = NWConnection(
             host: NWEndpoint.Host(host),

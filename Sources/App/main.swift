@@ -14,9 +14,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // Menu items that change state
     var startItem: NSMenuItem!
     var stopItem: NSMenuItem!
+    var reloadItem: NSMenuItem!
     var layerItem: NSMenuItem!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        let myBundleID = Bundle.main.bundleIdentifier ?? "com.kanata-bar"
+        let running = NSRunningApplication.runningApplications(withBundleIdentifier: myBundleID)
+        if running.count > 1 {
+            print("kanata-bar is already running, exiting.")
+            fflush(stdout)
+            NSApplication.shared.terminate(nil)
+            return
+        }
+
         let args = CommandLine.arguments
         var port: UInt16 = 5829
         var binaryPath = "/run/current-system/sw/bin/kanata"
@@ -71,8 +81,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         updateIcon(layer: nil)
         buildMenu()
 
-        // Register helper if needed
-        registerHelperIfNeeded()
+        // Register helper only when using XPC mode
+        if kanataProcess.stopMode == .xpc {
+            registerHelperIfNeeded()
+        }
 
         // Auto-start kanata
         if autostart {
@@ -104,8 +116,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         startItem = NSMenuItem(title: "Start kanata", action: #selector(doStart), keyEquivalent: "")
         stopItem = NSMenuItem(title: "Stop kanata", action: #selector(doStop), keyEquivalent: "")
+        reloadItem = NSMenuItem(title: "Reload config", action: #selector(doReload), keyEquivalent: "")
         menu.addItem(startItem)
         menu.addItem(stopItem)
+        menu.addItem(reloadItem)
 
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(doQuit), keyEquivalent: "q"))
@@ -121,6 +135,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         startItem?.isHidden = running
         stopItem?.isEnabled = running
         stopItem?.isHidden = !running
+        reloadItem?.isEnabled = running
+        reloadItem?.isHidden = !running
     }
 
     // MARK: - Icons
@@ -186,6 +202,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func doStop() {
         kanataProcess.stop()
+    }
+
+    @objc func doReload() {
+        kanataClient.sendReload()
     }
 
     @objc func doQuit() {

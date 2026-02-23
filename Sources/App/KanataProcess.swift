@@ -1,12 +1,16 @@
 import Foundation
+import ServiceManagement
 
 /// Manages the kanata process lifecycle.
 /// Start via sudo (user session → TCC dialog works).
-/// Stop via XPC helper (root → SIGTERM).
+/// Stop via XPC helper (root → SIGTERM) or sudoers fallback.
 class KanataProcess {
+    enum StopMode { case xpc, sudoers }
+
     private var sudoProcess: Process?
     private(set) var kanataPID: Int32 = -1
     private(set) var isRunning = false
+    private(set) var stopMode: StopMode
 
     let binaryPath: String
     let configPath: String
@@ -19,6 +23,12 @@ class KanataProcess {
         self.binaryPath = binaryPath
         self.configPath = configPath
         self.port = port
+        self.stopMode = Self.detectStopMode()
+    }
+
+    private static func detectStopMode() -> StopMode {
+        let service = SMAppService.daemon(plistName: "com.kanata-bar.helper.plist")
+        return service.status == .enabled ? .xpc : .sudoers
     }
 
     func start() {
@@ -77,19 +87,30 @@ class KanataProcess {
     func stop() {
         guard isRunning, kanataPID > 0 else { return }
 
+        switch stopMode {
+        case .xpc:
+            stopViaXPC()
+        case .sudoers:
+            stopViaSudoers()
+        }
+    }
+
+    // MARK: - XPC Stop
+
+    private func stopViaXPC() {
         let conn = NSXPCConnection(machServiceName: HelperConfig.machServiceName, options: .privileged)
         conn.remoteObjectInterface = NSXPCInterface(with: HelperProtocol.self)
         conn.resume()
 
-        let proxy = conn.remoteObjectProxyWithErrorHandler { error in
-            // Helper not available — fall back to sudo kill
-            self.sudoKill()
+        let proxy = conn.remoteObjectProxyWithErrorHandler { [weak self] error in
+            // Helper not available — fall back to sudoers
+            self?.stopViaSudoers()
         } as! HelperProtocol
 
         let pid = kanataPID
         proxy.sendSignal(SIGTERM, toProcessID: pid) { [weak self] success, _ in
             if !success {
-                self?.sudoKill()
+                self?.stopViaSudoers()
                 return
             }
             // SIGKILL fallback after 3 seconds
@@ -103,14 +124,43 @@ class KanataProcess {
         }
     }
 
-    /// Fallback stop via sudo (when helper is not available)
-    private func sudoKill() {
-        guard kanataPID > 0 else { return }
+    // MARK: - Sudoers Stop
+
+    private func stopViaSudoers() {
+        let pid = kanataPID
+        guard pid > 0 else { return }
+
+        sudoKill(signal: "TERM", pid: pid)
+
+        // SIGKILL escalation after 3 seconds
+        DispatchQueue.global().asyncAfter(deadline: .now() + 3.0) { [weak self] in
+            guard let self, self.isRunning else { return }
+            // Check if process is still alive
+            if self.isProcessAlive(pid) {
+                self.sudoKill(signal: "KILL", pid: pid)
+            }
+        }
+    }
+
+    private func sudoKill(signal: String, pid: Int32) {
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
-        p.arguments = ["/bin/kill", "-TERM", "\(kanataPID)"]
+        p.arguments = ["/bin/kill", "-\(signal)", "\(pid)"]
         try? p.run()
     }
+
+    private func isProcessAlive(_ pid: Int32) -> Bool {
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/bin/kill")
+        p.arguments = ["-0", "\(pid)"]
+        p.standardOutput = Pipe()
+        p.standardError = Pipe()
+        try? p.run()
+        p.waitUntilExit()
+        return p.terminationStatus == 0
+    }
+
+    // MARK: - PID Discovery
 
     private func findKanataPID() {
         let pgrep = Process()
