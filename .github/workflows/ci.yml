@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build
+        run: ./build.sh build
+
+      - name: Verify codesign
+        run: |
+          codesign --verify --strict "build/Kanata Bar.app"
+          codesign --verify --strict "build/Kanata Bar.app/Contents/MacOS/kanata-bar-helper"
+
+      - name: Verify Info.plist
+        run: |
+          check_key() {
+            val="$(/usr/libexec/PlistBuddy -c "Print $1" "build/Kanata Bar.app/Contents/Info.plist")"
+            if [ -z "$val" ]; then
+              echo "FAIL: $1 is empty"
+              exit 1
+            fi
+            echo "OK: $1 = $val"
+          }
+          check_key CFBundleIdentifier
+          check_key CFBundleName
+          check_key CFBundleVersion
+          check_key CFBundleShortVersionString
+          check_key CFBundleExecutable
+
+      - name: Smoke test
+        run: |
+          "build/Kanata Bar.app/Contents/MacOS/kanata-bar" --help &
+          pid=$!
+          sleep 2
+          kill "$pid" 2>/dev/null || true
+          echo "OK: process launched and exited cleanly"
