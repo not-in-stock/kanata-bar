@@ -55,7 +55,9 @@ cat > "$BUNDLE/Contents/Info.plist" << PLIST
     <key>CFBundleIdentifier</key>
     <string>com.kanata-bar</string>
     <key>CFBundleName</key>
-    <string>kanata-bar</string>
+    <string>Kanata Bar</string>
+    <key>CFBundleDisplayName</key>
+    <string>Kanata Bar</string>
     <key>CFBundleExecutable</key>
     <string>kanata-bar</string>
     <key>CFBundleVersion</key>
