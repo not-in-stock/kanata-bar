@@ -26,3 +26,11 @@ jobs:
         with:
           files: kanata-bar.app.zip
           generate_release_notes: true
+
+      - name: Notify homebrew-tap
+        env:
+          GH_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: |
+          gh api repos/not-in-stock/homebrew-tap/dispatches \
+            -f event_type=bump-kanata-bar \
+            -f "client_payload[version]=${GITHUB_REF_NAME#v}"
