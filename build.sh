@@ -134,6 +134,11 @@ $SWIFTC -O \
   -o "$BUNDLE/Contents/MacOS/kanata-bar" \
   Sources/Shared/HelperProtocol.swift \
   Sources/App/main.swift \
+  Sources/App/AppDelegate.swift \
+  Sources/App/Menu.swift \
+  Sources/App/Icons.swift \
+  Sources/App/Logging.swift \
+  Sources/App/LaunchAgent.swift \
   Sources/App/KanataClient.swift \
   Sources/App/KanataProcess.swift \
   -framework AppKit \
