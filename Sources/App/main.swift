@@ -129,6 +129,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Setup kanata process manager
         kanataProcess = KanataProcess(binaryPath: binaryPath, configPath: configPath, port: port)
+        kanataProcess.kanataLogURL = kanataLogURL
         kanataProcess.onStateChange = { [weak self] running in
             if !running {
                 self?.log("kanata stopped")
@@ -139,12 +140,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.updateIcon(layer: nil)
             }
         }
-        kanataProcess.onStderr = { [weak self] line in
-            print("kanata: \(line)")
-            self?.appendKanataLog(line)
-        }
         kanataProcess.onPIDFound = { [weak self] pid in
             self?.log("kanata started (pid=\(pid))")
+        }
+        kanataProcess.onError = { [weak self] msg in
+            self?.log("ERROR: \(msg)")
         }
 
         // Setup TCP client for layer tracking
@@ -356,11 +356,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let entry = "\(logDateFormatter.string(from: Date())) \(message)\n"
         print("kanata-bar: \(message)")
         appendToFile(appLogURL, entry)
-    }
-
-    func appendKanataLog(_ line: String) {
-        let entry = "\(logDateFormatter.string(from: Date())) \(line)\n"
-        appendToFile(kanataLogURL, entry)
     }
 
     private func appendToFile(_ url: URL, _ entry: String) {

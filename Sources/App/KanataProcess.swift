@@ -15,10 +15,11 @@ class KanataProcess {
     let binaryPath: String
     let configPath: String
     let port: UInt16
+    var kanataLogURL: URL?
 
     var onStateChange: ((Bool) -> Void)?
-    var onStderr: ((String) -> Void)?
     var onPIDFound: ((Int32) -> Void)?
+    var onError: ((String) -> Void)?
 
     init(binaryPath: String, configPath: String, port: UInt16) {
         self.binaryPath = binaryPath
@@ -47,18 +48,12 @@ class KanataProcess {
         p.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
         p.arguments = [binaryPath, "-c", configPath, "--port", "\(port)"]
 
-        let errPipe = Pipe()
-        p.standardError = errPipe
-        p.standardOutput = Pipe()
-
-        errPipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
-            let data = handle.availableData
-            if !data.isEmpty, let text = String(data: data, encoding: .utf8) {
-                let line = text.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !line.isEmpty {
-                    DispatchQueue.main.async { self?.onStderr?(line) }
-                }
-            }
+        // Redirect stdout+stderr to log file (like kanata-tray does)
+        if let logURL = kanataLogURL {
+            FileManager.default.createFile(atPath: logURL.path, contents: nil)
+            let logHandle = try? FileHandle(forWritingTo: logURL)
+            p.standardOutput = logHandle
+            p.standardError = logHandle
         }
 
         p.terminationHandler = { [weak self] proc in
@@ -81,7 +76,7 @@ class KanataProcess {
                 self?.findKanataPID()
             }
         } catch {
-            onStderr?("failed to start kanata: \(error.localizedDescription)")
+            onError?("failed to start kanata: \(error.localizedDescription)")
         }
     }
 
