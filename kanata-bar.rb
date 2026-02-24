@@ -7,5 +7,5 @@ cask "kanata-bar" do
   desc "macOS menu bar app for kanata keyboard remapper"
   homepage "https://github.com/not-in-stock/kanata-bar"
 
-  app "kanata-bar.app"
+  app "Kanata Bar.app"
 end
