@@ -232,7 +232,7 @@ services.kanata = {
 - **Результат**: полностью рабочее standalone приложение, оба режима работают
 
 ### Этап 3: Улучшения
-- [ ] Autostart (launchd agent, как сейчас)
+- [x] Autostart via LaunchAgent (`--install-agent` / `--uninstall-agent` CLI + "Start at Login" menu toggle)
 - [ ] Лог-вьюер в меню (последние N строк stderr)
 - [ ] Уведомления при crash/restart
 - [ ] Dark/light mode для иконок (если нужно — текущие уже адаптивные)
