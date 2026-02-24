@@ -8,6 +8,7 @@ class KanataProcess {
     enum StopMode { case xpc, sudoers }
 
     private var sudoProcess: Process?
+    private var stoppedByUser = false
     private(set) var kanataPID: Int32 = -1
     private(set) var isRunning = false
     private(set) var stopMode: StopMode
@@ -20,6 +21,7 @@ class KanataProcess {
     var onStateChange: ((Bool) -> Void)?
     var onPIDFound: ((Int32) -> Void)?
     var onError: ((String) -> Void)?
+    var onCrash: ((Int32) -> Void)?
 
     init(binaryPath: String, configPath: String, port: UInt16) {
         self.binaryPath = binaryPath
@@ -35,6 +37,7 @@ class KanataProcess {
 
     func start() {
         guard !isRunning else { return }
+        stoppedByUser = false
 
         // Kill any leftover kanata
         let pkill = Process()
@@ -57,11 +60,16 @@ class KanataProcess {
         }
 
         p.terminationHandler = { [weak self] proc in
+            let exitCode = proc.terminationStatus
             DispatchQueue.main.async {
+                let wasStopped = self?.stoppedByUser ?? true
                 self?.isRunning = false
                 self?.kanataPID = -1
                 self?.sudoProcess = nil
                 self?.onStateChange?(false)
+                if !wasStopped && exitCode != 0 {
+                    self?.onCrash?(exitCode)
+                }
             }
         }
 
@@ -82,6 +90,7 @@ class KanataProcess {
 
     func stop() {
         guard isRunning, kanataPID > 0 else { return }
+        stoppedByUser = true
 
         switch stopMode {
         case .xpc:

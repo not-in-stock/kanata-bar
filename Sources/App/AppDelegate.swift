@@ -1,7 +1,8 @@
 import AppKit
 import ServiceManagement
+import UserNotifications
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
     var statusItem: NSStatusItem!
     var kanataClient: KanataClient!
     var kanataProcess: KanataProcess!
@@ -68,6 +69,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         kanataProcess.onError = { [weak self] msg in
             self?.log("ERROR: \(msg)")
         }
+        kanataProcess.onCrash = { [weak self] exitCode in
+            self?.log("kanata crashed (exit code \(exitCode))")
+            self?.sendCrashNotification()
+        }
+
+        // Request notification permission
+        let notificationCenter = UNUserNotificationCenter.current()
+        notificationCenter.delegate = self
+        notificationCenter.requestAuthorization(options: [.alert, .sound]) { _, _ in }
 
         // Setup TCP client for layer tracking
         kanataClient = KanataClient(port: port)
@@ -122,6 +132,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             kanataProcess.stop()
             usleep(500_000)
         }
+    }
+
+    // MARK: - Crash Notification
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.banner, .sound])
+    }
+
+    private func sendCrashNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = NSLocalizedString("notification.crash.title", comment: "")
+        content.body = NSLocalizedString("notification.crash.body", comment: "")
+        content.sound = .default
+
+        let request = UNNotificationRequest(identifier: "kanata-crash", content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
     }
 
     // MARK: - Helper

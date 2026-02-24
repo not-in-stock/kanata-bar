@@ -9,5 +9,9 @@
 "menu.logs.kanata" = "Kanata";
 "menu.quit" = "Quit";
 
+/* Notifications */
+"notification.crash.title" = "kanata stopped unexpectedly";
+"notification.crash.body" = "Check logs for details";
+
 /* Status bar */
 "status.placeholder" = "K?";
