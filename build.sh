@@ -24,9 +24,23 @@ case "${1:-build}" in
     echo "Running... (Ctrl+C to stop)"
     exec "$BUNDLE/Contents/MacOS/kanata-bar" "${@:2}"
     ;;
+  release)
+    ver="${2:?Usage: $0 release <version> (e.g. 0.2.0)}"
+    ver="${ver#v}"
+    tag="v$ver"
+    if git rev-parse "$tag" >/dev/null 2>&1; then
+      echo "error: tag $tag already exists" >&2
+      exit 1
+    fi
+    echo "Tagging $tag and pushing..."
+    git tag "$tag"
+    git push origin "$tag"
+    echo "Released $tag — CI will create the GitHub Release."
+    exit 0
+    ;;
   build) ;;
   *)
-    echo "Usage: $0 [build|clean|run [-- app args...]]"
+    echo "Usage: $0 [build|clean|run|release <version>]"
     exit 1
     ;;
 esac
