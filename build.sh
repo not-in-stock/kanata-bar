@@ -111,7 +111,8 @@ PLIST
 
 # --- Icon ---
 
-mkdir -p "$BUNDLE/Contents/Resources"
+mkdir -p "$BUNDLE/Contents/Resources/en.lproj"
+echo 'CFBundleDisplayName = "Kanata Bar";' > "$BUNDLE/Contents/Resources/en.lproj/InfoPlist.strings"
 [ -f Resources/AppIcon.icns ] && cp Resources/AppIcon.icns "$BUNDLE/Contents/Resources/"
 [ -f Resources/placeholder.png ] && cp Resources/placeholder.png "$BUNDLE/Contents/Resources/"
 
