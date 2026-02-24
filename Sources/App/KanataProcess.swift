@@ -29,7 +29,7 @@ class KanataProcess {
     }
 
     private static func detectStopMode() -> StopMode {
-        let service = SMAppService.daemon(plistName: "com.kanata-bar.helper.plist")
+        let service = SMAppService.daemon(plistName: Constants.helperPlistName)
         return service.status == .enabled ? .xpc : .sudoers
     }
 

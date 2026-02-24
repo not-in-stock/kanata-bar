@@ -1,7 +1,7 @@
 import Foundation
 
 enum HelperConfig {
-    static let machServiceName = "com.kanata-bar.helper"
+    static let machServiceName = Constants.helperBundleID
 }
 
 @objc protocol HelperProtocol {

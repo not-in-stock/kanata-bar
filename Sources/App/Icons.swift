@@ -8,7 +8,7 @@ extension AppDelegate {
                 statusItem?.button?.title = ""
             } else {
                 statusItem?.button?.image = nil
-                statusItem?.button?.title = "K?"
+                statusItem?.button?.title = NSLocalizedString("status.placeholder", comment: "")
             }
             return
         }

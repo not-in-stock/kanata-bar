@@ -19,7 +19,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var startAtLoginItem: NSMenuItem!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let myBundleID = Bundle.main.bundleIdentifier ?? "com.kanata-bar"
+        let myBundleID = Bundle.main.bundleIdentifier ?? Constants.bundleID
         let running = NSRunningApplication.runningApplications(withBundleIdentifier: myBundleID)
         if running.count > 1 {
             print("kanata-bar is already running, exiting.")
@@ -29,23 +29,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let args = CommandLine.arguments
-        var port: UInt16 = 5829
-        var binaryPath = "/run/current-system/sw/bin/kanata"
-        var configPath = "\(NSHomeDirectory())/.config/kanata/kanata.kbd"
+        var port = Constants.defaultPort
+        var binaryPath = Constants.defaultBinaryPath
+        var configPath = "\(NSHomeDirectory())/\(Constants.defaultConfigPath)"
 
-        if let idx = args.firstIndex(of: "--icons-dir"), idx + 1 < args.count {
+        if let idx = args.firstIndex(of: Constants.CLI.iconsDir), idx + 1 < args.count {
             iconsDir = args[idx + 1]
         }
-        if let idx = args.firstIndex(of: "--port"), idx + 1 < args.count, let p = UInt16(args[idx + 1]) {
+        if let idx = args.firstIndex(of: Constants.CLI.port), idx + 1 < args.count, let p = UInt16(args[idx + 1]) {
             port = p
         }
-        if let idx = args.firstIndex(of: "--kanata"), idx + 1 < args.count {
+        if let idx = args.firstIndex(of: Constants.CLI.kanata), idx + 1 < args.count {
             binaryPath = args[idx + 1]
         }
-        if let idx = args.firstIndex(of: "--config"), idx + 1 < args.count {
+        if let idx = args.firstIndex(of: Constants.CLI.config), idx + 1 < args.count {
             configPath = args[idx + 1]
         }
-        if args.contains("--no-autostart") {
+        if args.contains(Constants.CLI.noAutostart) {
             autostart = false
         }
 
@@ -127,7 +127,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Helper
 
     func registerHelperIfNeeded() {
-        let service = SMAppService.daemon(plistName: "com.kanata-bar.helper.plist")
+        let service = SMAppService.daemon(plistName: Constants.helperPlistName)
         switch service.status {
         case .enabled:
             return

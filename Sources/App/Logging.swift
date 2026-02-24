@@ -4,13 +4,13 @@ extension AppDelegate {
     var appLogURL: URL {
         let logsDir = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Library/Logs")
-        return logsDir.appendingPathComponent("kanata-bar.log")
+        return logsDir.appendingPathComponent(Constants.Log.appFilename)
     }
 
     var kanataLogURL: URL {
         let logsDir = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Library/Logs")
-        return logsDir.appendingPathComponent("kanata.log")
+        return logsDir.appendingPathComponent(Constants.Log.kanataFilename)
     }
 
     func log(_ message: String) {

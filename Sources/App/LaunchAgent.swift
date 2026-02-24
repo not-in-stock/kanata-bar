@@ -1,7 +1,7 @@
 import Foundation
 
 extension AppDelegate {
-    static let agentLabel = "com.kanata-bar"
+    static let agentLabel = Constants.bundleID
     static let agentPlistName = "\(agentLabel).plist"
 
     var launchAgentPath: String {
@@ -38,7 +38,7 @@ extension AppDelegate {
     }
 
     func buildLaunchAgentPlist() -> String {
-        let skip: Set<String> = ["--install-agent", "--uninstall-agent", "--no-autostart", "--"]
+        let skip: Set<String> = [Constants.CLI.installAgent, Constants.CLI.uninstallAgent, Constants.CLI.noAutostart, "--"]
         let args = CommandLine.arguments.filter { !skip.contains($0) }
 
         let binary: String

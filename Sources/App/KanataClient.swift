@@ -6,7 +6,7 @@ class KanataClient {
     private var connection: NWConnection?
     private let host: String
     private let port: UInt16
-    private let queue = DispatchQueue(label: "com.kanata-bar.tcp")
+    private let queue = DispatchQueue(label: "\(Constants.bundleID).tcp")
     private var reconnectDelay: TimeInterval = 1.0
     private var shouldReconnect = true
 
@@ -16,7 +16,7 @@ class KanataClient {
     /// Called on the main queue when connection state changes.
     var onConnectionChange: ((Bool) -> Void)?
 
-    init(host: String = "127.0.0.1", port: UInt16 = 5829) {
+    init(host: String = Constants.defaultHost, port: UInt16 = Constants.defaultPort) {
         self.host = host
         self.port = port
     }

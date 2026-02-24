@@ -1,0 +1,13 @@
+/* Menu items */
+"menu.layer" = "Layer: %@";
+"menu.start" = "Start kanata";
+"menu.stop" = "Stop kanata";
+"menu.reload" = "Reload config";
+"menu.startAtLogin" = "Start at Login";
+"menu.logs" = "Logs";
+"menu.logs.app" = "Kanata Bar";
+"menu.logs.kanata" = "Kanata";
+"menu.quit" = "Quit";
+
+/* Status bar */
+"status.placeholder" = "K?";

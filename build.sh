@@ -126,12 +126,14 @@ PLIST
 mkdir -p "$BUNDLE/Contents/Resources"
 [ -f Resources/AppIcon.icns ] && cp Resources/AppIcon.icns "$BUNDLE/Contents/Resources/"
 [ -f Resources/placeholder.png ] && cp Resources/placeholder.png "$BUNDLE/Contents/Resources/"
+[ -d Resources/en.lproj ] && cp -r Resources/en.lproj "$BUNDLE/Contents/Resources/"
 
 # --- Compile ---
 
 echo "Compiling kanata-bar..."
 $SWIFTC -O \
   -o "$BUNDLE/Contents/MacOS/kanata-bar" \
+  Sources/Shared/Constants.swift \
   Sources/Shared/HelperProtocol.swift \
   Sources/App/main.swift \
   Sources/App/AppDelegate.swift \
@@ -148,6 +150,7 @@ $SWIFTC -O \
 echo "Compiling kanata-bar-helper..."
 $SWIFTC -O \
   -o "$BUNDLE/Contents/MacOS/kanata-bar-helper" \
+  Sources/Shared/Constants.swift \
   Sources/Shared/HelperProtocol.swift \
   Sources/Helper/main.swift \
   -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker build/helper-info.plist
