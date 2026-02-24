@@ -3,7 +3,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-BUNDLE="build/kanata-bar.app"
+BUNDLE="build/Kanata Bar.app"
 BUNDLE_ID="com.kanata-bar"
 HELPER_BUNDLE_ID="com.kanata-bar.helper"
 SWIFTC="/usr/bin/swiftc"
@@ -55,8 +55,6 @@ cat > "$BUNDLE/Contents/Info.plist" << PLIST
     <key>CFBundleIdentifier</key>
     <string>com.kanata-bar</string>
     <key>CFBundleName</key>
-    <string>Kanata Bar</string>
-    <key>CFBundleDisplayName</key>
     <string>Kanata Bar</string>
     <key>CFBundleExecutable</key>
     <string>kanata-bar</string>
@@ -111,8 +109,7 @@ PLIST
 
 # --- Icon ---
 
-mkdir -p "$BUNDLE/Contents/Resources/en.lproj"
-echo 'CFBundleDisplayName = "Kanata Bar";' > "$BUNDLE/Contents/Resources/en.lproj/InfoPlist.strings"
+mkdir -p "$BUNDLE/Contents/Resources"
 [ -f Resources/AppIcon.icns ] && cp Resources/AppIcon.icns "$BUNDLE/Contents/Resources/"
 [ -f Resources/placeholder.png ] && cp Resources/placeholder.png "$BUNDLE/Contents/Resources/"
 

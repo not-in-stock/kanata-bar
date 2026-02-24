@@ -19,7 +19,7 @@ jobs:
         run: ./build.sh build
 
       - name: Package
-        run: ditto -c -k --keepParent build/kanata-bar.app kanata-bar.app.zip
+        run: ditto -c -k --keepParent "build/Kanata Bar.app" kanata-bar.app.zip
 
       - name: Release
         uses: softprops/action-gh-release@v2
