@@ -233,7 +233,7 @@ services.kanata = {
 
 ### Этап 3: Улучшения
 - [x] Autostart via LaunchAgent (`--install-agent` / `--uninstall-agent` CLI + "Start at Login" menu toggle)
-- [ ] Лог-вьюер в меню (последние N строк stderr)
+- [ ] Пункт меню "View Logs" — открывает Console.app
 - [ ] Уведомления при crash/restart
 - [ ] Dark/light mode для иконок (если нужно — текущие уже адаптивные)
 
