@@ -7,6 +7,8 @@ BUNDLE="build/kanata-bar.app"
 BUNDLE_ID="com.kanata-bar"
 HELPER_BUNDLE_ID="com.kanata-bar.helper"
 SWIFTC="/usr/bin/swiftc"
+VERSION="$(git describe --tags --always 2>/dev/null || echo "dev")"
+VERSION="${VERSION#v}"  # strip leading 'v'
 
 case "${1:-build}" in
   clean)
@@ -35,7 +37,7 @@ if [ ! -x "$SWIFTC" ]; then
   exit 1
 fi
 
-echo "=== Building kanata-bar ==="
+echo "=== Building kanata-bar $VERSION ==="
 
 # Clean previous build
 rm -rf "$BUNDLE"
@@ -45,7 +47,7 @@ mkdir -p build
 
 # --- Plists ---
 
-cat > "$BUNDLE/Contents/Info.plist" << 'PLIST'
+cat > "$BUNDLE/Contents/Info.plist" << PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -57,7 +59,9 @@ cat > "$BUNDLE/Contents/Info.plist" << 'PLIST'
     <key>CFBundleExecutable</key>
     <string>kanata-bar</string>
     <key>CFBundleVersion</key>
-    <string>1.0</string>
+    <string>$VERSION</string>
+    <key>CFBundleShortVersionString</key>
+    <string>$VERSION</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>LSUIElement</key>
@@ -66,7 +70,7 @@ cat > "$BUNDLE/Contents/Info.plist" << 'PLIST'
 </plist>
 PLIST
 
-cat > build/helper-info.plist << 'PLIST'
+cat > build/helper-info.plist << PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -76,7 +80,7 @@ cat > build/helper-info.plist << 'PLIST'
     <key>CFBundleName</key>
     <string>kanata-bar-helper</string>
     <key>CFBundleVersion</key>
-    <string>1.0</string>
+    <string>$VERSION</string>
 </dict>
 </plist>
 PLIST
