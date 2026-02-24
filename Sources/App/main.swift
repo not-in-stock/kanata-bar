@@ -11,6 +11,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var currentLayer = "?"
     var autostart = true
 
+    let appLogURL: URL = {
+        let logsDir = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Logs")
+        return logsDir.appendingPathComponent("kanata-bar.log")
+    }()
+
+    let kanataLogURL: URL = {
+        let logsDir = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Logs")
+        return logsDir.appendingPathComponent("kanata.log")
+    }()
+
     // Menu items that change state
     var startItem: NSMenuItem!
     var stopItem: NSMenuItem!
@@ -118,24 +130,37 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Setup kanata process manager
         kanataProcess = KanataProcess(binaryPath: binaryPath, configPath: configPath, port: port)
         kanataProcess.onStateChange = { [weak self] running in
+            if !running {
+                self?.log("kanata stopped")
+            }
             self?.updateMenuState()
             if !running {
                 self?.currentLayer = "?"
                 self?.updateIcon(layer: nil)
             }
         }
-        kanataProcess.onStderr = { line in
+        kanataProcess.onStderr = { [weak self] line in
             print("kanata: \(line)")
+            self?.appendKanataLog(line)
+        }
+        kanataProcess.onPIDFound = { [weak self] pid in
+            self?.log("kanata started (pid=\(pid))")
         }
 
         // Setup TCP client for layer tracking
         kanataClient = KanataClient(port: port)
         kanataClient.onLayerChange = { [weak self] layer in
+            self?.log("layer: \(layer)")
             self?.currentLayer = layer
             self?.updateIcon(layer: layer)
             self?.updateMenuState()
         }
+        var wasConnected = false
         kanataClient.onConnectionChange = { [weak self] connected in
+            if connected != wasConnected {
+                self?.log("TCP \(connected ? "connected" : "disconnected")")
+                wasConnected = connected
+            }
             if !connected {
                 self?.currentLayer = "?"
                 self?.updateIcon(layer: nil)
@@ -155,11 +180,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Auto-start kanata
         if autostart {
+            log("starting kanata: \(binaryPath) -c \(configPath) --port \(port)")
             kanataProcess.start()
         }
 
         kanataClient.start()
-        print("kanata-bar started (binary=\(binaryPath), config=\(configPath), port=\(port))")
+
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
+        log("starting [version=\(version)]")
+        log("kanata binary: \(binaryPath)")
+        log("kanata config: \(configPath)")
+        log("TCP port: \(port)")
+        if let dir = iconsDir { log("icons dir: \(dir)") }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -193,6 +225,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         startAtLoginItem = NSMenuItem(title: "Start at Login", action: #selector(doToggleAgent), keyEquivalent: "")
         startAtLoginItem.state = isAgentInstalled ? .on : .off
         menu.addItem(startAtLoginItem)
+        let logsItem = NSMenuItem(title: "Logs", action: nil, keyEquivalent: "")
+        let logsSubmenu = NSMenu()
+        logsSubmenu.addItem(NSMenuItem(title: "Kanata Bar", action: #selector(doViewAppLog), keyEquivalent: ""))
+        logsSubmenu.addItem(NSMenuItem(title: "Kanata", action: #selector(doViewKanataLog), keyEquivalent: ""))
+        logsItem.submenu = logsSubmenu
+        menu.addItem(logsItem)
 
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(doQuit), keyEquivalent: "q"))
@@ -270,6 +308,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Actions
 
     @objc func doStart() {
+        log("starting kanata: \(kanataProcess.binaryPath) -c \(kanataProcess.configPath) --port \(kanataProcess.port)")
         kanataProcess.start()
     }
 
@@ -288,6 +327,51 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             installAgent()
         }
         startAtLoginItem?.state = isAgentInstalled ? .on : .off
+    }
+
+    @objc func doViewAppLog() {
+        openInConsole(appLogURL)
+    }
+
+    @objc func doViewKanataLog() {
+        openInConsole(kanataLogURL)
+    }
+
+    private func openInConsole(_ url: URL) {
+        if !FileManager.default.fileExists(atPath: url.path) {
+            FileManager.default.createFile(atPath: url.path, contents: nil)
+        }
+        NSWorkspace.shared.open([url],
+                                withApplicationAt: URL(fileURLWithPath: "/System/Applications/Utilities/Console.app"),
+                                configuration: NSWorkspace.OpenConfiguration())
+    }
+
+    private let logDateFormatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
+    func log(_ message: String) {
+        let entry = "\(logDateFormatter.string(from: Date())) \(message)\n"
+        print("kanata-bar: \(message)")
+        appendToFile(appLogURL, entry)
+    }
+
+    func appendKanataLog(_ line: String) {
+        let entry = "\(logDateFormatter.string(from: Date())) \(line)\n"
+        appendToFile(kanataLogURL, entry)
+    }
+
+    private func appendToFile(_ url: URL, _ entry: String) {
+        guard let data = entry.data(using: .utf8) else { return }
+        if let handle = try? FileHandle(forWritingTo: url) {
+            handle.seekToEndOfFile()
+            handle.write(data)
+            handle.closeFile()
+        } else {
+            try? data.write(to: url)
+        }
     }
 
     @objc func doQuit() {

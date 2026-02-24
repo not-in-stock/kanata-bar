@@ -18,6 +18,7 @@ class KanataProcess {
 
     var onStateChange: ((Bool) -> Void)?
     var onStderr: ((String) -> Void)?
+    var onPIDFound: ((Int32) -> Void)?
 
     init(binaryPath: String, configPath: String, port: UInt16) {
         self.binaryPath = binaryPath
@@ -176,6 +177,7 @@ class KanataProcess {
            let pid = Int32(output.components(separatedBy: "\n").last ?? "") {
             DispatchQueue.main.async {
                 self.kanataPID = pid
+                self.onPIDFound?(pid)
             }
         }
     }
