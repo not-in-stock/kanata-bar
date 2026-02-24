@@ -16,6 +16,73 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var stopItem: NSMenuItem!
     var reloadItem: NSMenuItem!
     var layerItem: NSMenuItem!
+    var startAtLoginItem: NSMenuItem!
+
+    // MARK: - LaunchAgent
+
+    static let agentLabel = "com.kanata-bar"
+    static let agentPlistName = "\(agentLabel).plist"
+
+    var launchAgentPath: String {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        return "\(home)/Library/LaunchAgents/\(Self.agentPlistName)"
+    }
+
+    var isAgentInstalled: Bool {
+        FileManager.default.fileExists(atPath: launchAgentPath)
+    }
+
+    func buildLaunchAgentPlist() -> String {
+        let skip: Set<String> = ["--install-agent", "--uninstall-agent", "--no-autostart", "--"]
+        let args = CommandLine.arguments.filter { !skip.contains($0) }
+
+        // Resolve binary path
+        let binary: String
+        let arg0 = args[0]
+        if arg0.hasPrefix("/") {
+            binary = arg0
+        } else {
+            let cwd = FileManager.default.currentDirectoryPath
+            binary = "\(cwd)/\(arg0)"
+        }
+
+        var programArgs = "        <string>\(binary)</string>"
+        for arg in args.dropFirst() {
+            programArgs += "\n        <string>\(arg)</string>"
+        }
+
+        return """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>Label</key>
+            <string>\(Self.agentLabel)</string>
+            <key>ProgramArguments</key>
+            <array>
+        \(programArgs)
+            </array>
+            <key>RunAtLoad</key>
+            <true/>
+        </dict>
+        </plist>
+        """
+    }
+
+    func installAgent() {
+        let dir = (launchAgentPath as NSString).deletingLastPathComponent
+        try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
+        let plist = buildLaunchAgentPlist()
+        do {
+            try plist.write(toFile: launchAgentPath, atomically: true, encoding: .utf8)
+        } catch {
+            print("Failed to write LaunchAgent plist: \(error)")
+        }
+    }
+
+    func uninstallAgent() {
+        try? FileManager.default.removeItem(atPath: launchAgentPath)
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let myBundleID = Bundle.main.bundleIdentifier ?? "com.kanata-bar"
@@ -122,6 +189,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(reloadItem)
 
         menu.addItem(NSMenuItem.separator())
+
+        startAtLoginItem = NSMenuItem(title: "Start at Login", action: #selector(doToggleAgent), keyEquivalent: "")
+        startAtLoginItem.state = isAgentInstalled ? .on : .off
+        menu.addItem(startAtLoginItem)
+
+        menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(doQuit), keyEquivalent: "q"))
 
         statusItem.menu = menu
@@ -208,6 +281,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         kanataClient.sendReload()
     }
 
+    @objc func doToggleAgent() {
+        if isAgentInstalled {
+            uninstallAgent()
+        } else {
+            installAgent()
+        }
+        startAtLoginItem?.state = isAgentInstalled ? .on : .off
+    }
+
     @objc func doQuit() {
         NSApplication.shared.terminate(nil)
     }
@@ -229,6 +311,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             break
         }
     }
+}
+
+// Handle --install-agent / --uninstall-agent before starting the app
+let cliArgs = CommandLine.arguments
+if cliArgs.contains("--install-agent") {
+    let helper = AppDelegate()
+    helper.installAgent()
+    print("LaunchAgent installed at \(helper.launchAgentPath)")
+    exit(0)
+} else if cliArgs.contains("--uninstall-agent") {
+    let helper = AppDelegate()
+    helper.uninstallAgent()
+    print("LaunchAgent removed from \(helper.launchAgentPath)")
+    exit(0)
 }
 
 let app = NSApplication.shared
