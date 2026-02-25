@@ -122,7 +122,3 @@ The app connects to kanata's TCP API to receive layer change events and updates 
 ## Acknowledgements
 
 Inspired by [kanata-tray](https://github.com/rszyma/kanata-tray) — a cross-platform system tray app for kanata.
-
-## License
-
-MIT
