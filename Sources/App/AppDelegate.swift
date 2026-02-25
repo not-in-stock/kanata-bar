@@ -30,28 +30,41 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         }
 
         let args = CommandLine.arguments
-        var port = Constants.defaultPort
-        var binaryPath = Constants.defaultBinaryPath
-        var configPath = "\(NSHomeDirectory())/\(Constants.defaultConfigPath)"
 
-        if let idx = args.firstIndex(of: Constants.CLI.iconsDir), idx + 1 < args.count {
-            iconsDir = args[idx + 1]
+        // Load config file
+        let configFilePath: String?
+        if let idx = args.firstIndex(of: Constants.CLI.configFile), idx + 1 < args.count {
+            configFilePath = args[idx + 1]
+        } else {
+            configFilePath = nil
         }
-        if let idx = args.firstIndex(of: Constants.CLI.port), idx + 1 < args.count, let p = UInt16(args[idx + 1]) {
-            port = p
-        }
+        var config = Config.load(from: configFilePath)
+
+        // CLI overrides
         if let idx = args.firstIndex(of: Constants.CLI.kanata), idx + 1 < args.count {
-            binaryPath = args[idx + 1]
+            config.kanata = args[idx + 1]
         }
         if let idx = args.firstIndex(of: Constants.CLI.config), idx + 1 < args.count {
-            configPath = args[idx + 1]
+            config.config = args[idx + 1]
+        }
+        if let idx = args.firstIndex(of: Constants.CLI.port), idx + 1 < args.count, let p = UInt16(args[idx + 1]) {
+            config.port = p
+        }
+        if let idx = args.firstIndex(of: Constants.CLI.iconsDir), idx + 1 < args.count {
+            config.iconsDir = args[idx + 1]
         }
         if args.contains(Constants.CLI.noAutostart) {
-            autostart = false
+            config.autostart = false
         }
 
+        let binaryPath = Config.resolveKanataPath(config.kanata)
+        let configPath = Config.expandTilde(config.config)
+        let port = config.port
+        iconsDir = config.iconsDir.map { Config.expandTilde($0) }
+        autostart = config.autostart
+
         // Setup kanata process manager
-        kanataProcess = KanataProcess(binaryPath: binaryPath, configPath: configPath, port: port)
+        kanataProcess = KanataProcess(binaryPath: binaryPath, configPath: configPath, port: port, extraArgs: config.extraArgs)
         kanataProcess.kanataLogURL = kanataLogURL
         kanataProcess.onStateChange = { [weak self] running in
             if !running {

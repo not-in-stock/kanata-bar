@@ -16,6 +16,7 @@ class KanataProcess {
     let binaryPath: String
     let configPath: String
     let port: UInt16
+    let extraArgs: [String]
     var kanataLogURL: URL?
 
     var onStateChange: ((Bool) -> Void)?
@@ -23,10 +24,11 @@ class KanataProcess {
     var onError: ((String) -> Void)?
     var onCrash: ((Int32) -> Void)?
 
-    init(binaryPath: String, configPath: String, port: UInt16) {
+    init(binaryPath: String, configPath: String, port: UInt16, extraArgs: [String] = []) {
         self.binaryPath = binaryPath
         self.configPath = configPath
         self.port = port
+        self.extraArgs = extraArgs
         self.stopMode = Self.detectStopMode()
     }
 
@@ -49,7 +51,7 @@ class KanataProcess {
         // Start kanata via sudo (user session context → TCC dialog will appear)
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
-        p.arguments = [binaryPath, "-c", configPath, "--port", "\(port)"]
+        p.arguments = [binaryPath, "-c", configPath, "--port", "\(port)"] + extraArgs
 
         // Redirect stdout+stderr to log file (like kanata-tray does)
         if let logURL = kanataLogURL {

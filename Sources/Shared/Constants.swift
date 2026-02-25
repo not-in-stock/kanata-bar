@@ -7,8 +7,8 @@ enum Constants {
 
     static let defaultPort: UInt16 = 5829
     static let defaultHost = "127.0.0.1"
-    static let defaultBinaryPath = "/run/current-system/sw/bin/kanata"
-    static let defaultConfigPath = ".config/kanata/kanata.kbd"
+    static let configDir = ".config/kanata-bar"
+    static let configFilename = "config.toml"
 
     enum CLI {
         static let installAgent = "--install-agent"
@@ -18,6 +18,7 @@ enum Constants {
         static let port = "--port"
         static let kanata = "--kanata"
         static let config = "--config"
+        static let configFile = "--config-file"
     }
 
     enum Log {

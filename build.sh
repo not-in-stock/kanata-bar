@@ -136,6 +136,8 @@ $SWIFTC -O \
   Sources/Shared/Constants.swift \
   Sources/Shared/HelperProtocol.swift \
   Sources/App/main.swift \
+  Sources/App/Config.swift \
+  Sources/App/TOMLParser.swift \
   Sources/App/AppDelegate.swift \
   Sources/App/Menu.swift \
   Sources/App/Icons.swift \
@@ -164,4 +166,4 @@ codesign -s - -f --identifier "$BUNDLE_ID" "$BUNDLE"
 
 echo ""
 echo "Built: $BUNDLE"
-echo "Run:   $0 run [-- --kanata /path/to/kanata --config /path/to/kanata.kbd --port 5829 --icons-dir /path/to/icons]"
+echo "Run:   $0 run [-- --config-file /path/to/config.toml --kanata /path/to/kanata --config /path/to/kanata.kbd --port 5829 --icons-dir /path/to/icons]"
