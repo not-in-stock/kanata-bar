@@ -50,7 +50,10 @@ class LayerRollerView: NSView {
 
     func update(layer: String, animated: Bool) {
         guard layer != currentText else { return }
+<<<<<<< HEAD
         setAccessibilityLabel("\(prefixLabel.stringValue)\(layer)")
+=======
+>>>>>>> fe87997 (Add the layer roller)
 
         if !animated || currentText.isEmpty {
             currentText = layer

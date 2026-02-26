@@ -141,6 +141,7 @@ $SWIFTC -O \
   Sources/App/TOMLParser.swift \
   Sources/App/AppDelegate.swift \
   Sources/App/Menu.swift \
+  Sources/App/MenuViews.swift \
   Sources/App/Icons.swift \
   Sources/App/Logging.swift \
   Sources/App/LaunchAgent.swift \

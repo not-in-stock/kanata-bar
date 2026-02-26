@@ -1,5 +1,6 @@
 /* Menu items */
 "menu.layer" = "Layer: %@";
+"menu.layer.prefix" = "Layer: ";
 "menu.starting" = "Starting\U2026";
 "menu.start" = "Start kanata";
 "menu.stop" = "Stop kanata";

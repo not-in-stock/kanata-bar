@@ -55,7 +55,10 @@ extension AppDelegate {
         startingItem.view = startingView
         menu.addItem(startingItem)
 
-        layerItem = NSMenuItem(title: String(format: NSLocalizedString("menu.layer", comment: ""), currentLayer), action: nil, keyEquivalent: "")
+        layerItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        layerItem.isEnabled = false
+        let rollerView = LayerRollerView(prefix: NSLocalizedString("menu.layer.prefix", comment: ""))
+        layerItem.view = rollerView
         menu.addItem(layerItem)
         menu.addItem(NSMenuItem.separator())
 
@@ -89,7 +92,7 @@ extension AppDelegate {
         let running = kanataProcess.isRunning
         let hasLayer = running && currentLayer != "?"
         startingItem?.isHidden = !running || hasLayer
-        layerItem?.title = String(format: NSLocalizedString("menu.layer", comment: ""), currentLayer)
+        (layerItem?.view as? LayerRollerView)?.update(layer: currentLayer, animated: hasLayer)
         layerItem?.isHidden = !hasLayer
         startItem?.isEnabled = !running
         startItem?.isHidden = running
