@@ -17,6 +17,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     var stopItem: NSMenuItem!
     var reloadItem: NSMenuItem!
     var layerItem: NSMenuItem!
+    var startingItem: NSMenuItem!
     var startAtLoginItem: NSMenuItem!
 
     func applicationDidFinishLaunching(_ notification: Notification) {

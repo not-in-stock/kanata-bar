@@ -126,6 +126,7 @@ PLIST
 mkdir -p "$BUNDLE/Contents/Resources"
 [ -f Resources/AppIcon.icns ] && cp Resources/AppIcon.icns "$BUNDLE/Contents/Resources/"
 [ -f Resources/placeholder.png ] && cp Resources/placeholder.png "$BUNDLE/Contents/Resources/"
+[ -f Resources/sign.png ] && cp Resources/sign.png "$BUNDLE/Contents/Resources/"
 [ -d Resources/en.lproj ] && cp -r Resources/en.lproj "$BUNDLE/Contents/Resources/"
 
 # --- Compile ---
