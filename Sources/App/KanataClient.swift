@@ -13,6 +13,9 @@ class KanataClient {
     /// Called on the main queue when the layer changes.
     var onLayerChange: ((String) -> Void)?
 
+    /// Called on the main queue when config reload succeeds.
+    var onConfigReload: (() -> Void)?
+
     /// Called on the main queue when connection state changes.
     var onConnectionChange: ((Bool) -> Void)?
 
@@ -101,13 +104,14 @@ class KanataClient {
 
     private func parseLine(_ line: String) {
         guard let data = line.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let layerChange = json["LayerChange"] as? [String: Any],
-              let newLayer = layerChange["new"] as? String
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         else { return }
 
-        DispatchQueue.main.async {
-            self.onLayerChange?(newLayer)
+        if let layerChange = json["LayerChange"] as? [String: Any],
+           let newLayer = layerChange["new"] as? String {
+            DispatchQueue.main.async { self.onLayerChange?(newLayer) }
+        } else if json["ConfigFileReload"] != nil {
+            DispatchQueue.main.async { self.onConfigReload?() }
         }
     }
 

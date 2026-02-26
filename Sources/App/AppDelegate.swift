@@ -95,6 +95,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
         // Setup TCP client for layer tracking
         kanataClient = KanataClient(port: port)
+        kanataClient.onConfigReload = { [weak self] in
+            self?.log("config reloaded")
+            self?.sendReloadNotification()
+        }
         kanataClient.onLayerChange = { [weak self] layer in
             self?.log("layer: \(layer)")
             self?.currentLayer = layer
@@ -154,6 +158,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
                                 willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         completionHandler([.banner, .sound])
+    }
+
+    func sendReloadNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = NSLocalizedString("notification.reload.title", comment: "")
+        content.body = NSLocalizedString("notification.reload.body", comment: "")
+
+        let request = UNNotificationRequest(identifier: "kanata-reload", content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
     }
 
     private func sendCrashNotification() {

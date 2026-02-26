@@ -14,6 +14,8 @@
 /* Notifications */
 "notification.crash.title" = "kanata stopped unexpectedly";
 "notification.crash.body" = "Check logs for details";
+"notification.reload.title" = "Config reloaded";
+"notification.reload.body" = "kanata configuration has been reloaded";
 
 /* Status bar */
 "status.placeholder" = "K?";
