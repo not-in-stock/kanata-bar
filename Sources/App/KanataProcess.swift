@@ -10,6 +10,7 @@ class KanataProcess {
 
     private var sudoProcess: Process?
     private var stoppedByUser = false
+    private var startTimeoutWork: DispatchWorkItem?
     private(set) var kanataPID: Int32 = -1
     private(set) var isRunning = false
     private(set) var stopMode: StopMode
@@ -24,6 +25,7 @@ class KanataProcess {
     var onPIDFound: ((Int32) -> Void)?
     var onError: ((String) -> Void)?
     var onCrash: ((Int32) -> Void)?
+    var onStartFailure: (() -> Void)?
 
     init(binaryPath: String, configPath: String, port: UInt16, extraArgs: [String] = []) {
         self.binaryPath = binaryPath
@@ -41,58 +43,100 @@ class KanataProcess {
     func start() {
         guard !isRunning else { return }
         stoppedByUser = false
+        isRunning = true
+        onStateChange?(true)
 
-        // Kill any leftover kanata
-        let pkill = Process()
-        pkill.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
-        pkill.arguments = ["/usr/bin/pkill", "-x", "kanata"]
-        try? pkill.run()
-        pkill.waitUntilExit()
+        DispatchQueue.global(qos: .userInitiated).async { [self] in
+            // Kill any leftover kanata (non-interactive: don't prompt for password)
+            let pkill = Process()
+            pkill.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
+            pkill.arguments = ["-n", "/usr/bin/pkill", "-x", "kanata"]
+            pkill.standardInput = FileHandle.nullDevice
+            try? pkill.run()
+            pkill.waitUntilExit()
 
-        // Start kanata via sudo (user session context → TCC dialog will appear)
-        let p = Process()
-        p.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
-        p.arguments = [binaryPath, "-c", configPath, "--port", "\(port)"] + extraArgs
+            // Start kanata via sudo (user session context → TCC dialog will appear)
+            let p = Process()
+            p.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
+            p.arguments = [self.binaryPath, "-c", self.configPath, "--port", "\(self.port)"] + self.extraArgs
 
-        // Redirect stdout+stderr to log file (like kanata-tray does)
-        if let logURL = kanataLogURL {
-            FileManager.default.createFile(atPath: logURL.path, contents: nil)
-            let logHandle = try? FileHandle(forWritingTo: logURL)
-            p.standardOutput = logHandle
-            p.standardError = logHandle
-        }
+            // Redirect stdout+stderr to log file
+            if let logURL = self.kanataLogURL {
+                FileManager.default.createFile(atPath: logURL.path, contents: nil)
+                let logHandle = try? FileHandle(forWritingTo: logURL)
+                p.standardOutput = logHandle
+                p.standardError = logHandle
+            }
 
-        p.terminationHandler = { [weak self] proc in
-            let exitCode = proc.terminationStatus
-            DispatchQueue.main.async {
-                let wasStopped = self?.stoppedByUser ?? true
-                self?.isRunning = false
-                self?.kanataPID = -1
-                self?.sudoProcess = nil
-                self?.onStateChange?(false)
-                if !wasStopped && exitCode != 0 {
-                    self?.onCrash?(exitCode)
+            p.terminationHandler = { [weak self] proc in
+                let exitCode = proc.terminationStatus
+                DispatchQueue.main.async {
+                    self?.startTimeoutWork?.cancel()
+                    self?.startTimeoutWork = nil
+                    let wasStopped = self?.stoppedByUser ?? true
+                    let hadPID = self?.kanataPID ?? -1 > 0
+                    self?.isRunning = false
+                    self?.kanataPID = -1
+                    self?.sudoProcess = nil
+                    self?.onStateChange?(false)
+                    if !wasStopped && exitCode != 0 {
+                        if hadPID {
+                            self?.onCrash?(exitCode)
+                        } else {
+                            self?.onStartFailure?()
+                        }
+                    }
                 }
             }
-        }
 
-        do {
-            try p.run()
-            sudoProcess = p
-            isRunning = true
-            onStateChange?(true)
+            do {
+                try p.run()
+                self.sudoProcess = p
 
-            // Find kanata PID after a short delay (sudo forks kanata as child)
-            DispatchQueue.global().asyncAfter(deadline: .now() + 1.5) { [weak self] in
-                self?.findKanataPID()
+                // Timeout: if no kanata PID found within 30s, sudo likely hung
+                // (e.g. waiting for password after TouchID cancel)
+                let timeout = DispatchWorkItem { [weak self] in
+                    guard let self, self.isRunning, self.kanataPID == -1 else { return }
+                    self.startTimeoutWork = nil
+                    // Kill the hung sudo process, then report failure
+                    self.stoppedByUser = true
+                    if let proc = self.sudoProcess, proc.isRunning {
+                        proc.terminate()
+                    }
+                    self.isRunning = false
+                    self.kanataPID = -1
+                    self.sudoProcess = nil
+                    self.onStateChange?(false)
+                    self.onStartFailure?()
+                }
+                self.startTimeoutWork = timeout
+                DispatchQueue.main.asyncAfter(deadline: .now() + 10.0, execute: timeout)
+
+                // Find kanata PID after a short delay (sudo forks kanata as child)
+                DispatchQueue.global().asyncAfter(deadline: .now() + 1.5) { [weak self] in
+                    self?.findKanataPID()
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.isRunning = false
+                    self.onStateChange?(false)
+                    self.onError?("failed to start kanata: \(error.localizedDescription)")
+                }
             }
-        } catch {
-            onError?("failed to start kanata: \(error.localizedDescription)")
         }
     }
 
     func stop() {
-        guard isRunning, kanataPID > 0 else { return }
+        startTimeoutWork?.cancel()
+        startTimeoutWork = nil
+        guard isRunning, kanataPID > 0 else {
+            // sudo may still be waiting for auth — kill it
+            if isRunning, let proc = sudoProcess, proc.isRunning {
+                stoppedByUser = true
+                proc.terminate()
+            }
+            return
+        }
         stoppedByUser = true
 
         switch stopMode {
@@ -153,7 +197,8 @@ class KanataProcess {
     private func sudoKill(signal: String, pid: Int32) {
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
-        p.arguments = ["/bin/kill", "-\(signal)", "\(pid)"]
+        p.arguments = ["-n", "/bin/kill", "-\(signal)", "\(pid)"]
+        p.standardInput = FileHandle.nullDevice
         try? p.run()
     }
 
@@ -201,6 +246,8 @@ class KanataProcess {
         if let output = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
            let pid = Int32(output.components(separatedBy: "\n").last ?? "") {
             DispatchQueue.main.async {
+                self.startTimeoutWork?.cancel()
+                self.startTimeoutWork = nil
                 self.kanataPID = pid
                 self.onPIDFound?(pid)
             }

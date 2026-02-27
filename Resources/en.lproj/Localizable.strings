@@ -17,6 +17,8 @@
 "menu.quit" = "Quit";
 
 /* Notifications */
+"notification.startFailure.title" = "Failed to start kanata";
+"notification.startFailure.body" = "Administrator privileges are required. Click Start to try again.";
 "notification.crash.title" = "kanata stopped unexpectedly";
 "notification.crash.body" = "Check logs for details";
 "notification.reload.title" = "Config reloaded";

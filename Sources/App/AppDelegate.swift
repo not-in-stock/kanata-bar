@@ -101,6 +101,11 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         kanataProcess.onError = { [weak self] msg in
             self?.log("ERROR: \(msg)")
         }
+        kanataProcess.onStartFailure = { [weak self] in
+            self?.log("kanata failed to start (sudo denied or binary missing)")
+            self?.appState = .stopped
+            self?.sendStartFailureNotification()
+        }
         kanataProcess.onCrash = { [weak self] exitCode in
             self?.log("kanata crashed (exit code \(exitCode))")
             if self?.autorestart == true {
@@ -195,7 +200,8 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         // Kill any kanata that might have been started by a race with autorestart
         let pkill = Process()
         pkill.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
-        pkill.arguments = ["/usr/bin/pkill", "-x", "kanata"]
+        pkill.arguments = ["-n", "/usr/bin/pkill", "-x", "kanata"]
+        pkill.standardInput = FileHandle.nullDevice
         try? pkill.run()
         pkill.waitUntilExit()
     }
@@ -270,6 +276,16 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         content.sound = .default
 
         let request = UNNotificationRequest(identifier: "kanata-restart-disabled", content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
+    }
+
+    private func sendStartFailureNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = NSLocalizedString("notification.startFailure.title", comment: "")
+        content.body = NSLocalizedString("notification.startFailure.body", comment: "")
+        content.sound = .default
+
+        let request = UNNotificationRequest(identifier: "kanata-start-failure", content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)
     }
 
