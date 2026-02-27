@@ -85,10 +85,16 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         iconsDir = config.iconsDir.map { Config.expandTilde($0) }
         autostart = config.autostart
         autorestart = config.autorestart
+        let usePamTid = Config.resolvePamTid(config.pamTid)
 
         // Setup kanata process manager
-        kanataProcess = KanataProcess(binaryPath: binaryPath, configPath: configPath, port: port, extraArgs: config.extraArgs)
-        kanataProcess.kanataLogURL = kanataLogURL
+        let launcher: KanataLauncher
+        if usePamTid {
+            launcher = SudoLauncher(binaryPath: binaryPath, configPath: configPath, port: port, extraArgs: config.extraArgs, logURL: kanataLogURL)
+        } else {
+            launcher = AuthExecLauncher(binaryPath: binaryPath, configPath: configPath, port: port, extraArgs: config.extraArgs, logURL: kanataLogURL)
+        }
+        kanataProcess = KanataProcess(launcher: launcher, binaryPath: binaryPath, configPath: configPath, port: port)
         kanataProcess.onStateChange = { [weak self] running in
             if !running {
                 self?.log("kanata stopped")
@@ -161,10 +167,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         updateIcon()
         buildMenu()
 
-        // Register helper only when using XPC mode
-        if kanataProcess.stopMode == .xpc {
-            registerHelperIfNeeded()
-        }
+        registerHelperIfNeeded()
 
         // Detect external kanata or auto-start
         if let pid = KanataProcess.findExternalKanataPID() {
@@ -197,13 +200,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
             kanataProcess.stop()
             usleep(500_000)
         }
-        // Kill any kanata that might have been started by a race with autorestart
-        let pkill = Process()
-        pkill.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
-        pkill.arguments = ["-n", "/usr/bin/pkill", "-x", "kanata"]
-        pkill.standardInput = FileHandle.nullDevice
-        try? pkill.run()
-        pkill.waitUntilExit()
+        kanataProcess.forceKillAll()
     }
 
     // MARK: - Crash Notification

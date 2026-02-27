@@ -9,6 +9,7 @@ struct Config {
     var autostart: Bool
     var autorestart: Bool
     var extraArgs: [String]
+    var pamTid: String  // "false" or "auto"
 
     static let `default` = Config(
         kanata: "",
@@ -17,7 +18,8 @@ struct Config {
         iconsDir: nil,
         autostart: true,
         autorestart: false,
-        extraArgs: []
+        extraArgs: [],
+        pamTid: "false"
     )
 
     // MARK: - Load
@@ -50,8 +52,23 @@ struct Config {
         if let v = values["autostart"] as? Bool { config.autostart = v }
         if let v = values["autorestart"] as? Bool { config.autorestart = v }
         if let v = values["extra_args"] as? [String] { config.extraArgs = v }
+        if let v = values["pam_tid"] as? String { config.pamTid = v }
 
         return config
+    }
+
+    static func resolvePamTid(_ value: String) -> Bool {
+        guard value == "auto" else { return false }
+        for path in ["/etc/pam.d/sudo_local", "/etc/pam.d/sudo"] {
+            guard let contents = try? String(contentsOfFile: path, encoding: .utf8) else { continue }
+            for line in contents.components(separatedBy: "\n") {
+                let trimmed = line.trimmingCharacters(in: .whitespaces)
+                if !trimmed.hasPrefix("#") && trimmed.contains("pam_tid.so") {
+                    return true
+                }
+            }
+        }
+        return false
     }
 
     // MARK: - Path Utilities
