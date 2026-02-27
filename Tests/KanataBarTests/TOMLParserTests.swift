@@ -1,70 +1,70 @@
 import XCTest
 @testable import KanataBarLib
 
-final class TOMLParserTests: XCTestCase {
+final class TOMLDecoderTests: XCTestCase {
 
     // MARK: - Strings
 
     func testDoubleQuotedString() {
-        let result = TOMLParser.parse(#"name = "hello""#)
-        XCTAssertEqual(result["name"] as? String, "hello")
+        let config = Config.decode(#"kanata = "hello""#)
+        XCTAssertEqual(config.kanata, "hello")
     }
 
     func testSingleQuotedString() {
-        let result = TOMLParser.parse("name = 'hello'")
-        XCTAssertEqual(result["name"] as? String, "hello")
+        let config = Config.decode("kanata = 'hello'")
+        XCTAssertEqual(config.kanata, "hello")
     }
 
     func testStringWithSpaces() {
-        let result = TOMLParser.parse(#"path = "/usr/local/bin/kanata""#)
-        XCTAssertEqual(result["path"] as? String, "/usr/local/bin/kanata")
+        let config = Config.decode(#"kanata = "/usr/local/bin/kanata""#)
+        XCTAssertEqual(config.kanata, "/usr/local/bin/kanata")
     }
 
     func testTildeExpansion() {
-        let result = TOMLParser.parse(#"path = "~/configs/kanata.kbd""#)
+        let config = Config.decode(#"config = "~/configs/kanata.kbd""#)
         let expected = NSHomeDirectory() + "/configs/kanata.kbd"
-        XCTAssertEqual(result["path"] as? String, expected)
+        XCTAssertEqual(config.config, expected)
     }
 
     // MARK: - Integers
 
     func testInteger() {
-        let result = TOMLParser.parse("port = 5829")
-        XCTAssertEqual(result["port"] as? Int, 5829)
+        let config = Config.decode("port = 5829")
+        XCTAssertEqual(config.port, 5829)
     }
 
     func testZero() {
-        let result = TOMLParser.parse("count = 0")
-        XCTAssertEqual(result["count"] as? Int, 0)
+        let config = Config.decode("port = 0")
+        XCTAssertEqual(config.port, 0)
     }
 
     // MARK: - Booleans
 
     func testTrue() {
-        let result = TOMLParser.parse("autostart = true")
-        XCTAssertEqual(result["autostart"] as? Bool, true)
+        let config = Config.decode("autostart = true")
+        XCTAssertEqual(config.autostart, true)
     }
 
     func testFalse() {
-        let result = TOMLParser.parse("autostart = false")
-        XCTAssertEqual(result["autostart"] as? Bool, false)
+        let config = Config.decode("autostart = false")
+        XCTAssertEqual(config.autostart, false)
     }
 
     // MARK: - Arrays
 
     func testStringArray() {
-        let result = TOMLParser.parse(#"extra_args = ["--debug", "--verbose"]"#)
-        XCTAssertEqual(result["extra_args"] as? [String], ["--debug", "--verbose"])
+        let config = Config.decode(#"extra_args = ["--debug", "--verbose"]"#)
+        XCTAssertEqual(config.extraArgs, ["--debug", "--verbose"])
     }
 
     func testEmptyArray() {
-        let result = TOMLParser.parse("extra_args = []")
-        XCTAssertEqual(result["extra_args"] as? [String], [])
+        let config = Config.decode("extra_args = []")
+        XCTAssertEqual(config.extraArgs, [])
     }
 
     func testSingleQuotedArray() {
-        let result = TOMLParser.parse("args = ['--flag']")
-        XCTAssertEqual(result["args"] as? [String], ["--flag"])
+        let config = Config.decode("extra_args = ['--flag']")
+        XCTAssertEqual(config.extraArgs, ["--flag"])
     }
 
     // MARK: - Comments and whitespace
@@ -75,26 +75,13 @@ final class TOMLParserTests: XCTestCase {
         port = 1234
         # Another comment
         """
-        let result = TOMLParser.parse(input)
-        XCTAssertEqual(result.count, 1)
-        XCTAssertEqual(result["port"] as? Int, 1234)
-    }
-
-    func testEmptyLinesIgnored() {
-        let input = """
-
-        port = 1234
-
-        autostart = true
-
-        """
-        let result = TOMLParser.parse(input)
-        XCTAssertEqual(result.count, 2)
+        let config = Config.decode(input)
+        XCTAssertEqual(config.port, 1234)
     }
 
     func testWhitespaceAroundEquals() {
-        let result = TOMLParser.parse("  port  =  5829  ")
-        XCTAssertEqual(result["port"] as? Int, 5829)
+        let config = Config.decode("  port  =  5829  ")
+        XCTAssertEqual(config.port, 5829)
     }
 
     // MARK: - Multiple keys
@@ -106,33 +93,40 @@ final class TOMLParserTests: XCTestCase {
         autostart = true
         extra_args = ["--debug"]
         """
-        let result = TOMLParser.parse(input)
-        XCTAssertEqual(result.count, 4)
-        XCTAssertEqual(result["kanata"] as? String, "/usr/bin/kanata")
-        XCTAssertEqual(result["port"] as? Int, 5829)
-        XCTAssertEqual(result["autostart"] as? Bool, true)
-        XCTAssertEqual(result["extra_args"] as? [String], ["--debug"])
+        let config = Config.decode(input)
+        XCTAssertEqual(config.kanata, "/usr/bin/kanata")
+        XCTAssertEqual(config.port, 5829)
+        XCTAssertEqual(config.autostart, true)
+        XCTAssertEqual(config.extraArgs, ["--debug"])
     }
 
-    // MARK: - Edge cases
+    // MARK: - Partial config (missing keys use defaults)
+
+    func testPartialConfigUsesDefaults() {
+        let config = Config.decode("port = 9999")
+        XCTAssertEqual(config.port, 9999)
+        XCTAssertEqual(config.kanata, Config.default.kanata)
+        XCTAssertEqual(config.autostart, Config.default.autostart)
+        XCTAssertEqual(config.extraArgs, Config.default.extraArgs)
+    }
 
     func testEmptyInput() {
-        let result = TOMLParser.parse("")
-        XCTAssertTrue(result.isEmpty)
+        let config = Config.decode("")
+        XCTAssertEqual(config.port, Config.default.port)
+        XCTAssertEqual(config.autostart, Config.default.autostart)
     }
 
-    func testUnrecognizedLineSkipped() {
-        let result = TOMLParser.parse("not a valid line")
-        XCTAssertTrue(result.isEmpty)
-    }
+    // MARK: - CodingKeys mapping
 
-    func testEmptyKeySkipped() {
-        let result = TOMLParser.parse("= value")
-        XCTAssertTrue(result.isEmpty)
-    }
-
-    func testUnquotedStringNotParsed() {
-        let result = TOMLParser.parse("key = unquoted")
-        XCTAssertNil(result["key"])
+    func testSnakeCaseKeys() {
+        let input = """
+        icons_dir = "/path/to/icons"
+        extra_args = ["--log"]
+        pam_tid = "auto"
+        """
+        let config = Config.decode(input)
+        XCTAssertEqual(config.iconsDir, "/path/to/icons")
+        XCTAssertEqual(config.extraArgs, ["--log"])
+        XCTAssertEqual(config.pamTid, "auto")
     }
 }

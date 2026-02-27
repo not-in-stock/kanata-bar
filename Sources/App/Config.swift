@@ -1,7 +1,8 @@
 import Foundation
+import TOMLDecoder
 import Shared
 
-struct Config {
+struct Config: Codable {
     var kanata: String
     var config: String
     var port: UInt16
@@ -10,6 +11,14 @@ struct Config {
     var autorestart: Bool
     var extraArgs: [String]
     var pamTid: String  // "false" or "auto"
+
+    enum CodingKeys: String, CodingKey {
+        case kanata, config, port
+        case iconsDir = "icons_dir"
+        case autostart, autorestart
+        case extraArgs = "extra_args"
+        case pamTid = "pam_tid"
+    }
 
     static let `default` = Config(
         kanata: "",
@@ -25,34 +34,52 @@ struct Config {
     // MARK: - Load
 
     static func load(from explicitPath: String?) -> Config {
-        var config = Config.default
-
         let path: String
         if let explicitPath {
             path = expandTilde(explicitPath)
         } else {
             let defaultPath = "\(NSHomeDirectory())/\(Constants.configDir)/\(Constants.configFilename)"
             guard FileManager.default.fileExists(atPath: defaultPath) else {
-                return config
+                return .default
             }
             path = defaultPath
         }
 
         guard let contents = try? String(contentsOfFile: path, encoding: .utf8) else {
             print("warning: could not read config file: \(path)")
-            return config
+            return .default
         }
 
-        let values = TOMLParser.parse(contents)
+        return decode(contents)
+    }
 
-        if let v = values["kanata"] as? String { config.kanata = v }
-        if let v = values["config"] as? String { config.config = v }
-        if let v = values["port"] as? Int, let p = UInt16(exactly: v) { config.port = p }
-        if let v = values["icons_dir"] as? String { config.iconsDir = v }
-        if let v = values["autostart"] as? Bool { config.autostart = v }
-        if let v = values["autorestart"] as? Bool { config.autorestart = v }
-        if let v = values["extra_args"] as? [String] { config.extraArgs = v }
-        if let v = values["pam_tid"] as? String { config.pamTid = v }
+    static func decode(_ toml: String) -> Config {
+        var config = Config.default
+
+        guard let data = toml.data(using: .utf8) else { return config }
+
+        do {
+            let decoded = try TOMLDecoder().decode(Config.self, from: data)
+            config = decoded
+        } catch {
+            // Partial decode: try each field individually from a loose dictionary
+            if let partial = try? TOMLDecoder().decode(PartialConfig.self, from: data) {
+                if let v = partial.kanata { config.kanata = v }
+                if let v = partial.config { config.config = v }
+                if let v = partial.port { config.port = v }
+                if let v = partial.iconsDir { config.iconsDir = v }
+                if let v = partial.autostart { config.autostart = v }
+                if let v = partial.autorestart { config.autorestart = v }
+                if let v = partial.extraArgs { config.extraArgs = v }
+                if let v = partial.pamTid { config.pamTid = v }
+            }
+        }
+
+        // Expand ~ in paths
+        config.config = expandTilde(config.config)
+        if let dir = config.iconsDir {
+            config.iconsDir = expandTilde(dir)
+        }
 
         return config
     }
@@ -95,5 +122,25 @@ struct Config {
             return output.isEmpty ? "kanata" : output
         }
         return expandTilde(path)
+    }
+}
+
+/// All-optional mirror of Config for partial TOML files (missing keys → nil).
+private struct PartialConfig: Codable {
+    var kanata: String?
+    var config: String?
+    var port: UInt16?
+    var iconsDir: String?
+    var autostart: Bool?
+    var autorestart: Bool?
+    var extraArgs: [String]?
+    var pamTid: String?
+
+    enum CodingKeys: String, CodingKey {
+        case kanata, config, port
+        case iconsDir = "icons_dir"
+        case autostart, autorestart
+        case extraArgs = "extra_args"
+        case pamTid = "pam_tid"
     }
 }

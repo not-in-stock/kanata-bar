@@ -4,6 +4,9 @@ import PackageDescription
 let package = Package(
     name: "kanata-bar",
     platforms: [.macOS(.v13)],
+    dependencies: [
+        .package(url: "https://github.com/dduan/TOMLDecoder.git", from: "0.4.3"),
+    ],
     targets: [
         .target(
             name: "Shared",
@@ -11,7 +14,7 @@ let package = Package(
         ),
         .target(
             name: "KanataBarLib",
-            dependencies: ["Shared"],
+            dependencies: ["Shared", "TOMLDecoder"],
             path: "Sources/App",
             linkerSettings: [
                 .linkedFramework("AppKit"),
