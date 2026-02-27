@@ -34,7 +34,7 @@ let package = Package(
                     "-Xlinker", "-sectcreate",
                     "-Xlinker", "__TEXT",
                     "-Xlinker", "__info_plist",
-                    "-Xlinker", "build/helper-info.plist",
+                    "-Xlinker", "Resources/helper-info.plist",
                 ])
             ]
         ),
