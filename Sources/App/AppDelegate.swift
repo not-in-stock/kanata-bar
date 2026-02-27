@@ -17,6 +17,9 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
             updateMenuState()
         }
     }
+    var isExternal = false
+    var externalPID: Int32 = -1
+    var externalTimeoutWork: DispatchWorkItem?
     var autostart = true
     var autorestart = false
     var restartTimestamps: [Date] = []
@@ -33,7 +36,10 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
     var reloadItem: NSMenuItem!
     var layerItem: NSMenuItem!
     var startingItem: NSMenuItem!
+    var startingLabel: NSTextField!
+    var kanataSectionItem: NSMenuItem!
     var startAtLoginItem: NSMenuItem!
+    var kanataLogsItem: NSMenuItem!
 
     public func applicationDidFinishLaunching(_ notification: Notification) {
         let myBundleID = Bundle.main.bundleIdentifier ?? Constants.bundleID
@@ -118,18 +124,29 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
             self?.sendReloadNotification()
         }
         kanataClient.onLayerChange = { [weak self] layer in
-            self?.log("layer: \(layer)")
-            self?.appState = .running(layer)
+            guard let self else { return }
+            self.log("layer: \(layer)")
+            self.externalTimeoutWork?.cancel()
+            self.externalTimeoutWork = nil
+            self.appState = .running(layer)
         }
         var wasConnected = false
         kanataClient.onConnectionChange = { [weak self] connected in
+            guard let self else { return }
             if connected != wasConnected {
-                self?.log("TCP \(connected ? "connected" : "disconnected")")
+                self.log("TCP \(connected ? "connected" : "disconnected")")
                 wasConnected = connected
             }
+            if connected {
+                self.externalTimeoutWork?.cancel()
+                self.externalTimeoutWork = nil
+            }
             if !connected {
-                if let s = self, case .running = s.appState {
-                    s.appState = .starting
+                if case .running = self.appState {
+                    self.appState = .starting
+                }
+                if self.isExternal {
+                    self.scheduleExternalTimeout()
                 }
             }
         }
@@ -144,8 +161,13 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
             registerHelperIfNeeded()
         }
 
-        // Auto-start kanata
-        if autostart {
+        // Detect external kanata or auto-start
+        if let pid = KanataProcess.findExternalKanataPID() {
+            log("detected external kanata (pid=\(pid)), connecting...")
+            isExternal = true
+            externalPID = pid
+            appState = .starting
+        } else if autostart {
             log("starting kanata: \(binaryPath) -c \(configPath) --port \(port)")
             appState = .starting
             kanataProcess.start()
@@ -165,6 +187,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         restartWorkItem?.cancel()
         restartWorkItem = nil
         kanataClient.stop()
+        guard !isExternal else { return }
         if kanataProcess.isRunning {
             kanataProcess.stop()
             usleep(500_000)
@@ -192,6 +215,18 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
 
         let request = UNNotificationRequest(identifier: "kanata-reload", content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)
+    }
+
+    private func scheduleExternalTimeout() {
+        externalTimeoutWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self, self.isExternal, self.appState == .starting else { return }
+            self.log("external kanata not responding, stopping")
+            self.externalTimeoutWork = nil
+            self.appState = .stopped
+        }
+        externalTimeoutWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0, execute: work)
     }
 
     private func scheduleRestart() {

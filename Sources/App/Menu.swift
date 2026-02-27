@@ -41,7 +41,7 @@ extension AppDelegate {
         spinner.isIndeterminate = true
         spinner.startAnimation(nil)
         spinner.translatesAutoresizingMaskIntoConstraints = false
-        let startingLabel = NSTextField(labelWithString: NSLocalizedString("menu.starting", comment: ""))
+        startingLabel = NSTextField(labelWithString: NSLocalizedString("menu.starting", comment: ""))
         startingLabel.font = NSFont.menuFont(ofSize: 14)
         startingLabel.textColor = .secondaryLabelColor
         startingLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -62,10 +62,22 @@ extension AppDelegate {
         let rollerView = LayerRollerView(prefix: NSLocalizedString("menu.layer.prefix", comment: ""))
         layerItem.view = rollerView
         menu.addItem(layerItem)
+
         menu.addItem(NSMenuItem.separator())
 
-        startItem = NSMenuItem(title: NSLocalizedString("menu.start", comment: ""), action: #selector(doStart), keyEquivalent: "")
-        stopItem = NSMenuItem(title: NSLocalizedString("menu.stop", comment: ""), action: #selector(doStop), keyEquivalent: "")
+        let hasSection: Bool
+        if #available(macOS 14.0, *) {
+            kanataSectionItem = NSMenuItem.sectionHeader(title: NSLocalizedString("menu.section.kanata", comment: ""))
+            menu.addItem(kanataSectionItem)
+            hasSection = true
+        } else {
+            hasSection = false
+        }
+
+        let startTitle = hasSection ? NSLocalizedString("menu.start.short", comment: "") : NSLocalizedString("menu.start", comment: "")
+        let stopTitle = hasSection ? NSLocalizedString("menu.stop.short", comment: "") : NSLocalizedString("menu.stop", comment: "")
+        startItem = NSMenuItem(title: startTitle, action: #selector(doStart), keyEquivalent: "")
+        stopItem = NSMenuItem(title: stopTitle, action: #selector(doStop), keyEquivalent: "")
         reloadItem = NSMenuItem(title: NSLocalizedString("menu.reload", comment: ""), action: #selector(doReload), keyEquivalent: "")
         menu.addItem(startItem)
         menu.addItem(stopItem)
@@ -79,7 +91,8 @@ extension AppDelegate {
         let logsItem = NSMenuItem(title: NSLocalizedString("menu.logs", comment: ""), action: nil, keyEquivalent: "")
         let logsSubmenu = NSMenu()
         logsSubmenu.addItem(NSMenuItem(title: NSLocalizedString("menu.logs.app", comment: ""), action: #selector(doViewAppLog), keyEquivalent: ""))
-        logsSubmenu.addItem(NSMenuItem(title: NSLocalizedString("menu.logs.kanata", comment: ""), action: #selector(doViewKanataLog), keyEquivalent: ""))
+        kanataLogsItem = NSMenuItem(title: NSLocalizedString("menu.logs.kanata", comment: ""), action: #selector(doViewKanataLog), keyEquivalent: "")
+        logsSubmenu.addItem(kanataLogsItem)
         logsItem.submenu = logsSubmenu
         menu.addItem(logsItem)
 
@@ -91,6 +104,16 @@ extension AppDelegate {
     }
 
     func updateMenuState() {
+        if #available(macOS 14.0, *) {
+            reloadItem?.badge = isExternal ? NSMenuItemBadge(string: NSLocalizedString("menu.external", comment: "")) : nil
+        }
+        if isExternal && externalPID > 0 {
+            reloadItem?.toolTip = "PID \(externalPID)"
+        } else {
+            reloadItem?.toolTip = nil
+        }
+        kanataLogsItem?.isHidden = isExternal
+
         switch appState {
         case .stopped:
             startingItem?.isHidden = true
@@ -101,11 +124,16 @@ extension AppDelegate {
             reloadItem?.isHidden = true
 
         case .starting:
+            let startingText = NSLocalizedString(
+                isExternal ? "menu.connecting" : "menu.starting", comment: "")
+            startingLabel?.stringValue = startingText
+            startingItem?.view?.setAccessibilityLabel(startingText)
             startingItem?.isHidden = false
             layerItem?.isHidden = true
-            startItem?.isHidden = true
-            stopItem?.isHidden = false
-            stopItem?.isEnabled = true
+            startItem?.isHidden = isExternal ? false : true
+            startItem?.isEnabled = isExternal
+            stopItem?.isHidden = isExternal
+            stopItem?.isEnabled = !isExternal
             reloadItem?.isHidden = true
 
         case .running(let layer):
@@ -113,8 +141,7 @@ extension AppDelegate {
             (layerItem?.view as? LayerRollerView)?.update(layer: layer, animated: true)
             layerItem?.isHidden = false
             startItem?.isHidden = true
-            stopItem?.isHidden = false
-            stopItem?.isEnabled = true
+            stopItem?.isHidden = isExternal
             reloadItem?.isHidden = false
             reloadItem?.isEnabled = true
 
@@ -131,6 +158,9 @@ extension AppDelegate {
     // MARK: - Actions
 
     @objc func doStart() {
+        isExternal = false
+        externalTimeoutWork?.cancel()
+        externalTimeoutWork = nil
         restartWorkItem?.cancel()
         restartWorkItem = nil
         restartTimestamps.removeAll()

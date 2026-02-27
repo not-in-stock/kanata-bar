@@ -2,8 +2,13 @@
 "menu.layer" = "Layer: %@";
 "menu.layer.prefix" = "Layer: ";
 "menu.starting" = "Starting\U2026";
+"menu.connecting" = "Connecting\U2026";
+"menu.external" = "External";
+"menu.section.kanata" = "Kanata";
 "menu.start" = "Start kanata";
+"menu.start.short" = "Start";
 "menu.stop" = "Stop kanata";
+"menu.stop.short" = "Stop";
 "menu.reload" = "Reload config";
 "menu.startAtLogin" = "Start at Login";
 "menu.logs" = "Logs";

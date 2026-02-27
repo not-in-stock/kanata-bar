@@ -168,6 +168,24 @@ class KanataProcess {
         return p.terminationStatus == 0
     }
 
+    // MARK: - Detection
+
+    static func findExternalKanataPID() -> Int32? {
+        let pgrep = Process()
+        pgrep.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
+        pgrep.arguments = ["-x", "kanata"]
+        let pipe = Pipe()
+        pgrep.standardOutput = pipe
+        pgrep.standardError = Pipe()
+        try? pgrep.run()
+        pgrep.waitUntilExit()
+        guard pgrep.terminationStatus == 0 else { return nil }
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        guard let output = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
+              let pid = Int32(output.components(separatedBy: "\n").first ?? "") else { return nil }
+        return pid
+    }
+
     // MARK: - PID Discovery
 
     private func findKanataPID() {
