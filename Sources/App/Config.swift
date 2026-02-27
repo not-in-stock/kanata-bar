@@ -1,4 +1,5 @@
 import Foundation
+import Shared
 
 struct Config {
     var kanata: String

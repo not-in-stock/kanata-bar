@@ -14,6 +14,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Test
+        run: swift test
+
       - name: Build
         run: ./build.sh build
 

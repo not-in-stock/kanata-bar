@@ -1,6 +1,7 @@
 import AppKit
+import KanataBarLib
+import Shared
 
-// Handle --install-agent / --uninstall-agent before starting the app
 let cliArgs = CommandLine.arguments
 if cliArgs.contains(Constants.CLI.installAgent) {
     let helper = AppDelegate()

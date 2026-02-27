@@ -6,13 +6,12 @@ cd "$(dirname "$0")"
 BUNDLE="build/Kanata Bar.app"
 BUNDLE_ID="com.kanata-bar"
 HELPER_BUNDLE_ID="com.kanata-bar.helper"
-SWIFTC="/usr/bin/swiftc"
 VERSION="$(git describe --tags --always 2>/dev/null || echo "dev")"
 VERSION="${VERSION#v}"  # strip leading 'v'
 
 case "${1:-build}" in
   clean)
-    rm -rf build
+    rm -rf build .build
     echo "Cleaned."
     exit 0
     ;;
@@ -45,8 +44,8 @@ case "${1:-build}" in
     ;;
 esac
 
-if [ ! -x "$SWIFTC" ]; then
-  echo "error: system swiftc not found at $SWIFTC" >&2
+if ! command -v swift &>/dev/null; then
+  echo "error: swift not found" >&2
   echo "Install Xcode Command Line Tools: xcode-select --install" >&2
   exit 1
 fi
@@ -131,35 +130,11 @@ mkdir -p "$BUNDLE/Contents/Resources"
 
 # --- Compile ---
 
-echo "Compiling kanata-bar..."
-$SWIFTC -O \
-  -o "$BUNDLE/Contents/MacOS/kanata-bar" \
-  Sources/Shared/Constants.swift \
-  Sources/Shared/HelperProtocol.swift \
-  Sources/App/main.swift \
-  Sources/App/Config.swift \
-  Sources/App/TOMLParser.swift \
-  Sources/App/AppState.swift \
-  Sources/App/AppDelegate.swift \
-  Sources/App/Menu.swift \
-  Sources/App/MenuViews.swift \
-  Sources/App/Icons.swift \
-  Sources/App/Logging.swift \
-  Sources/App/LaunchAgent.swift \
-  Sources/App/KanataClient.swift \
-  Sources/App/KanataProcess.swift \
-  -framework AppKit \
-  -framework Network \
-  -framework ServiceManagement \
-  -framework UserNotifications
+echo "Compiling with Swift Package Manager..."
+swift build -c release
 
-echo "Compiling kanata-bar-helper..."
-$SWIFTC -O \
-  -o "$BUNDLE/Contents/MacOS/kanata-bar-helper" \
-  Sources/Shared/Constants.swift \
-  Sources/Shared/HelperProtocol.swift \
-  Sources/Helper/main.swift \
-  -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker build/helper-info.plist
+cp .build/release/kanata-bar "$BUNDLE/Contents/MacOS/"
+cp .build/release/kanata-bar-helper "$BUNDLE/Contents/MacOS/"
 
 # --- Sign ---
 

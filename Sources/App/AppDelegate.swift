@@ -1,8 +1,9 @@
 import AppKit
 import ServiceManagement
+import Shared
 import UserNotifications
 
-class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
+public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
     var statusItem: NSStatusItem!
     var kanataClient: KanataClient!
     var kanataProcess: KanataProcess!
@@ -34,7 +35,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     var startingItem: NSMenuItem!
     var startAtLoginItem: NSMenuItem!
 
-    func applicationDidFinishLaunching(_ notification: Notification) {
+    public func applicationDidFinishLaunching(_ notification: Notification) {
         let myBundleID = Bundle.main.bundleIdentifier ?? Constants.bundleID
         let running = NSRunningApplication.runningApplications(withBundleIdentifier: myBundleID)
         if running.count > 1 {
@@ -160,7 +161,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         if let dir = iconsDir { log("icons dir: \(dir)") }
     }
 
-    func applicationWillTerminate(_ notification: Notification) {
+    public func applicationWillTerminate(_ notification: Notification) {
         restartWorkItem?.cancel()
         restartWorkItem = nil
         kanataClient.stop()
@@ -178,9 +179,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
     // MARK: - Crash Notification
 
-    func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                willPresent notification: UNNotification,
-                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+    public func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                       willPresent notification: UNNotification,
+                                       withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         completionHandler([.banner, .sound])
     }
 

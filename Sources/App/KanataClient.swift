@@ -1,5 +1,6 @@
 import Foundation
 import Network
+import Shared
 
 /// Connects to kanata's TCP server and reports layer changes.
 class KanataClient {

@@ -1,5 +1,6 @@
 import Foundation
 import ServiceManagement
+import Shared
 
 /// Manages the kanata process lifecycle.
 /// Start via sudo (user session → TCC dialog works).

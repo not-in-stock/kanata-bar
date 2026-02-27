@@ -1,28 +1,28 @@
 import Foundation
 
-enum Constants {
-    static let bundleID = "com.kanata-bar"
-    static let helperBundleID = "com.kanata-bar.helper"
-    static let helperPlistName = "com.kanata-bar.helper.plist"
+public enum Constants {
+    public static let bundleID = "com.kanata-bar"
+    public static let helperBundleID = "com.kanata-bar.helper"
+    public static let helperPlistName = "com.kanata-bar.helper.plist"
 
-    static let defaultPort: UInt16 = 5829
-    static let defaultHost = "127.0.0.1"
-    static let configDir = ".config/kanata-bar"
-    static let configFilename = "config.toml"
+    public static let defaultPort: UInt16 = 5829
+    public static let defaultHost = "127.0.0.1"
+    public static let configDir = ".config/kanata-bar"
+    public static let configFilename = "config.toml"
 
-    enum CLI {
-        static let installAgent = "--install-agent"
-        static let uninstallAgent = "--uninstall-agent"
-        static let noAutostart = "--no-autostart"
-        static let iconsDir = "--icons-dir"
-        static let port = "--port"
-        static let kanata = "--kanata"
-        static let config = "--config"
-        static let configFile = "--config-file"
+    public enum CLI {
+        public static let installAgent = "--install-agent"
+        public static let uninstallAgent = "--uninstall-agent"
+        public static let noAutostart = "--no-autostart"
+        public static let iconsDir = "--icons-dir"
+        public static let port = "--port"
+        public static let kanata = "--kanata"
+        public static let config = "--config"
+        public static let configFile = "--config-file"
     }
 
-    enum Log {
-        static let appFilename = "kanata-bar.log"
-        static let kanataFilename = "kanata.log"
+    public enum Log {
+        public static let appFilename = "kanata-bar.log"
+        public static let kanataFilename = "kanata.log"
     }
 }

@@ -1,4 +1,5 @@
 import AppKit
+import Shared
 
 extension AppDelegate {
     var appLogURL: URL {

@@ -1,4 +1,5 @@
 import Foundation
+import Shared
 
 class HelperTool: NSObject, HelperProtocol {
     func sendSignal(_ sig: Int32, toProcessID pid: Int32, withReply reply: @escaping (Bool, String) -> Void) {

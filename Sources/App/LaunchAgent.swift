@@ -1,10 +1,11 @@
 import Foundation
+import Shared
 
 extension AppDelegate {
     static let agentLabel = Constants.bundleID
     static let agentPlistName = "\(agentLabel).plist"
 
-    var launchAgentPath: String {
+    public var launchAgentPath: String {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         return "\(home)/Library/LaunchAgents/\(Self.agentPlistName)"
     }
@@ -13,7 +14,7 @@ extension AppDelegate {
         FileManager.default.fileExists(atPath: launchAgentPath)
     }
 
-    func installAgent() {
+    public func installAgent() {
         let dir = (launchAgentPath as NSString).deletingLastPathComponent
         try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
         let plist = buildLaunchAgentPlist()
@@ -24,7 +25,7 @@ extension AppDelegate {
         }
     }
 
-    func uninstallAgent() {
+    public func uninstallAgent() {
         try? FileManager.default.removeItem(atPath: launchAgentPath)
     }
 
