@@ -9,8 +9,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
     var iconsDir: String?
     var iconCache: [String: NSImage] = [:]
-    var currentLayer = "?"
+    var appState: AppState = .stopped {
+        didSet {
+            guard appState != oldValue else { return }
+            updateIcon()
+            updateMenuState()
+        }
+    }
     var autostart = true
+    var autorestart = false
+    var restartTimestamps: [Date] = []
+    var restartWorkItem: DispatchWorkItem?
+
+    var currentLayer: String? {
+        if case .running(let layer) = appState { return layer }
+        return nil
+    }
 
     // Menu items that change state
     var startItem: NSMenuItem!
@@ -63,6 +77,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         let port = config.port
         iconsDir = config.iconsDir.map { Config.expandTilde($0) }
         autostart = config.autostart
+        autorestart = config.autorestart
 
         // Setup kanata process manager
         kanataProcess = KanataProcess(binaryPath: binaryPath, configPath: configPath, port: port, extraArgs: config.extraArgs)
@@ -70,11 +85,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         kanataProcess.onStateChange = { [weak self] running in
             if !running {
                 self?.log("kanata stopped")
-            }
-            self?.updateMenuState()
-            if !running {
-                self?.currentLayer = "?"
-                self?.updateIcon(layer: nil)
+                self?.appState = .stopped
             }
         }
         kanataProcess.onPIDFound = { [weak self] pid in
@@ -85,7 +96,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         }
         kanataProcess.onCrash = { [weak self] exitCode in
             self?.log("kanata crashed (exit code \(exitCode))")
-            self?.sendCrashNotification()
+            if self?.autorestart == true {
+                self?.appState = .restarting
+                self?.scheduleRestart()
+            } else {
+                self?.appState = .stopped
+                self?.sendCrashNotification()
+            }
         }
 
         // Request notification permission
@@ -101,9 +118,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         }
         kanataClient.onLayerChange = { [weak self] layer in
             self?.log("layer: \(layer)")
-            self?.currentLayer = layer
-            self?.updateIcon(layer: layer)
-            self?.updateMenuState()
+            self?.appState = .running(layer)
         }
         var wasConnected = false
         kanataClient.onConnectionChange = { [weak self] connected in
@@ -112,15 +127,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
                 wasConnected = connected
             }
             if !connected {
-                self?.currentLayer = "?"
-                self?.updateIcon(layer: nil)
-                self?.updateMenuState()
+                if let s = self, case .running = s.appState {
+                    s.appState = .starting
+                }
             }
         }
 
         // Build menu bar
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        updateIcon(layer: nil)
+        updateIcon()
         buildMenu()
 
         // Register helper only when using XPC mode
@@ -131,6 +146,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         // Auto-start kanata
         if autostart {
             log("starting kanata: \(binaryPath) -c \(configPath) --port \(port)")
+            appState = .starting
             kanataProcess.start()
         }
 
@@ -145,11 +161,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        restartWorkItem?.cancel()
+        restartWorkItem = nil
         kanataClient.stop()
         if kanataProcess.isRunning {
             kanataProcess.stop()
             usleep(500_000)
         }
+        // Kill any kanata that might have been started by a race with autorestart
+        let pkill = Process()
+        pkill.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
+        pkill.arguments = ["/usr/bin/pkill", "-x", "kanata"]
+        try? pkill.run()
+        pkill.waitUntilExit()
     }
 
     // MARK: - Crash Notification
@@ -166,6 +190,50 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         content.body = NSLocalizedString("notification.reload.body", comment: "")
 
         let request = UNNotificationRequest(identifier: "kanata-reload", content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
+    }
+
+    private func scheduleRestart() {
+        let now = Date()
+        restartTimestamps = restartTimestamps.filter { now.timeIntervalSince($0) < 60 }
+        if restartTimestamps.count >= 3 {
+            log("autorestart disabled: too many crashes")
+            autorestart = false
+            appState = .stopped
+            sendAutorestartDisabledNotification()
+            sendCrashNotification()
+            return
+        }
+        restartTimestamps.append(now)
+
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self, self.appState == .restarting else { return }
+            self.restartWorkItem = nil
+            self.log("autorestarting kanata...")
+            self.appState = .starting
+            self.kanataProcess.start()
+            self.sendRestartNotification()
+        }
+        restartWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: workItem)
+    }
+
+    private func sendRestartNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = NSLocalizedString("notification.restart.title", comment: "")
+        content.body = NSLocalizedString("notification.restart.body", comment: "")
+
+        let request = UNNotificationRequest(identifier: "kanata-restart", content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
+    }
+
+    private func sendAutorestartDisabledNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = NSLocalizedString("notification.restart.disabled.title", comment: "")
+        content.body = NSLocalizedString("notification.restart.disabled.body", comment: "")
+        content.sound = .default
+
+        let request = UNNotificationRequest(identifier: "kanata-restart-disabled", content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)
     }
 

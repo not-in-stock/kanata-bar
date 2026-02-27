@@ -91,28 +91,59 @@ extension AppDelegate {
     }
 
     func updateMenuState() {
-        let running = kanataProcess.isRunning
-        let hasLayer = running && currentLayer != "?"
-        startingItem?.isHidden = !running || hasLayer
-        (layerItem?.view as? LayerRollerView)?.update(layer: currentLayer, animated: hasLayer)
-        layerItem?.isHidden = !hasLayer
-        startItem?.isEnabled = !running
-        startItem?.isHidden = running
-        stopItem?.isEnabled = running
-        stopItem?.isHidden = !running
-        reloadItem?.isEnabled = hasLayer
-        reloadItem?.isHidden = !hasLayer
+        switch appState {
+        case .stopped:
+            startingItem?.isHidden = true
+            layerItem?.isHidden = true
+            startItem?.isHidden = false
+            startItem?.isEnabled = true
+            stopItem?.isHidden = true
+            reloadItem?.isHidden = true
+
+        case .starting:
+            startingItem?.isHidden = false
+            layerItem?.isHidden = true
+            startItem?.isHidden = true
+            stopItem?.isHidden = false
+            stopItem?.isEnabled = true
+            reloadItem?.isHidden = true
+
+        case .running(let layer):
+            startingItem?.isHidden = true
+            (layerItem?.view as? LayerRollerView)?.update(layer: layer, animated: true)
+            layerItem?.isHidden = false
+            startItem?.isHidden = true
+            stopItem?.isHidden = false
+            stopItem?.isEnabled = true
+            reloadItem?.isHidden = false
+            reloadItem?.isEnabled = true
+
+        case .restarting:
+            startingItem?.isHidden = true
+            layerItem?.isHidden = true
+            startItem?.isHidden = true
+            stopItem?.isHidden = false
+            stopItem?.isEnabled = true
+            reloadItem?.isHidden = true
+        }
     }
 
     // MARK: - Actions
 
     @objc func doStart() {
+        restartWorkItem?.cancel()
+        restartWorkItem = nil
+        restartTimestamps.removeAll()
         log("starting kanata: \(kanataProcess.binaryPath) -c \(kanataProcess.configPath) --port \(kanataProcess.port)")
+        appState = .starting
         kanataProcess.start()
     }
 
     @objc func doStop() {
+        restartWorkItem?.cancel()
+        restartWorkItem = nil
         kanataProcess.stop()
+        appState = .stopped
     }
 
     @objc func doReload() {

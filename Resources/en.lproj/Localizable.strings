@@ -16,6 +16,10 @@
 "notification.crash.body" = "Check logs for details";
 "notification.reload.title" = "Config reloaded";
 "notification.reload.body" = "kanata configuration has been reloaded";
+"notification.restart.title" = "kanata restarted";
+"notification.restart.body" = "kanata was restarted automatically";
+"notification.restart.disabled.title" = "Autorestart disabled";
+"notification.restart.disabled.body" = "Too many crashes within a minute";
 
 /* Status bar */
 "status.placeholder" = "K?";

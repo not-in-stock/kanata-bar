@@ -1,8 +1,9 @@
 import AppKit
 
 extension AppDelegate {
-    func updateIcon(layer: String?) {
-        guard let layer else {
+    func updateIcon() {
+        switch appState {
+        case .stopped, .starting, .restarting:
             if let image = loadPlaceholder() {
                 statusItem?.button?.image = image
                 statusItem?.button?.title = ""
@@ -10,15 +11,14 @@ extension AppDelegate {
                 statusItem?.button?.image = nil
                 statusItem?.button?.title = NSLocalizedString("status.placeholder", comment: "")
             }
-            return
-        }
-
-        if let dir = iconsDir, let image = loadIcon(layer: layer, from: dir) {
-            statusItem.button?.image = image
-            statusItem.button?.title = ""
-        } else {
-            statusItem.button?.image = nil
-            statusItem.button?.title = String(layer.prefix(1)).uppercased()
+        case .running(let layer):
+            if let dir = iconsDir, let image = loadIcon(layer: layer, from: dir) {
+                statusItem.button?.image = image
+                statusItem.button?.title = ""
+            } else {
+                statusItem.button?.image = nil
+                statusItem.button?.title = String(layer.prefix(1)).uppercased()
+            }
         }
     }
 

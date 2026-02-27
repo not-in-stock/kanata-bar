@@ -139,6 +139,7 @@ $SWIFTC -O \
   Sources/App/main.swift \
   Sources/App/Config.swift \
   Sources/App/TOMLParser.swift \
+  Sources/App/AppState.swift \
   Sources/App/AppDelegate.swift \
   Sources/App/Menu.swift \
   Sources/App/MenuViews.swift \
