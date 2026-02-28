@@ -1,32 +1,105 @@
-/* Menu items */
+/* ============================================================
+   Kanata Bar — Localizable Strings
+
+   Notes for translators:
+   - "Kanata Bar" is the app name — do NOT translate.
+   - "kanata" is the name of the keyboard remapper — do NOT translate.
+   - %@ is a placeholder (e.g. layer name) — keep it in the translation.
+   - \U2026 is the ellipsis character (…).
+   ============================================================ */
+
+/* ----- Menu Items ----- */
+
+/* Shown in menu: "Layer: <layer_name>", e.g. "Layer: nav".
+   %@ is replaced with the active keyboard layer name. */
 "menu.layer" = "Layer: %@";
+
+/* Prefix used in the animated layer roller view.
+   Displayed before the layer name in the menu bar dropdown. */
 "menu.layer.prefix" = "Layer: ";
+
+/* Shown while kanata is launching but not yet connected.
+   Displayed as a spinner label in the menu. */
 "menu.starting" = "Starting\U2026";
+
+/* Shown while kanata-bar is trying to connect to a running kanata via TCP. */
 "menu.connecting" = "Connecting\U2026";
+
+/* Badge label on the Reload menu item when kanata-bar is monitoring
+   an externally started kanata process (not started by the app). */
 "menu.external" = "External";
+
+/* Section header in the menu, groups kanata-related actions.
+   "Kanata" is the product name — do NOT translate. */
 "menu.section.kanata" = "Kanata";
+
+/* Full menu item label to start kanata (used when section header is not shown). */
 "menu.start" = "Start kanata";
+
+/* Short menu item label to start kanata (used under a "Kanata" section header). */
 "menu.start.short" = "Start";
+
+/* Full menu item label to stop kanata (used when section header is not shown). */
 "menu.stop" = "Stop kanata";
+
+/* Short menu item label to stop kanata (used under a "Kanata" section header). */
 "menu.stop.short" = "Stop";
+
+/* Menu item to reload the kanata keyboard configuration file. */
 "menu.reload" = "Reload config";
+
+/* Menu item to toggle launching kanata-bar at macOS login. */
 "menu.startAtLogin" = "Start at Login";
+
+/* Submenu title for log file access. */
 "menu.logs" = "Logs";
+
+/* Submenu item: open Kanata Bar's own log file.
+   "Kanata Bar" is the app name — do NOT translate. */
 "menu.logs.app" = "Kanata Bar";
+
+/* Submenu item: open kanata's log file.
+   "Kanata" is the product name — do NOT translate. */
 "menu.logs.kanata" = "Kanata";
+
+/* Menu item to quit the app. Standard macOS terminology. */
 "menu.quit" = "Quit";
 
-/* Notifications */
+/* ----- Notifications ----- */
+
+/* Notification title when kanata fails to start
+   (e.g. user cancelled sudo/TouchID prompt or binary not found). */
 "notification.startFailure.title" = "Failed to start kanata";
+
+/* Notification body for start failure. Advises user to try again. */
 "notification.startFailure.body" = "Administrator privileges are required. Click Start to try again.";
+
+/* Notification title when kanata exits unexpectedly (crash or error). */
 "notification.crash.title" = "kanata stopped unexpectedly";
+
+/* Notification body for crash. Directs user to check log files. */
 "notification.crash.body" = "Check logs for details";
+
+/* Notification title after a successful config reload via TCP command. */
 "notification.reload.title" = "Config reloaded";
+
+/* Notification body for config reload. */
 "notification.reload.body" = "kanata configuration has been reloaded";
+
+/* Notification title when kanata is automatically restarted after a crash. */
 "notification.restart.title" = "kanata restarted";
+
+/* Notification body for automatic restart. */
 "notification.restart.body" = "kanata was restarted automatically";
+
+/* Notification title when autorestart is disabled due to too many crashes. */
 "notification.restart.disabled.title" = "Autorestart disabled";
+
+/* Notification body when autorestart is disabled (rate limit: 3 crashes per minute). */
 "notification.restart.disabled.body" = "Too many crashes within a minute";
 
-/* Status bar */
+/* ----- Status Bar ----- */
+
+/* Fallback text shown in the menu bar when no layer icon is available
+   and the layer name is unknown. "K?" = Kanata status unknown. */
 "status.placeholder" = "K?";
