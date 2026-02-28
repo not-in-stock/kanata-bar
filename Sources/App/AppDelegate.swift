@@ -37,6 +37,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
     var layerItem: NSMenuItem!
     var startingItem: NSMenuItem!
     var startingLabel: NSTextField!
+    var startingLeading: NSLayoutConstraint!
     var kanataSectionItem: NSMenuItem!
     var startAtLoginItem: NSMenuItem!
     var kanataLogsItem: NSMenuItem!

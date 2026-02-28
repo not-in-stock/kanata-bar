@@ -10,7 +10,7 @@ class LayerRollerView: NSView {
     private var isAnimating = false
     private var pendingLayer: String?
     private let viewHeight: CGFloat = 22
-    private let leadingPadding: CGFloat = 14
+    private var leadingConstraint: NSLayoutConstraint!
 
     init(prefix: String, width: CGFloat = 200) {
         prefixLabel = NSTextField(labelWithString: prefix)
@@ -24,8 +24,9 @@ class LayerRollerView: NSView {
         prefixLabel.textColor = .secondaryLabelColor
         prefixLabel.translatesAutoresizingMaskIntoConstraints = false
         addSubview(prefixLabel)
+        leadingConstraint = prefixLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 14)
         NSLayoutConstraint.activate([
-            prefixLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: leadingPadding),
+            leadingConstraint,
             prefixLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
         ])
 
@@ -47,6 +48,10 @@ class LayerRollerView: NSView {
     }
 
     required init?(coder: NSCoder) { fatalError() }
+
+    func updateLeading(_ constant: CGFloat) {
+        leadingConstraint.constant = constant
+    }
 
     func update(layer: String, animated: Bool) {
         guard layer != currentText else { return }

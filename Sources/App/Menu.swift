@@ -47,8 +47,9 @@ extension AppDelegate {
         startingLabel.translatesAutoresizingMaskIntoConstraints = false
         startingView.addSubview(spinner)
         startingView.addSubview(startingLabel)
+        startingLeading = startingLabel.leadingAnchor.constraint(equalTo: startingView.leadingAnchor, constant: 14)
         NSLayoutConstraint.activate([
-            startingLabel.leadingAnchor.constraint(equalTo: startingView.leadingAnchor, constant: 14),
+            startingLeading,
             startingLabel.centerYAnchor.constraint(equalTo: startingView.centerYAnchor),
             spinner.trailingAnchor.constraint(equalTo: startingView.trailingAnchor, constant: -14),
             spinner.centerYAnchor.constraint(equalTo: startingView.centerYAnchor),
@@ -113,6 +114,13 @@ extension AppDelegate {
             reloadItem?.toolTip = nil
         }
         kanataLogsItem?.isHidden = isExternal
+
+        // Align custom views with standard menu items.
+        // When any item has a checkmark, macOS adds ~11px for the check column.
+        let hasCheck = startAtLoginItem?.state == .on
+        let leading: CGFloat = hasCheck ? 25 : 14
+        startingLeading?.constant = leading
+        (layerItem?.view as? LayerRollerView)?.updateLeading(leading)
 
         switch appState {
         case .stopped:

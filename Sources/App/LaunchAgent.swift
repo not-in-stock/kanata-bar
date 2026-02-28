@@ -36,6 +36,7 @@ extension AppDelegate {
             installAgent()
         }
         startAtLoginItem?.state = isAgentInstalled ? .on : .off
+        updateMenuState()
     }
 
     func buildLaunchAgentPlist() -> String {
