@@ -81,6 +81,11 @@ autorestart = false
 
 # Extra arguments passed to kanata
 extra_args = ["--log-layer-changes"]
+
+# Privilege escalation mode:
+#   "auto"  — use sudo with PAM (TouchID if configured, recommended)
+#   "false" — use AuthorizationExecuteWithPrivileges (deprecated API)
+pam_tid = "auto"
 ```
 
 All string values support `~` expansion.
@@ -115,9 +120,33 @@ If no icon is found for a layer, the menu bar shows the layer name abbreviation.
 
 ## How it works
 
-kanata requires root privileges for keyboard access on macOS. kanata-bar starts it via `sudo` in the user session (so the macOS Input Monitoring permission dialog appears correctly) and stops it via a privileged XPC helper that sends SIGTERM.
+kanata requires root privileges for keyboard access on macOS. kanata-bar supports two privilege escalation methods:
 
-The app connects to kanata's TCP API to receive layer change events and updates the menu bar in real time.
+| Mode | Config | Auth prompt | How it works |
+| :--- | :----- | :---------- | :----------- |
+| **sudo + PAM** | `pam_tid = "auto"` | TouchID / password (system PAM dialog) | `sudo -S` with stdin EOF — fast, clean |
+| **AuthExec** | `pam_tid = "false"` (default) | macOS password dialog | `AuthorizationExecuteWithPrivileges` via dlsym |
+
+Both modes start kanata in the user session (so the macOS Input Monitoring permission dialog appears correctly). The app stops kanata via a privileged XPC helper (SIGTERM) or `sudo -n kill` as fallback, and connects to kanata's TCP API to receive layer change events in real time.
+
+### Recommended: enable sudo TouchID
+
+The AuthExec mode relies on `AuthorizationExecuteWithPrivileges`, a macOS API **deprecated since OS X 10.7** (2011). Apple may remove it in a future macOS release without notice. When that happens, the AuthExec mode will stop working.
+
+**We recommend enabling sudo with TouchID** (`pam_tid = "auto"`) to future-proof your setup:
+
+```bash
+# Create /etc/pam.d/sudo_local (survives macOS updates)
+sudo sh -c 'echo "auth       sufficient     pam_tid.so" > /etc/pam.d/sudo_local'
+```
+
+Then set in `~/.config/kanata-bar/config.toml`:
+
+```toml
+pam_tid = "auto"
+```
+
+This gives you TouchID prompts for sudo and doesn't depend on any deprecated APIs.
 
 ## Acknowledgements
 
