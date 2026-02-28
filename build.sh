@@ -27,6 +27,10 @@ case "${1:-build}" in
     ver="${2:?Usage: $0 release <version> (e.g. 0.2.0)}"
     ver="${ver#v}"
     tag="v$ver"
+    if [ -n "$(git status --porcelain)" ]; then
+      echo "error: working tree is dirty. Commit or stash your changes first." >&2
+      exit 1
+    fi
     if git rev-parse "$tag" >/dev/null 2>&1; then
       echo "error: tag $tag already exists" >&2
       exit 1
