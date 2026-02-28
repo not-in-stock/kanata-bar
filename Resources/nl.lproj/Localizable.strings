@@ -1,0 +1,32 @@
+/* Menu items */
+"menu.layer" = "Laag: %@";
+"menu.layer.prefix" = "Laag: ";
+"menu.starting" = "Starten\U2026";
+"menu.connecting" = "Verbinden\U2026";
+"menu.external" = "Extern";
+"menu.section.kanata" = "Kanata";
+"menu.start" = "Start kanata";
+"menu.start.short" = "Start";
+"menu.stop" = "Stop kanata";
+"menu.stop.short" = "Stop";
+"menu.reload" = "Configuratie herladen";
+"menu.startAtLogin" = "Open bij inloggen";
+"menu.logs" = "Logboeken";
+"menu.logs.app" = "Kanata Bar";
+"menu.logs.kanata" = "Kanata";
+"menu.quit" = "Sluit af";
+
+/* Notifications */
+"notification.startFailure.title" = "Kan kanata niet starten";
+"notification.startFailure.body" = "Beheerdersbevoegdheden zijn vereist. Klik op Start om opnieuw te proberen.";
+"notification.crash.title" = "kanata is onverwacht gestopt";
+"notification.crash.body" = "Bekijk de logboeken voor details";
+"notification.reload.title" = "Configuratie herladen";
+"notification.reload.body" = "De kanata-configuratie is herladen";
+"notification.restart.title" = "kanata is opnieuw gestart";
+"notification.restart.body" = "kanata is automatisch herstart";
+"notification.restart.disabled.title" = "Automatisch herstarten uitgeschakeld";
+"notification.restart.disabled.body" = "Te veel crashes binnen een minuut";
+
+/* Status bar */
+"status.placeholder" = "K?";

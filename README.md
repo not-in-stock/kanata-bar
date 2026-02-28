@@ -153,6 +153,12 @@ pam_tid = "auto"
 
 This gives you native TouchID prompts for sudo and doesn't depend on any deprecated APIs.
 
+## Localization
+
+Kanata Bar is localized into English, German, French, Japanese, Korean, Simplified Chinese, Dutch, Russian, and Brazilian Portuguese. Translations live in `Resources/<lang>.lproj/Localizable.strings`.
+
+Machine-generated translations may sound unnatural. If you are a native speaker and spot an issue, PRs are welcome — each string has a context comment in the English file (`Resources/en.lproj/Localizable.strings`) explaining where and how it is used.
+
 ## Acknowledgements
 
 Inspired by [kanata-tray](https://github.com/rszyma/kanata-tray) — a cross-platform system tray app for kanata.

@@ -1,0 +1,32 @@
+/* Menu items */
+"menu.layer" = "Couche : %@";
+"menu.layer.prefix" = "Couche : ";
+"menu.starting" = "Démarrage\U2026";
+"menu.connecting" = "Connexion\U2026";
+"menu.external" = "Externe";
+"menu.section.kanata" = "Kanata";
+"menu.start" = "Démarrer kanata";
+"menu.start.short" = "Démarrer";
+"menu.stop" = "Arrêter kanata";
+"menu.stop.short" = "Arrêter";
+"menu.reload" = "Recharger la configuration";
+"menu.startAtLogin" = "Ouvrir à la connexion";
+"menu.logs" = "Journaux";
+"menu.logs.app" = "Kanata Bar";
+"menu.logs.kanata" = "Kanata";
+"menu.quit" = "Quitter";
+
+/* Notifications */
+"notification.startFailure.title" = "Impossible de démarrer kanata";
+"notification.startFailure.body" = "Les privilèges administrateur sont requis. Cliquez sur Démarrer pour réessayer.";
+"notification.crash.title" = "kanata s'est arrêté de manière inattendue";
+"notification.crash.body" = "Consultez les journaux pour plus de détails";
+"notification.reload.title" = "Configuration rechargée";
+"notification.reload.body" = "La configuration de kanata a été rechargée";
+"notification.restart.title" = "kanata a redémarré";
+"notification.restart.body" = "kanata a été redémarré automatiquement";
+"notification.restart.disabled.title" = "Redémarrage automatique désactivé";
+"notification.restart.disabled.body" = "Trop de plantages en moins d'une minute";
+
+/* Status bar */
+"status.placeholder" = "K?";

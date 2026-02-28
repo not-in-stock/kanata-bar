@@ -1,0 +1,32 @@
+/* Menu items */
+"menu.layer" = "레이어: %@";
+"menu.layer.prefix" = "레이어: ";
+"menu.starting" = "시작 중\U2026";
+"menu.connecting" = "연결 중\U2026";
+"menu.external" = "외부";
+"menu.section.kanata" = "Kanata";
+"menu.start" = "kanata 시작";
+"menu.start.short" = "시작";
+"menu.stop" = "kanata 중단";
+"menu.stop.short" = "중단";
+"menu.reload" = "설정 다시 불러오기";
+"menu.startAtLogin" = "로그인 시 열기";
+"menu.logs" = "로그";
+"menu.logs.app" = "Kanata Bar";
+"menu.logs.kanata" = "Kanata";
+"menu.quit" = "종료";
+
+/* Notifications */
+"notification.startFailure.title" = "kanata 시작 실패";
+"notification.startFailure.body" = "관리자 권한이 필요합니다. 시작을 클릭하여 다시 시도하세요.";
+"notification.crash.title" = "kanata가 예기치 않게 중단되었습니다";
+"notification.crash.body" = "자세한 내용은 로그를 확인하세요";
+"notification.reload.title" = "설정을 다시 불러왔습니다";
+"notification.reload.body" = "kanata 설정을 다시 불러왔습니다";
+"notification.restart.title" = "kanata가 재시작되었습니다";
+"notification.restart.body" = "kanata가 자동으로 재시작되었습니다";
+"notification.restart.disabled.title" = "자동 재시작 비활성화됨";
+"notification.restart.disabled.body" = "1분 이내에 충돌이 너무 많습니다";
+
+/* Status bar */
+"status.placeholder" = "K?";

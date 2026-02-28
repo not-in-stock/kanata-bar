@@ -1,0 +1,32 @@
+/* Menu items */
+"menu.layer" = "レイヤー: %@";
+"menu.layer.prefix" = "レイヤー: ";
+"menu.starting" = "起動中\U2026";
+"menu.connecting" = "接続中\U2026";
+"menu.external" = "外部";
+"menu.section.kanata" = "Kanata";
+"menu.start" = "kanataを開始";
+"menu.start.short" = "開始";
+"menu.stop" = "kanataを停止";
+"menu.stop.short" = "停止";
+"menu.reload" = "設定を再読み込み";
+"menu.startAtLogin" = "ログイン時に開く";
+"menu.logs" = "ログ";
+"menu.logs.app" = "Kanata Bar";
+"menu.logs.kanata" = "Kanata";
+"menu.quit" = "終了";
+
+/* Notifications */
+"notification.startFailure.title" = "kanataの起動に失敗しました";
+"notification.startFailure.body" = "管理者権限が必要です。「開始」をクリックして再試行してください。";
+"notification.crash.title" = "kanataが予期せず停止しました";
+"notification.crash.body" = "詳細はログを確認してください";
+"notification.reload.title" = "設定を再読み込みしました";
+"notification.reload.body" = "kanataの設定が再読み込みされました";
+"notification.restart.title" = "kanataが再起動しました";
+"notification.restart.body" = "kanataは自動的に再起動されました";
+"notification.restart.disabled.title" = "自動再起動が無効になりました";
+"notification.restart.disabled.body" = "1分以内にクラッシュが多すぎます";
+
+/* Status bar */
+"status.placeholder" = "K?";

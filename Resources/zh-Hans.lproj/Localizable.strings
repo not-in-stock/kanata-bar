@@ -1,0 +1,32 @@
+/* Menu items */
+"menu.layer" = "层: %@";
+"menu.layer.prefix" = "层: ";
+"menu.starting" = "正在启动\U2026";
+"menu.connecting" = "正在连接\U2026";
+"menu.external" = "外部";
+"menu.section.kanata" = "Kanata";
+"menu.start" = "启动 kanata";
+"menu.start.short" = "启动";
+"menu.stop" = "停止 kanata";
+"menu.stop.short" = "停止";
+"menu.reload" = "重新加载配置";
+"menu.startAtLogin" = "登录时打开";
+"menu.logs" = "日志";
+"menu.logs.app" = "Kanata Bar";
+"menu.logs.kanata" = "Kanata";
+"menu.quit" = "退出";
+
+/* Notifications */
+"notification.startFailure.title" = "无法启动 kanata";
+"notification.startFailure.body" = "需要管理员权限。点击"启动"重试。";
+"notification.crash.title" = "kanata 意外停止";
+"notification.crash.body" = "请查看日志了解详情";
+"notification.reload.title" = "配置已重新加载";
+"notification.reload.body" = "kanata 配置已重新加载";
+"notification.restart.title" = "kanata 已重新启动";
+"notification.restart.body" = "kanata 已自动重新启动";
+"notification.restart.disabled.title" = "自动重启已禁用";
+"notification.restart.disabled.body" = "一分钟内崩溃次数过多";
+
+/* Status bar */
+"status.placeholder" = "K?";
