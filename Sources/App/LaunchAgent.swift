@@ -14,6 +14,13 @@ extension AppDelegate {
         FileManager.default.fileExists(atPath: launchAgentPath)
     }
 
+    /// Agent plist exists but is managed externally (e.g. nix-darwin symlink).
+    var isAgentExternal: Bool {
+        guard isAgentInstalled else { return false }
+        let attrs = try? FileManager.default.attributesOfItem(atPath: launchAgentPath)
+        return attrs?[.type] as? FileAttributeType == .typeSymbolicLink
+    }
+
     public func installAgent() {
         let dir = (launchAgentPath as NSString).deletingLastPathComponent
         try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
@@ -30,12 +37,13 @@ extension AppDelegate {
     }
 
     @objc func doToggleAgent() {
+        guard !isAgentExternal else { return }
         if isAgentInstalled {
             uninstallAgent()
         } else {
             installAgent()
         }
-        startAtLoginItem?.state = isAgentInstalled ? .on : .off
+        updateStartAtLoginState()
         updateMenuState()
     }
 

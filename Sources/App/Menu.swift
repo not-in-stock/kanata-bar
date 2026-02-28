@@ -87,7 +87,7 @@ extension AppDelegate {
         menu.addItem(NSMenuItem.separator())
 
         startAtLoginItem = NSMenuItem(title: NSLocalizedString("menu.startAtLogin", comment: ""), action: #selector(doToggleAgent), keyEquivalent: "")
-        startAtLoginItem.state = isAgentInstalled ? .on : .off
+        updateStartAtLoginState()
         menu.addItem(startAtLoginItem)
         let logsItem = NSMenuItem(title: NSLocalizedString("menu.logs", comment: ""), action: nil, keyEquivalent: "")
         let logsSubmenu = NSMenu()
@@ -114,6 +114,7 @@ extension AppDelegate {
             reloadItem?.toolTip = nil
         }
         kanataLogsItem?.isHidden = isExternal
+        updateStartAtLoginState()
 
         // Align custom views with standard menu items.
         // When any item has a checkmark, macOS adds ~11px for the check column.
@@ -160,6 +161,24 @@ extension AppDelegate {
             stopItem?.isHidden = false
             stopItem?.isEnabled = true
             reloadItem?.isHidden = true
+        }
+    }
+
+    func updateStartAtLoginState() {
+        if isAgentExternal {
+            startAtLoginItem?.state = .on
+            startAtLoginItem?.isEnabled = false
+            if #available(macOS 14.0, *) {
+                startAtLoginItem?.badge = NSMenuItemBadge(string: NSLocalizedString("menu.external", comment: ""))
+            }
+            startAtLoginItem?.toolTip = "Managed externally (symlink)"
+        } else {
+            startAtLoginItem?.state = isAgentInstalled ? .on : .off
+            startAtLoginItem?.isEnabled = true
+            if #available(macOS 14.0, *) {
+                startAtLoginItem?.badge = nil
+            }
+            startAtLoginItem?.toolTip = nil
         }
     }
 
