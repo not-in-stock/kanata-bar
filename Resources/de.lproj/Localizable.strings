@@ -1,0 +1,32 @@
+/* Menu items */
+"menu.layer" = "Ebene: %@";
+"menu.layer.prefix" = "Ebene: ";
+"menu.starting" = "Starten\U2026";
+"menu.connecting" = "Verbinden\U2026";
+"menu.external" = "Extern";
+"menu.section.kanata" = "Kanata";
+"menu.start" = "kanata starten";
+"menu.start.short" = "Starten";
+"menu.stop" = "kanata stoppen";
+"menu.stop.short" = "Stoppen";
+"menu.reload" = "Konfiguration neu laden";
+"menu.startAtLogin" = "Bei Anmeldung starten";
+"menu.logs" = "Protokolle";
+"menu.logs.app" = "Kanata Bar";
+"menu.logs.kanata" = "Kanata";
+"menu.quit" = "Beenden";
+
+/* Notifications */
+"notification.startFailure.title" = "kanata konnte nicht gestartet werden";
+"notification.startFailure.body" = "Administratorrechte erforderlich. Klicken Sie auf Starten, um es erneut zu versuchen.";
+"notification.crash.title" = "kanata wurde unerwartet beendet";
+"notification.crash.body" = "Überprüfen Sie die Protokolle für Details";
+"notification.reload.title" = "Konfiguration neu geladen";
+"notification.reload.body" = "Die kanata-Konfiguration wurde neu geladen";
+"notification.restart.title" = "kanata wurde neugestartet";
+"notification.restart.body" = "kanata wurde automatisch neugestartet";
+"notification.restart.disabled.title" = "Automatischer Neustart deaktiviert";
+"notification.restart.disabled.body" = "Zu viele Abstürze innerhalb einer Minute";
+
+/* Status bar */
+"status.placeholder" = "K?";
