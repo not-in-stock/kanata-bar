@@ -10,7 +10,7 @@ class LayerRollerView: NSView {
     private var isAnimating = false
     private var pendingLayer: String?
     private let viewHeight: CGFloat = 22
-    private let leadingPadding: CGFloat = 25
+    private let leadingPadding: CGFloat = 14
 
     init(prefix: String, width: CGFloat = 200) {
         prefixLabel = NSTextField(labelWithString: prefix)

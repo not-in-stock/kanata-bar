@@ -48,7 +48,7 @@ extension AppDelegate {
         startingView.addSubview(spinner)
         startingView.addSubview(startingLabel)
         NSLayoutConstraint.activate([
-            startingLabel.leadingAnchor.constraint(equalTo: startingView.leadingAnchor, constant: 25),
+            startingLabel.leadingAnchor.constraint(equalTo: startingView.leadingAnchor, constant: 14),
             startingLabel.centerYAnchor.constraint(equalTo: startingView.centerYAnchor),
             spinner.trailingAnchor.constraint(equalTo: startingView.trailingAnchor, constant: -14),
             spinner.centerYAnchor.constraint(equalTo: startingView.centerYAnchor),
