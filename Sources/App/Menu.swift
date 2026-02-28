@@ -25,6 +25,7 @@ extension AppDelegate {
                 imageView.widthAnchor.constraint(equalToConstant: imageSize.width),
                 imageView.heightAnchor.constraint(equalToConstant: imageSize.height),
             ])
+            container.setAccessibilityLabel("Kanata Bar")
             headerItem.view = container
         }
         menu.addItem(headerItem)
@@ -52,6 +53,7 @@ extension AppDelegate {
             spinner.trailingAnchor.constraint(equalTo: startingView.trailingAnchor, constant: -14),
             spinner.centerYAnchor.constraint(equalTo: startingView.centerYAnchor),
         ])
+        startingView.setAccessibilityLabel(NSLocalizedString("menu.starting", comment: ""))
         startingItem.view = startingView
         menu.addItem(startingItem)
 
@@ -98,8 +100,8 @@ extension AppDelegate {
         startItem?.isHidden = running
         stopItem?.isEnabled = running
         stopItem?.isHidden = !running
-        reloadItem?.isEnabled = running
-        reloadItem?.isHidden = !running
+        reloadItem?.isEnabled = hasLayer
+        reloadItem?.isHidden = !hasLayer
     }
 
     // MARK: - Actions
