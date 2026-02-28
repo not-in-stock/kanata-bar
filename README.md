@@ -133,11 +133,16 @@ Both modes start kanata in the user session (so the macOS Input Monitoring permi
 
 The AuthExec mode relies on `AuthorizationExecuteWithPrivileges`, a macOS API **deprecated since OS X 10.7** (2011). Apple may remove it in a future macOS release without notice. When that happens, the AuthExec mode will stop working.
 
-**We recommend enabling sudo with TouchID** (`pam_tid = "auto"`) to future-proof your setup:
+If you have a Mac with TouchID (built-in or via Magic Keyboard), you can enable TouchID for sudo and use the more reliable PAM-based mode instead. A helper script is included:
 
 ```bash
-# Create /etc/pam.d/sudo_local (survives macOS updates)
-sudo sh -c 'echo "auth       sufficient     pam_tid.so" > /etc/pam.d/sudo_local'
+./scripts/enable-pam-tid.sh
+```
+
+The script creates `/etc/pam.d/sudo_local` with the `pam_tid.so` module (this file survives macOS updates). It will ask for confirmation, back up any existing file, and verify the result. **Use at your own risk** — the script modifies a system PAM configuration file. If anything goes wrong, restore the backup:
+
+```bash
+sudo cp /etc/pam.d/sudo_local.bak /etc/pam.d/sudo_local
 ```
 
 Then set in `~/.config/kanata-bar/config.toml`:
@@ -146,7 +151,7 @@ Then set in `~/.config/kanata-bar/config.toml`:
 pam_tid = "auto"
 ```
 
-This gives you TouchID prompts for sudo and doesn't depend on any deprecated APIs.
+This gives you native TouchID prompts for sudo and doesn't depend on any deprecated APIs.
 
 ## Acknowledgements
 
