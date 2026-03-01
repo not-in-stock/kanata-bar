@@ -55,7 +55,6 @@ extension AppDelegate {
         updateIcon()
         let newSnapshot = snapshotButton(button)
         button.image = nil
-        button.title = ""
 
         // Now add overlays
         let oldView = NSImageView()

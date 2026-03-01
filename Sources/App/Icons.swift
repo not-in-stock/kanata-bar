@@ -48,18 +48,14 @@ extension AppDelegate {
         case .stopped, .starting, .restarting:
             if let image = loadPlaceholder() {
                 statusItem?.button?.image = image
-                statusItem?.button?.title = ""
             } else {
                 statusItem?.button?.image = makeTextBadge(NSLocalizedString("status.placeholder", comment: ""))
-                statusItem?.button?.title = ""
             }
         case .running(let layer):
             if let dir = iconsDir, let image = loadIcon(layer: layer, from: dir) {
                 statusItem.button?.image = image
-                statusItem.button?.title = ""
             } else {
                 statusItem.button?.image = makeTextBadge(String(layer.prefix(1)).uppercased())
-                statusItem.button?.title = ""
             }
         }
     }
