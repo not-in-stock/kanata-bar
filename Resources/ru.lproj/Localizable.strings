@@ -70,6 +70,14 @@
 "notification.restart.disabled.title" = "Автоперезапуск отключён";
 "notification.restart.disabled.body" = "Слишком много падений за минуту";
 
+/* ----- Метки для VoiceOver ----- */
+
+"accessibility.starting" = "Запуск kanata";
+"accessibility.connecting" = "Подключение к kanata";
+"accessibility.reload" = "Перечитать настройки kanata";
+"accessibility.layer" = "Слой kanata: %@";
+"accessibility.startAtLogin" = "Открывать Kanata Bar при входе";
+
 /* ----- Строка состояния ----- */
 
 /* Заглушка в меню баре, когда слой неизвестен */

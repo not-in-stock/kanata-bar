@@ -170,6 +170,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
 
         // Build menu bar
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        statusItem.button?.toolTip = "Kanata Bar"
         updateIcon()
         buildMenu()
 

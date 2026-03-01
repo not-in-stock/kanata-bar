@@ -25,7 +25,10 @@ extension AppDelegate {
                 imageView.widthAnchor.constraint(equalToConstant: imageSize.width),
                 imageView.heightAnchor.constraint(equalToConstant: imageSize.height),
             ])
+            container.setAccessibilityElement(true)
+            container.setAccessibilityRole(.staticText)
             container.setAccessibilityLabel("Kanata Bar")
+            container.setAccessibilityChildren([])
             headerItem.view = container
         }
         menu.addItem(headerItem)
@@ -54,7 +57,10 @@ extension AppDelegate {
             spinner.trailingAnchor.constraint(equalTo: startingView.trailingAnchor, constant: -14),
             spinner.centerYAnchor.constraint(equalTo: startingView.centerYAnchor),
         ])
-        startingView.setAccessibilityLabel(NSLocalizedString("menu.starting", comment: ""))
+        startingView.setAccessibilityElement(true)
+        startingView.setAccessibilityRole(.staticText)
+        startingView.setAccessibilityLabel(NSLocalizedString("accessibility.starting", comment: ""))
+        startingView.setAccessibilityChildren([])
         startingItem.view = startingView
         menu.addItem(startingItem)
 
@@ -80,6 +86,11 @@ extension AppDelegate {
         startItem = NSMenuItem(title: startTitle, action: #selector(doStart), keyEquivalent: "")
         stopItem = NSMenuItem(title: stopTitle, action: #selector(doStop), keyEquivalent: "")
         reloadItem = NSMenuItem(title: NSLocalizedString("menu.reload", comment: ""), action: #selector(doReload), keyEquivalent: "")
+        if hasSection {
+            startItem.setAccessibilityTitle(NSLocalizedString("menu.start", comment: ""))
+            stopItem.setAccessibilityTitle(NSLocalizedString("menu.stop", comment: ""))
+            reloadItem.setAccessibilityTitle(NSLocalizedString("accessibility.reload", comment: ""))
+        }
         menu.addItem(startItem)
         menu.addItem(stopItem)
         menu.addItem(reloadItem)
@@ -87,6 +98,7 @@ extension AppDelegate {
         menu.addItem(NSMenuItem.separator())
 
         startAtLoginItem = NSMenuItem(title: NSLocalizedString("menu.startAtLogin", comment: ""), action: #selector(doToggleAgent), keyEquivalent: "")
+        startAtLoginItem.setAccessibilityTitle(NSLocalizedString("accessibility.startAtLogin", comment: ""))
         updateStartAtLoginState()
         menu.addItem(startAtLoginItem)
         let logsItem = NSMenuItem(title: NSLocalizedString("menu.logs", comment: ""), action: nil, keyEquivalent: "")
@@ -136,7 +148,9 @@ extension AppDelegate {
             let startingText = NSLocalizedString(
                 isExternal ? "menu.connecting" : "menu.starting", comment: "")
             startingLabel?.stringValue = startingText
-            startingItem?.view?.setAccessibilityLabel(startingText)
+            let a11yText = NSLocalizedString(
+                isExternal ? "accessibility.connecting" : "accessibility.starting", comment: "")
+            startingItem?.view?.setAccessibilityLabel(a11yText)
             startingItem?.isHidden = false
             layerItem?.isHidden = true
             startItem?.isHidden = isExternal ? false : true

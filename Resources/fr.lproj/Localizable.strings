@@ -28,5 +28,12 @@
 "notification.restart.disabled.title" = "Redémarrage automatique désactivé";
 "notification.restart.disabled.body" = "Trop de plantages en moins d'une minute";
 
+/* Accessibility labels */
+"accessibility.starting" = "D\U00E9marrage de kanata";
+"accessibility.connecting" = "Connexion \U00E0 kanata";
+"accessibility.reload" = "Recharger la configuration kanata";
+"accessibility.layer" = "Couche Kanata : %@";
+"accessibility.startAtLogin" = "Ouvrir Kanata Bar \U00E0 la connexion";
+
 /* Status bar */
 "status.placeholder" = "K?";

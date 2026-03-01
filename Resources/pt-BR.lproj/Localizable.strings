@@ -70,6 +70,14 @@
 "notification.restart.disabled.title" = "Reinício automático desativado";
 "notification.restart.disabled.body" = "Muitas falhas em menos de um minuto";
 
+/* ----- Accessibility Labels ----- */
+
+"accessibility.starting" = "Iniciando kanata";
+"accessibility.connecting" = "Conectando ao kanata";
+"accessibility.reload" = "Recarregar configura\U00E7\U00E3o do kanata";
+"accessibility.layer" = "Camada Kanata: %@";
+"accessibility.startAtLogin" = "Abrir Kanata Bar no login";
+
 /* ----- Status Bar ----- */
 
 /* Fallback in menu bar when layer is unknown */

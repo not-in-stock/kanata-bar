@@ -28,5 +28,12 @@
 "notification.restart.disabled.title" = "자동 재시작 비활성화됨";
 "notification.restart.disabled.body" = "1분 이내에 충돌이 너무 많습니다";
 
+/* Accessibility labels */
+"accessibility.starting" = "kanata \UC2DC\UC791 \UC911";
+"accessibility.connecting" = "kanata\UC5D0 \UC5F0\uACB0 \UC911";
+"accessibility.reload" = "kanata \UC124\UC815 \uB2E4\uC2DC \uBD88\uB7EC\uC624\uAE30";
+"accessibility.layer" = "Kanata \uB808\uC774\uC5B4: %@";
+"accessibility.startAtLogin" = "\uB85C\uADF8\uC778 \uC2DC Kanata Bar \uC5F4\uAE30";
+
 /* Status bar */
 "status.placeholder" = "K?";

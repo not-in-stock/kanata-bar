@@ -45,9 +45,16 @@ class LayerRollerView: NSView {
         nextCenterY = nextLabel.centerYAnchor.constraint(equalTo: centerYAnchor, constant: -viewHeight)
         nextCenterY.isActive = true
         nextLabel.alphaValue = 0
+
     }
 
     required init?(coder: NSCoder) { fatalError() }
+
+    // MARK: - Accessibility
+
+    override func isAccessibilityElement() -> Bool { true }
+    override func accessibilityRole() -> NSAccessibility.Role? { .staticText }
+    override func accessibilityChildren() -> [Any]? { nil }
 
     func updateLeading(_ constant: CGFloat) {
         leadingConstraint.constant = constant
@@ -55,7 +62,8 @@ class LayerRollerView: NSView {
 
     func update(layer: String, animated: Bool) {
         guard layer != currentText else { return }
-        setAccessibilityLabel("\(prefixLabel.stringValue)\(layer)")
+        setAccessibilityLabel(String(format: NSLocalizedString("accessibility.layer", comment: ""), layer))
+        NSAccessibility.post(element: self, notification: .valueChanged)
 
         if !animated || currentText.isEmpty {
             currentText = layer

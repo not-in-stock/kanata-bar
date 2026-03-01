@@ -28,5 +28,12 @@
 "notification.restart.disabled.title" = "Automatischer Neustart deaktiviert";
 "notification.restart.disabled.body" = "Zu viele Abstürze innerhalb einer Minute";
 
+/* Accessibility labels */
+"accessibility.starting" = "kanata starten";
+"accessibility.connecting" = "Verbindung zu kanata";
+"accessibility.reload" = "kanata-Konfiguration neu laden";
+"accessibility.layer" = "Kanata-Ebene: %@";
+"accessibility.startAtLogin" = "Kanata Bar bei Anmeldung starten";
+
 /* Status bar */
 "status.placeholder" = "K?";

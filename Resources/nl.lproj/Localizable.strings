@@ -28,5 +28,12 @@
 "notification.restart.disabled.title" = "Automatisch herstarten uitgeschakeld";
 "notification.restart.disabled.body" = "Te veel crashes binnen een minuut";
 
+/* Accessibility labels */
+"accessibility.starting" = "kanata starten";
+"accessibility.connecting" = "Verbinden met kanata";
+"accessibility.reload" = "kanata-configuratie herladen";
+"accessibility.layer" = "Kanata-laag: %@";
+"accessibility.startAtLogin" = "Kanata Bar openen bij inloggen";
+
 /* Status bar */
 "status.placeholder" = "K?";

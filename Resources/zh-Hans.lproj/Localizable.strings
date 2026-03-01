@@ -28,5 +28,12 @@
 "notification.restart.disabled.title" = "自动重启已禁用";
 "notification.restart.disabled.body" = "一分钟内崩溃次数过多";
 
+/* Accessibility labels */
+"accessibility.starting" = "\U6B63\U5728\U542F\U52A8 kanata";
+"accessibility.connecting" = "\U6B63\U5728\U8FDE\U63A5 kanata";
+"accessibility.reload" = "\U91CD\U65B0\U52A0\U8F7D kanata \U914D\U7F6E";
+"accessibility.layer" = "Kanata \U5C42: %@";
+"accessibility.startAtLogin" = "\U767B\U5F55\U65F6\U6253\U5F00 Kanata Bar";
+
 /* Status bar */
 "status.placeholder" = "K?";

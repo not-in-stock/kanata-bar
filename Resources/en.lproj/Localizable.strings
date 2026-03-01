@@ -98,6 +98,27 @@
 /* Notification body when autorestart is disabled (rate limit: 3 crashes per minute). */
 "notification.restart.disabled.body" = "Too many crashes within a minute";
 
+/* ----- Accessibility Labels ----- */
+
+/* VoiceOver label for the spinner while kanata is starting.
+   Should include "kanata" for context (section header is not read by VoiceOver). */
+"accessibility.starting" = "Starting kanata";
+
+/* VoiceOver label for the spinner while connecting to an external kanata. */
+"accessibility.connecting" = "Connecting to kanata";
+
+/* VoiceOver label for the Reload menu item (under a section header).
+   Should include "kanata" for context. */
+"accessibility.reload" = "Reload kanata config";
+
+/* VoiceOver label for the layer roller.
+   %@ is the active keyboard layer name. */
+"accessibility.layer" = "Kanata layer: %@";
+
+/* VoiceOver label for Start at Login toggle.
+   "Kanata Bar" is the app name — do NOT translate. */
+"accessibility.startAtLogin" = "Start Kanata Bar at Login";
+
 /* ----- Status Bar ----- */
 
 /* Fallback text shown in the menu bar when no layer icon is available

@@ -28,5 +28,12 @@
 "notification.restart.disabled.title" = "自動再起動が無効になりました";
 "notification.restart.disabled.body" = "1分以内にクラッシュが多すぎます";
 
+/* Accessibility labels */
+"accessibility.starting" = "kanata\U3092\U8D77\U52D5\U4E2D";
+"accessibility.connecting" = "kanata\U306B\U63A5\U7D9A\U4E2D";
+"accessibility.reload" = "kanata\U8A2D\U5B9A\U3092\U518D\U8AAD\U307F\U8FBC\U307F";
+"accessibility.layer" = "Kanata\U30EC\U30A4\U30E4\U30FC: %@";
+"accessibility.startAtLogin" = "Kanata Bar\U3092\U30ED\U30B0\U30A4\U30F3\U6642\U306B\U958B\U304F";
+
 /* Status bar */
 "status.placeholder" = "K?";

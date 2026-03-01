@@ -29,6 +29,7 @@ extension AppDelegate {
             return true
         }
         image.isTemplate = true
+        image.accessibilityDescription = "Kanata Bar"
         return image
     }
 
@@ -75,6 +76,7 @@ extension AppDelegate {
             if let image = NSImage(contentsOfFile: path) {
                 image.isTemplate = true
                 image.size = NSSize(width: 18, height: 18)
+                image.accessibilityDescription = "Kanata Bar"
                 iconCache["__placeholder"] = image
                 return image
             }
@@ -89,6 +91,7 @@ extension AppDelegate {
         guard let image = NSImage(contentsOfFile: path) else { return nil }
         image.isTemplate = true
         image.size = NSSize(width: 18, height: 18)
+        image.accessibilityDescription = "Kanata Bar"
         iconCache[layer] = image
         return image
     }
