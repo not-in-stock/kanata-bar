@@ -4,6 +4,20 @@ extension AppDelegate {
     func buildMenu() {
         let menu = NSMenu()
 
+        addHeader(to: menu)
+        addStatusItems(to: menu)
+        menu.addItem(NSMenuItem.separator())
+        addKanataControls(to: menu)
+        menu.addItem(NSMenuItem.separator())
+        addSettings(to: menu)
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: NSLocalizedString("menu.quit", comment: ""), action: #selector(doQuit), keyEquivalent: "q"))
+
+        statusItem.menu = menu
+        updateMenuState()
+    }
+
+    private func addHeader(to menu: NSMenu) {
         let headerItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
         headerItem.isEnabled = false
         if let signImage = NSImage(named: "sign") {
@@ -33,8 +47,9 @@ extension AppDelegate {
         }
         menu.addItem(headerItem)
         menu.addItem(NSMenuItem.separator())
+    }
 
-        // Starting indicator with spinner
+    private func addStatusItems(to menu: NSMenu) {
         startingItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
         startingItem.isEnabled = false
         let startingView = NSView(frame: NSRect(x: 0, y: 0, width: 200, height: 22))
@@ -69,9 +84,9 @@ extension AppDelegate {
         let rollerView = LayerRollerView(prefix: NSLocalizedString("menu.layer.prefix", comment: ""))
         layerItem.view = rollerView
         menu.addItem(layerItem)
+    }
 
-        menu.addItem(NSMenuItem.separator())
-
+    private func addKanataControls(to menu: NSMenu) {
         let hasSection: Bool
         if #available(macOS 14.0, *) {
             kanataSectionItem = NSMenuItem.sectionHeader(title: NSLocalizedString("menu.section.kanata", comment: ""))
@@ -94,13 +109,14 @@ extension AppDelegate {
         menu.addItem(startItem)
         menu.addItem(stopItem)
         menu.addItem(reloadItem)
+    }
 
-        menu.addItem(NSMenuItem.separator())
-
+    private func addSettings(to menu: NSMenu) {
         startAtLoginItem = NSMenuItem(title: NSLocalizedString("menu.startAtLogin", comment: ""), action: #selector(doToggleAgent), keyEquivalent: "")
         startAtLoginItem.setAccessibilityTitle(NSLocalizedString("accessibility.startAtLogin", comment: ""))
         updateStartAtLoginState()
         menu.addItem(startAtLoginItem)
+
         let logsItem = NSMenuItem(title: NSLocalizedString("menu.logs", comment: ""), action: nil, keyEquivalent: "")
         let logsSubmenu = NSMenu()
         logsSubmenu.addItem(NSMenuItem(title: NSLocalizedString("menu.logs.app", comment: ""), action: #selector(doViewAppLog), keyEquivalent: ""))
@@ -108,12 +124,6 @@ extension AppDelegate {
         logsSubmenu.addItem(kanataLogsItem)
         logsItem.submenu = logsSubmenu
         menu.addItem(logsItem)
-
-        menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: NSLocalizedString("menu.quit", comment: ""), action: #selector(doQuit), keyEquivalent: "q"))
-
-        statusItem.menu = menu
-        updateMenuState()
     }
 
     func updateMenuState() {
