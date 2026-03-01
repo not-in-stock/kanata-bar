@@ -19,6 +19,9 @@
 /* Notifications */
 "notification.startFailure.title" = "kanataの起動に失敗しました";
 "notification.startFailure.body" = "管理者権限が必要です。「開始」をクリックして再試行してください。";
+"notification.binaryNotFound.title" = "kanataが見つかりません";
+"notification.binaryNotFound.body" = "%@でkanataのパスを設定してください";
+
 "notification.crash.title" = "kanataが予期せず停止しました";
 "notification.crash.body" = "詳細はログを確認してください";
 "notification.reload.title" = "設定を再読み込みしました";

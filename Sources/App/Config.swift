@@ -127,6 +127,11 @@ struct Config: Codable {
         }
         return expandTilde(path)
     }
+
+    static func isBinaryAccessible(_ path: String) -> Bool {
+        guard path != "kanata" else { return false }  // unresolved bare name
+        return FileManager.default.isExecutableFile(atPath: path)
+    }
 }
 
 /// All-optional mirror of Config for partial TOML files (missing keys → nil).

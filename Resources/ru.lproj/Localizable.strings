@@ -54,6 +54,9 @@
 "notification.startFailure.title" = "Не удалось запустить kanata";
 "notification.startFailure.body" = "Требуются права администратора. Нажмите «Запустить» для повторной попытки.";
 
+"notification.binaryNotFound.title" = "kanata не найдена";
+"notification.binaryNotFound.body" = "Укажите путь к kanata в %@";
+
 /* Аварийное завершение kanata */
 "notification.crash.title" = "kanata неожиданно завершилась";
 "notification.crash.body" = "Подробности в логах";

@@ -19,6 +19,9 @@
 /* Notifications */
 "notification.startFailure.title" = "无法启动 kanata";
 "notification.startFailure.body" = "需要管理员权限。点击"启动"重试。";
+"notification.binaryNotFound.title" = "找不到 kanata";
+"notification.binaryNotFound.body" = "请在 %@ 中设置 kanata 路径";
+
 "notification.crash.title" = "kanata 意外停止";
 "notification.crash.body" = "请查看日志了解详情";
 "notification.reload.title" = "配置已重新加载";

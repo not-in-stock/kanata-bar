@@ -19,6 +19,9 @@
 /* Notifications */
 "notification.startFailure.title" = "Impossible de démarrer kanata";
 "notification.startFailure.body" = "Les privilèges administrateur sont requis. Cliquez sur Démarrer pour réessayer.";
+"notification.binaryNotFound.title" = "kanata introuvable";
+"notification.binaryNotFound.body" = "Définissez le chemin de kanata dans %@";
+
 "notification.crash.title" = "kanata s'est arrêté de manière inattendue";
 "notification.crash.body" = "Consultez les journaux pour plus de détails";
 "notification.reload.title" = "Configuration rechargée";

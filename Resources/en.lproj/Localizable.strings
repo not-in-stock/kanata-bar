@@ -74,6 +74,13 @@
 /* Notification body for start failure. Advises user to try again. */
 "notification.startFailure.body" = "Administrator privileges are required. Click Start to try again.";
 
+/* Notification title when the kanata binary cannot be found at the configured path. */
+"notification.binaryNotFound.title" = "kanata binary not found";
+
+/* Notification body when the kanata binary cannot be found.
+   Advises the user to set the path in config.toml. */
+"notification.binaryNotFound.body" = "Set the kanata path in %@";
+
 /* Notification title when kanata exits unexpectedly (crash or error). */
 "notification.crash.title" = "kanata stopped unexpectedly";
 

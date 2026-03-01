@@ -19,6 +19,9 @@
 /* Notifications */
 "notification.startFailure.title" = "kanata 시작 실패";
 "notification.startFailure.body" = "관리자 권한이 필요합니다. 시작을 클릭하여 다시 시도하세요.";
+"notification.binaryNotFound.title" = "kanata를 찾을 수 없습니다";
+"notification.binaryNotFound.body" = "%@에서 kanata 경로를 설정하세요";
+
 "notification.crash.title" = "kanata가 예기치 않게 중단되었습니다";
 "notification.crash.body" = "자세한 내용은 로그를 확인하세요";
 "notification.reload.title" = "설정을 다시 불러왔습니다";

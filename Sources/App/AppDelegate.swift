@@ -183,9 +183,14 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
             externalPID = pid
             appState = .starting
         } else if autostart {
-            log("starting kanata: \(binaryPath) -c \(configPath) --port \(port)")
-            appState = .starting
-            kanataProcess.start()
+            if Config.isBinaryAccessible(binaryPath) {
+                log("starting kanata: \(binaryPath) -c \(configPath) --port \(port)")
+                appState = .starting
+                kanataProcess.start()
+            } else {
+                log("ERROR: kanata binary not found: \(binaryPath)")
+                sendBinaryNotFoundNotification()
+            }
         }
 
         kanataClient.start()
@@ -255,6 +260,12 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         let workItem = DispatchWorkItem { [weak self] in
             guard let self, self.appState == .restarting else { return }
             self.restartWorkItem = nil
+            guard Config.isBinaryAccessible(self.kanataProcess.binaryPath) else {
+                self.log("ERROR: kanata binary not found: \(self.kanataProcess.binaryPath)")
+                self.appState = .stopped
+                self.sendBinaryNotFoundNotification()
+                return
+            }
             self.log("autorestarting kanata...")
             self.appState = .starting
             self.kanataProcess.start()
@@ -300,6 +311,17 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         content.sound = .default
 
         let request = UNNotificationRequest(identifier: "kanata-crash", content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
+    }
+
+    func sendBinaryNotFoundNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = NSLocalizedString("notification.binaryNotFound.title", comment: "")
+        let configPath = "~/\(Constants.configDir)/\(Constants.configFilename)"
+        content.body = String(format: NSLocalizedString("notification.binaryNotFound.body", comment: ""), configPath)
+        content.sound = .default
+
+        let request = UNNotificationRequest(identifier: "kanata-binary-not-found", content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)
     }
 

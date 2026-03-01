@@ -55,6 +55,9 @@
 "notification.startFailure.body" = "Privilégios de administrador são necessários. Clique em Iniciar para tentar novamente.";
 
 /* kanata crashed */
+"notification.binaryNotFound.title" = "kanata não encontrado";
+"notification.binaryNotFound.body" = "Defina o caminho do kanata em %@";
+
 "notification.crash.title" = "kanata parou inesperadamente";
 "notification.crash.body" = "Verifique os logs para mais detalhes";
 

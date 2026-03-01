@@ -19,6 +19,9 @@
 /* Notifications */
 "notification.startFailure.title" = "Kan kanata niet starten";
 "notification.startFailure.body" = "Beheerdersbevoegdheden zijn vereist. Klik op Start om opnieuw te proberen.";
+"notification.binaryNotFound.title" = "kanata niet gevonden";
+"notification.binaryNotFound.body" = "Stel het kanata-pad in via %@";
+
 "notification.crash.title" = "kanata is onverwacht gestopt";
 "notification.crash.body" = "Bekijk de logboeken voor details";
 "notification.reload.title" = "Configuratie herladen";

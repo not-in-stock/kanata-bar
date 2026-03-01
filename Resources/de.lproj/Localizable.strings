@@ -19,6 +19,9 @@
 /* Notifications */
 "notification.startFailure.title" = "kanata konnte nicht gestartet werden";
 "notification.startFailure.body" = "Administratorrechte erforderlich. Klicken Sie auf Starten, um es erneut zu versuchen.";
+"notification.binaryNotFound.title" = "kanata nicht gefunden";
+"notification.binaryNotFound.body" = "Setzen Sie den kanata-Pfad in %@";
+
 "notification.crash.title" = "kanata wurde unerwartet beendet";
 "notification.crash.body" = "Weitere Details in den Protokollen";
 "notification.reload.title" = "Konfiguration neu geladen";
