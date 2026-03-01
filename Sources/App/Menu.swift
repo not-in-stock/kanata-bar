@@ -147,7 +147,8 @@ extension AppDelegate {
 
         case .running(let layer):
             startingItem?.isHidden = true
-            (layerItem?.view as? LayerRollerView)?.update(layer: layer, animated: true)
+            let animated = !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+            (layerItem?.view as? LayerRollerView)?.update(layer: layer, animated: animated)
             layerItem?.isHidden = false
             startItem?.isHidden = true
             stopItem?.isHidden = isExternal

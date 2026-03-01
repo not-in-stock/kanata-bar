@@ -8,6 +8,11 @@ enum IconTransition: String, Codable {
 }
 
 extension AppDelegate {
+    var iconTransition: IconTransition {
+        if let explicit = iconTransitionConfig { return explicit }
+        return NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? .off : .pages
+    }
+
     func updateIconAnimated() {
         guard let button = statusItem?.button else {
             updateIcon()
