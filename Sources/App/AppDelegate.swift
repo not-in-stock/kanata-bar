@@ -10,10 +10,14 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
 
     var iconsDir: String?
     var iconCache: [String: NSImage] = [:]
+    var iconTransition: IconTransition = .pages
+    var iconOldOverlay: NSImageView?
+    var iconNewOverlay: NSImageView?
+    var iconAnimating = false
     var appState: AppState = .stopped {
         didSet {
             guard appState != oldValue else { return }
-            updateIcon()
+            updateIconAnimated()
             updateMenuState()
         }
     }
@@ -86,6 +90,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         iconsDir = config.iconsDir.map { Config.expandTilde($0) }
         autostart = config.autostart
         autorestart = config.autorestart
+        if let transition = config.iconTransition { iconTransition = transition }
         let usePamTid = Config.resolvePamTid(config.pamTid)
 
         // Setup kanata process manager

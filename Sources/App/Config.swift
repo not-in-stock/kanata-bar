@@ -11,6 +11,7 @@ struct Config: Codable {
     var autorestart: Bool
     var extraArgs: [String]
     var pamTid: String  // "false" or "auto"
+    var iconTransition: IconTransition?
 
     enum CodingKeys: String, CodingKey {
         case kanata, config, port
@@ -18,6 +19,7 @@ struct Config: Codable {
         case autostart, autorestart
         case extraArgs = "extra_args"
         case pamTid = "pam_tid"
+        case iconTransition = "icon_transition"
     }
 
     static let `default` = Config(
@@ -28,7 +30,8 @@ struct Config: Codable {
         autostart: true,
         autorestart: false,
         extraArgs: [],
-        pamTid: "false"
+        pamTid: "false",
+        iconTransition: nil
     )
 
     // MARK: - Load
@@ -72,6 +75,7 @@ struct Config: Codable {
                 if let v = partial.autorestart { config.autorestart = v }
                 if let v = partial.extraArgs { config.extraArgs = v }
                 if let v = partial.pamTid { config.pamTid = v }
+                if let v = partial.iconTransition { config.iconTransition = v }
             }
         }
 
@@ -135,6 +139,7 @@ private struct PartialConfig: Codable {
     var autorestart: Bool?
     var extraArgs: [String]?
     var pamTid: String?
+    var iconTransition: IconTransition?
 
     enum CodingKeys: String, CodingKey {
         case kanata, config, port
@@ -142,5 +147,6 @@ private struct PartialConfig: Codable {
         case autostart, autorestart
         case extraArgs = "extra_args"
         case pamTid = "pam_tid"
+        case iconTransition = "icon_transition"
     }
 }
