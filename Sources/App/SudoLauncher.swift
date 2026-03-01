@@ -170,17 +170,7 @@ class SudoLauncher: KanataLauncher {
     }
 
     private func findKanataPID() {
-        let pgrep = Process()
-        pgrep.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
-        pgrep.arguments = ["-x", "kanata"]
-        let pipe = Pipe()
-        pgrep.standardOutput = pipe
-        try? pgrep.run()
-        pgrep.waitUntilExit()
-
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        if let output = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
-           let pid = Int32(output.components(separatedBy: "\n").last ?? "") {
+        if let pid = KanataProcess.findKanataPIDs().last {
             DispatchQueue.main.async {
                 self.discoveredPID = pid
                 self.onStarted?(pid)

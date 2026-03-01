@@ -88,7 +88,8 @@ class KanataProcess {
 
     // MARK: - Detection
 
-    static func findExternalKanataPID() -> Int32? {
+    /// Returns all PIDs of processes named exactly "kanata".
+    static func findKanataPIDs() -> [Int32] {
         let pgrep = Process()
         pgrep.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
         pgrep.arguments = ["-x", "kanata"]
@@ -97,10 +98,14 @@ class KanataProcess {
         pgrep.standardError = Pipe()
         try? pgrep.run()
         pgrep.waitUntilExit()
-        guard pgrep.terminationStatus == 0 else { return nil }
+        guard pgrep.terminationStatus == 0 else { return [] }
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         guard let output = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
-              let pid = Int32(output.components(separatedBy: "\n").first ?? "") else { return nil }
-        return pid
+              !output.isEmpty else { return [] }
+        return output.components(separatedBy: "\n").compactMap { Int32($0) }
+    }
+
+    static func findExternalKanataPID() -> Int32? {
+        findKanataPIDs().first
     }
 }
