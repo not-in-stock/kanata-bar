@@ -128,6 +128,11 @@ extension AppDelegate {
         iconAnimating = false
     }
 
+    private func boldTitle(_ text: String) -> NSAttributedString {
+        let font = NSFontManager.shared.convert(NSFont.menuBarFont(ofSize: 0), toHaveTrait: .boldFontMask)
+        return NSAttributedString(string: text, attributes: [.font: font])
+    }
+
     private func snapshotButton(_ button: NSButton) -> NSImage {
         let bounds = button.bounds
         guard let rep = button.bitmapImageRepForCachingDisplay(in: bounds) else {
@@ -176,7 +181,7 @@ extension AppDelegate {
                 statusItem?.button?.title = ""
             } else {
                 statusItem?.button?.image = nil
-                statusItem?.button?.title = NSLocalizedString("status.placeholder", comment: "")
+                statusItem?.button?.attributedTitle = boldTitle(NSLocalizedString("status.placeholder", comment: ""))
             }
         case .running(let layer):
             if let dir = iconsDir, let image = loadIcon(layer: layer, from: dir) {
@@ -184,7 +189,7 @@ extension AppDelegate {
                 statusItem.button?.title = ""
             } else {
                 statusItem.button?.image = nil
-                statusItem.button?.title = String(layer.prefix(1)).uppercased()
+                statusItem.button?.attributedTitle = boldTitle(String(layer.prefix(1)).uppercased())
             }
         }
 
