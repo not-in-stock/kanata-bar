@@ -72,8 +72,9 @@ extension AppDelegate {
         iconOldOverlay = oldView
         iconNewOverlay = newView
 
-        oldView.imageScaling = .scaleAxesIndependently
-        newView.imageScaling = .scaleAxesIndependently
+        let scaling: NSImageScaling = iconTransition == .flow ? .scaleProportionallyDown : .scaleAxesIndependently
+        oldView.imageScaling = scaling
+        newView.imageScaling = scaling
 
         let oldEndFrame: NSRect
         let newStartFrame: NSRect
@@ -128,9 +129,35 @@ extension AppDelegate {
         iconAnimating = false
     }
 
-    private func boldTitle(_ text: String) -> NSAttributedString {
-        let font = NSFontManager.shared.convert(NSFont.menuBarFont(ofSize: 0), toHaveTrait: .boldFontMask)
-        return NSAttributedString(string: text, attributes: [.font: font])
+    private func makeTextBadge(_ text: String) -> NSImage {
+        let size: CGFloat = 18
+        let cornerRadius: CGFloat = 3
+        let font = NSFontManager.shared.convert(
+            NSFont.systemFont(ofSize: 11), toHaveTrait: .boldFontMask
+        )
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: NSColor.black,
+        ]
+        let textSize = (text as NSString).size(withAttributes: attrs)
+
+        let image = NSImage(size: NSSize(width: size, height: size), flipped: false) { rect in
+            // Rounded rect border (1px inset so the stroke is fully inside)
+            let borderRect = rect.insetBy(dx: 0.5, dy: 0.5)
+            let path = NSBezierPath(roundedRect: borderRect, xRadius: cornerRadius, yRadius: cornerRadius)
+            path.lineWidth = 1
+            NSColor.black.setStroke()
+            path.stroke()
+
+            // Centered text
+            let x = (size - textSize.width) / 2
+            let y = (size - textSize.height) / 2
+            (text as NSString).draw(at: NSPoint(x: x, y: y), withAttributes: attrs)
+
+            return true
+        }
+        image.isTemplate = true
+        return image
     }
 
     private func snapshotButton(_ button: NSButton) -> NSImage {
@@ -181,15 +208,16 @@ extension AppDelegate {
                 statusItem?.button?.title = ""
             } else {
                 statusItem?.button?.image = nil
-                statusItem?.button?.attributedTitle = boldTitle(NSLocalizedString("status.placeholder", comment: ""))
+                statusItem?.button?.image = makeTextBadge(NSLocalizedString("status.placeholder", comment: ""))
+                statusItem?.button?.title = ""
             }
         case .running(let layer):
             if let dir = iconsDir, let image = loadIcon(layer: layer, from: dir) {
                 statusItem.button?.image = image
                 statusItem.button?.title = ""
             } else {
-                statusItem.button?.image = nil
-                statusItem.button?.attributedTitle = boldTitle(String(layer.prefix(1)).uppercased())
+                statusItem.button?.image = makeTextBadge(String(layer.prefix(1)).uppercased())
+                statusItem.button?.title = ""
             }
         }
 
