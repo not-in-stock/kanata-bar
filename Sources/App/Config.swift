@@ -34,6 +34,34 @@ struct Config: Codable {
         iconTransition: nil
     )
 
+    init(kanata: String, config: String, port: UInt16, iconsDir: String?,
+         autostart: Bool, autorestart: Bool, extraArgs: [String],
+         pamTid: String, iconTransition: IconTransition?) {
+        self.kanata = kanata
+        self.config = config
+        self.port = port
+        self.iconsDir = iconsDir
+        self.autostart = autostart
+        self.autorestart = autorestart
+        self.extraArgs = extraArgs
+        self.pamTid = pamTid
+        self.iconTransition = iconTransition
+    }
+
+    init(from decoder: Decoder) throws {
+        let d = Self.default
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        kanata = (try? c.decode(String.self, forKey: .kanata)) ?? d.kanata
+        config = (try? c.decode(String.self, forKey: .config)) ?? d.config
+        port = (try? c.decode(UInt16.self, forKey: .port)) ?? d.port
+        iconsDir = try? c.decode(String.self, forKey: .iconsDir)
+        autostart = (try? c.decode(Bool.self, forKey: .autostart)) ?? d.autostart
+        autorestart = (try? c.decode(Bool.self, forKey: .autorestart)) ?? d.autorestart
+        extraArgs = (try? c.decode([String].self, forKey: .extraArgs)) ?? d.extraArgs
+        pamTid = (try? c.decode(String.self, forKey: .pamTid)) ?? d.pamTid
+        iconTransition = try? c.decode(IconTransition.self, forKey: .iconTransition)
+    }
+
     // MARK: - Load
 
     static func load(from explicitPath: String?) -> Config {
@@ -57,29 +85,11 @@ struct Config: Codable {
     }
 
     static func decode(_ toml: String) -> Config {
-        var config = Config.default
-
-        guard let data = toml.data(using: .utf8) else { return config }
-
-        do {
-            let decoded = try TOMLDecoder().decode(Config.self, from: data)
-            config = decoded
-        } catch {
-            // Partial decode: try each field individually from a loose dictionary
-            if let partial = try? TOMLDecoder().decode(PartialConfig.self, from: data) {
-                if let v = partial.kanata { config.kanata = v }
-                if let v = partial.config { config.config = v }
-                if let v = partial.port { config.port = v }
-                if let v = partial.iconsDir { config.iconsDir = v }
-                if let v = partial.autostart { config.autostart = v }
-                if let v = partial.autorestart { config.autorestart = v }
-                if let v = partial.extraArgs { config.extraArgs = v }
-                if let v = partial.pamTid { config.pamTid = v }
-                if let v = partial.iconTransition { config.iconTransition = v }
-            }
+        guard let data = toml.data(using: .utf8),
+              var config = try? TOMLDecoder().decode(Config.self, from: data) else {
+            return .default
         }
 
-        // Expand ~ in paths
         config.config = expandTilde(config.config)
         if let dir = config.iconsDir {
             config.iconsDir = expandTilde(dir)
@@ -131,27 +141,5 @@ struct Config: Codable {
     static func isBinaryAccessible(_ path: String) -> Bool {
         guard path != "kanata" else { return false }  // unresolved bare name
         return FileManager.default.isExecutableFile(atPath: path)
-    }
-}
-
-/// All-optional mirror of Config for partial TOML files (missing keys → nil).
-private struct PartialConfig: Codable {
-    var kanata: String?
-    var config: String?
-    var port: UInt16?
-    var iconsDir: String?
-    var autostart: Bool?
-    var autorestart: Bool?
-    var extraArgs: [String]?
-    var pamTid: String?
-    var iconTransition: IconTransition?
-
-    enum CodingKeys: String, CodingKey {
-        case kanata, config, port
-        case iconsDir = "icons_dir"
-        case autostart, autorestart
-        case extraArgs = "extra_args"
-        case pamTid = "pam_tid"
-        case iconTransition = "icon_transition"
     }
 }
