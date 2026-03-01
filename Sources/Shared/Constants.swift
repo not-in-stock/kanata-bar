@@ -5,6 +5,7 @@ public enum Constants {
     public static let helperBundleID = "com.kanata-bar.helper"
     public static let helperPlistName = "com.kanata-bar.helper.plist"
 
+    public static let kanataBinaryName = "kanata"
     public static let defaultPort: UInt16 = 5829
     public static let defaultHost = "127.0.0.1"
     public static let configDir = ".config/kanata-bar"

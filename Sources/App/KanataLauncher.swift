@@ -1,4 +1,5 @@
 import Foundation
+import Shared
 
 /// Abstraction for the kanata launch/stop mechanism.
 /// Implementations: `SudoLauncher` (PAM/TouchID) and `AuthExecLauncher` (password dialog).
@@ -22,7 +23,7 @@ protocol KanataLauncher: AnyObject {
 func killLeftoverKanata() {
     let pkill = Process()
     pkill.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
-    pkill.arguments = ["-n", "/usr/bin/pkill", "-x", "kanata"]
+    pkill.arguments = ["-n", "/usr/bin/pkill", "-x", Constants.kanataBinaryName]
     pkill.standardInput = FileHandle.nullDevice
     try? pkill.run()
     pkill.waitUntilExit()

@@ -1,4 +1,5 @@
 import Foundation
+import Shared
 
 /// Coordinates kanata lifecycle. Delegates launch/stop to a `KanataLauncher`.
 class KanataProcess {
@@ -92,7 +93,7 @@ class KanataProcess {
     static func findKanataPIDs() -> [Int32] {
         let pgrep = Process()
         pgrep.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
-        pgrep.arguments = ["-x", "kanata"]
+        pgrep.arguments = ["-x", Constants.kanataBinaryName]
         let pipe = Pipe()
         pgrep.standardOutput = pipe
         pgrep.standardError = Pipe()

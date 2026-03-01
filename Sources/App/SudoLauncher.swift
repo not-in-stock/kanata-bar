@@ -95,7 +95,7 @@ class SudoLauncher: KanataLauncher {
     func cleanup() {
         let pkill = Process()
         pkill.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
-        pkill.arguments = ["-n", "/usr/bin/pkill", "-x", "kanata"]
+        pkill.arguments = ["-n", "/usr/bin/pkill", "-x", Constants.kanataBinaryName]
         pkill.standardInput = FileHandle.nullDevice
         try? pkill.run()
         pkill.waitUntilExit()

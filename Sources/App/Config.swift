@@ -125,7 +125,7 @@ struct Config: Codable {
         if path.isEmpty {
             let which = Process()
             which.executableURL = URL(fileURLWithPath: "/usr/bin/which")
-            which.arguments = ["kanata"]
+            which.arguments = [Constants.kanataBinaryName]
             let pipe = Pipe()
             which.standardOutput = pipe
             which.standardError = Pipe()
@@ -133,13 +133,13 @@ struct Config: Codable {
             which.waitUntilExit()
             let output = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?
                 .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            return output.isEmpty ? "kanata" : output
+            return output.isEmpty ? Constants.kanataBinaryName : output
         }
         return expandTilde(path)
     }
 
     static func isBinaryAccessible(_ path: String) -> Bool {
-        guard path != "kanata" else { return false }  // unresolved bare name
+        guard path != Constants.kanataBinaryName else { return false }  // unresolved bare name
         return FileManager.default.isExecutableFile(atPath: path)
     }
 }
