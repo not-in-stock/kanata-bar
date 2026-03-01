@@ -208,7 +208,7 @@ extension AppDelegate {
         restartTimestamps.removeAll()
         guard Config.isBinaryAccessible(kanataProcess.binaryPath) else {
             log("ERROR: kanata binary not found: \(kanataProcess.binaryPath)")
-            sendBinaryNotFoundNotification()
+            Notifications.sendBinaryNotFound()
             return
         }
         log("starting kanata: \(kanataProcess.binaryPath) -c \(kanataProcess.configPath) --port \(kanataProcess.port)")

@@ -7,17 +7,12 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
     var statusItem: NSStatusItem!
     var kanataClient: KanataClient!
     var kanataProcess: KanataProcess!
+    var iconManager: IconManager!
 
-    var iconsDir: String?
-    var iconCache: [String: NSImage] = [:]
-    var iconTransitionConfig: IconTransition?
-    var iconOldOverlay: NSImageView?
-    var iconNewOverlay: NSImageView?
-    var iconAnimating = false
     var appState: AppState = .stopped {
         didSet {
             guard appState != oldValue else { return }
-            updateIconAnimated()
+            iconManager?.updateAnimated(for: appState)
             updateMenuState()
         }
     }
@@ -47,18 +42,41 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
     var kanataLogsItem: NSMenuItem!
 
     public func applicationDidFinishLaunching(_ notification: Notification) {
+        guard !isAlreadyRunning() else { return }
+
+        let config = loadConfig()
+        autostart = config.autostart
+        autorestart = config.autorestart
+
+        setupKanataProcess(config)
+        setupNotificationPermission()
+        setupTCPClient(port: config.port)
+        setupMenuBar(config)
+
+        registerHelperIfNeeded()
+        detectOrAutostart()
+
+        kanataClient.start()
+        logStartupInfo()
+    }
+
+    // MARK: - Startup
+
+    private func isAlreadyRunning() -> Bool {
         let myBundleID = Bundle.main.bundleIdentifier ?? Constants.bundleID
         let running = NSRunningApplication.runningApplications(withBundleIdentifier: myBundleID)
         if running.count > 1 {
             print("kanata-bar is already running, exiting.")
             fflush(stdout)
             NSApplication.shared.terminate(nil)
-            return
+            return true
         }
+        return false
+    }
 
+    private func loadConfig() -> Config {
         let args = CommandLine.arguments
 
-        // Load config file
         let configFilePath: String?
         if let idx = args.firstIndex(of: Constants.CLI.configFile), idx + 1 < args.count {
             configFilePath = args[idx + 1]
@@ -67,7 +85,6 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         }
         var config = Config.load(from: configFilePath)
 
-        // CLI overrides
         if let idx = args.firstIndex(of: Constants.CLI.kanata), idx + 1 < args.count {
             config.kanata = args[idx + 1]
         }
@@ -84,16 +101,15 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
             config.autostart = false
         }
 
+        return config
+    }
+
+    private func setupKanataProcess(_ config: Config) {
         let binaryPath = Config.resolveKanataPath(config.kanata)
         let configPath = Config.expandTilde(config.config)
         let port = config.port
-        iconsDir = config.iconsDir.map { Config.expandTilde($0) }
-        autostart = config.autostart
-        autorestart = config.autorestart
-        iconTransitionConfig = config.iconTransition
         let usePamTid = Config.resolvePamTid(config.pamTid)
 
-        // Setup kanata process manager
         let launcher: KanataLauncher
         if usePamTid {
             launcher = SudoLauncher(binaryPath: binaryPath, configPath: configPath, port: port, extraArgs: config.extraArgs, logURL: kanataLogURL)
@@ -116,7 +132,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         kanataProcess.onStartFailure = { [weak self] in
             self?.log("kanata failed to start (sudo denied or binary missing)")
             self?.appState = .stopped
-            self?.sendStartFailureNotification()
+            Notifications.sendStartFailure()
         }
         kanataProcess.onCrash = { [weak self] exitCode in
             self?.log("kanata crashed (exit code \(exitCode))")
@@ -125,20 +141,22 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
                 self?.scheduleRestart()
             } else {
                 self?.appState = .stopped
-                self?.sendCrashNotification()
+                Notifications.sendCrash()
             }
         }
+    }
 
-        // Request notification permission
+    private func setupNotificationPermission() {
         let notificationCenter = UNUserNotificationCenter.current()
         notificationCenter.delegate = self
         notificationCenter.requestAuthorization(options: [.alert, .sound]) { _, _ in }
+    }
 
-        // Setup TCP client for layer tracking
+    private func setupTCPClient(port: UInt16) {
         kanataClient = KanataClient(port: port)
         kanataClient.onConfigReload = { [weak self] in
             self?.log("config reloaded")
-            self?.sendReloadNotification()
+            Notifications.sendReload()
         }
         kanataClient.onLayerChange = { [weak self] layer in
             guard let self else { return }
@@ -167,40 +185,44 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
                 }
             }
         }
+    }
 
-        // Build menu bar
+    private func setupMenuBar(_ config: Config) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.toolTip = "Kanata Bar"
-        updateIcon()
+        iconManager = IconManager(button: statusItem.button)
+        iconManager.iconsDir = config.iconsDir.map { Config.expandTilde($0) }
+        iconManager.transitionConfig = config.iconTransition
+        iconManager.updateIcon(for: appState)
         buildMenu()
+    }
 
-        registerHelperIfNeeded()
-
-        // Detect external kanata or auto-start
+    private func detectOrAutostart() {
         if let pid = KanataProcess.findExternalKanataPID() {
             log("detected external kanata (pid=\(pid)), connecting...")
             isExternal = true
             externalPID = pid
             appState = .starting
         } else if autostart {
+            let binaryPath = kanataProcess.binaryPath
             if Config.isBinaryAccessible(binaryPath) {
-                log("starting kanata: \(binaryPath) -c \(configPath) --port \(port)")
+                log("starting kanata: \(binaryPath) -c \(kanataProcess.configPath) --port \(kanataProcess.port)")
                 appState = .starting
                 kanataProcess.start()
             } else {
                 log("ERROR: kanata binary not found: \(binaryPath)")
-                sendBinaryNotFoundNotification()
+                Notifications.sendBinaryNotFound()
             }
         }
+    }
 
-        kanataClient.start()
-
+    private func logStartupInfo() {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
         log("starting [version=\(version)]")
-        log("kanata binary: \(binaryPath)")
-        log("kanata config: \(configPath)")
-        log("TCP port: \(port)")
-        if let dir = iconsDir { log("icons dir: \(dir)") }
+        log("kanata binary: \(kanataProcess.binaryPath)")
+        log("kanata config: \(kanataProcess.configPath)")
+        log("TCP port: \(kanataProcess.port)")
+        if let dir = iconManager.iconsDir { log("icons dir: \(dir)") }
     }
 
     public func applicationWillTerminate(_ notification: Notification) {
@@ -215,21 +237,12 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         kanataProcess.forceKillAll()
     }
 
-    // MARK: - Crash Notification
+    // MARK: - Notifications
 
     public func userNotificationCenter(_ center: UNUserNotificationCenter,
                                        willPresent notification: UNNotification,
                                        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         completionHandler([.banner, .sound])
-    }
-
-    func sendReloadNotification() {
-        let content = UNMutableNotificationContent()
-        content.title = NSLocalizedString("notification.reload.title", comment: "")
-        content.body = NSLocalizedString("notification.reload.body", comment: "")
-
-        let request = UNNotificationRequest(identifier: "kanata-reload", content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(request)
     }
 
     private func scheduleExternalTimeout() {
@@ -251,8 +264,8 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
             log("autorestart disabled: too many crashes")
             autorestart = false
             appState = .stopped
-            sendAutorestartDisabledNotification()
-            sendCrashNotification()
+            Notifications.sendAutorestartDisabled()
+            Notifications.sendCrash()
             return
         }
         restartTimestamps.append(now)
@@ -263,66 +276,16 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
             guard Config.isBinaryAccessible(self.kanataProcess.binaryPath) else {
                 self.log("ERROR: kanata binary not found: \(self.kanataProcess.binaryPath)")
                 self.appState = .stopped
-                self.sendBinaryNotFoundNotification()
+                Notifications.sendBinaryNotFound()
                 return
             }
             self.log("autorestarting kanata...")
             self.appState = .starting
             self.kanataProcess.start()
-            self.sendRestartNotification()
+            Notifications.sendRestart()
         }
         restartWorkItem = workItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: workItem)
-    }
-
-    private func sendRestartNotification() {
-        let content = UNMutableNotificationContent()
-        content.title = NSLocalizedString("notification.restart.title", comment: "")
-        content.body = NSLocalizedString("notification.restart.body", comment: "")
-
-        let request = UNNotificationRequest(identifier: "kanata-restart", content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(request)
-    }
-
-    private func sendAutorestartDisabledNotification() {
-        let content = UNMutableNotificationContent()
-        content.title = NSLocalizedString("notification.restart.disabled.title", comment: "")
-        content.body = NSLocalizedString("notification.restart.disabled.body", comment: "")
-        content.sound = .default
-
-        let request = UNNotificationRequest(identifier: "kanata-restart-disabled", content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(request)
-    }
-
-    private func sendStartFailureNotification() {
-        let content = UNMutableNotificationContent()
-        content.title = NSLocalizedString("notification.startFailure.title", comment: "")
-        content.body = NSLocalizedString("notification.startFailure.body", comment: "")
-        content.sound = .default
-
-        let request = UNNotificationRequest(identifier: "kanata-start-failure", content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(request)
-    }
-
-    private func sendCrashNotification() {
-        let content = UNMutableNotificationContent()
-        content.title = NSLocalizedString("notification.crash.title", comment: "")
-        content.body = NSLocalizedString("notification.crash.body", comment: "")
-        content.sound = .default
-
-        let request = UNNotificationRequest(identifier: "kanata-crash", content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(request)
-    }
-
-    func sendBinaryNotFoundNotification() {
-        let content = UNMutableNotificationContent()
-        content.title = NSLocalizedString("notification.binaryNotFound.title", comment: "")
-        let configPath = "~/\(Constants.configDir)/\(Constants.configFilename)"
-        content.body = String(format: NSLocalizedString("notification.binaryNotFound.body", comment: ""), configPath)
-        content.sound = .default
-
-        let request = UNNotificationRequest(identifier: "kanata-binary-not-found", content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(request)
     }
 
     // MARK: - Helper
