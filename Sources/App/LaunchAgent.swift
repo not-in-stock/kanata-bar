@@ -14,11 +14,19 @@ extension AppDelegate {
         FileManager.default.fileExists(atPath: launchAgentPath)
     }
 
-    /// Agent plist exists but is managed externally (e.g. nix-darwin symlink).
+    /// Agent plist exists but is managed externally (e.g. nix-darwin, homebrew).
     var isAgentExternal: Bool {
         guard isAgentInstalled else { return false }
+        // Fast path: symlink = definitely external
         let attrs = try? FileManager.default.attributesOfItem(atPath: launchAgentPath)
-        return attrs?[.type] as? FileAttributeType == .typeSymbolicLink
+        if attrs?[.type] as? FileAttributeType == .typeSymbolicLink {
+            return true
+        }
+        // Content mismatch = managed by something else
+        guard let content = try? String(contentsOfFile: launchAgentPath, encoding: .utf8) else {
+            return true
+        }
+        return content != buildLaunchAgentPlist()
     }
 
     public func installAgent() {
