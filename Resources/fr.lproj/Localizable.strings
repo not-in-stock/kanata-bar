@@ -11,6 +11,7 @@
 "menu.stop.short" = "Arrêter";
 "menu.reload" = "Recharger la configuration";
 "menu.startAtLogin" = "Ouvrir à la connexion";
+"menu.startAtLogin.external.tooltip" = "G\U00E9r\U00E9 par un outil externe (ex. nix-darwin)";
 "menu.logs" = "Journaux";
 "menu.logs.app" = "Kanata Bar";
 "menu.logs.kanata" = "Kanata";

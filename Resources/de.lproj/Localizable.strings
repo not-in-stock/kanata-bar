@@ -11,6 +11,7 @@
 "menu.stop.short" = "Stoppen";
 "menu.reload" = "Konfiguration neu laden";
 "menu.startAtLogin" = "Bei Anmeldung starten";
+"menu.startAtLogin.external.tooltip" = "Wird von einem externen Tool verwaltet (z.\U00A0B. nix-darwin)";
 "menu.logs" = "Protokolle";
 "menu.logs.app" = "Kanata Bar";
 "menu.logs.kanata" = "Kanata";

@@ -196,7 +196,7 @@ extension AppDelegate {
             if #available(macOS 14.0, *) {
                 startAtLoginItem?.badge = NSMenuItemBadge(string: NSLocalizedString("menu.external", comment: ""))
             }
-            startAtLoginItem?.toolTip = "Managed externally (symlink)"
+            startAtLoginItem?.toolTip = NSLocalizedString("menu.startAtLogin.external.tooltip", comment: "")
         } else {
             startAtLoginItem?.state = isAgentInstalled ? .on : .off
             startAtLoginItem?.isEnabled = true

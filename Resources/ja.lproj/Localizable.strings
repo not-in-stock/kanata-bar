@@ -11,6 +11,7 @@
 "menu.stop.short" = "停止";
 "menu.reload" = "設定を再読み込み";
 "menu.startAtLogin" = "ログイン時に開く";
+"menu.startAtLogin.external.tooltip" = "外部ツール（例: nix-darwin）により管理されています";
 "menu.logs" = "ログ";
 "menu.logs.app" = "Kanata Bar";
 "menu.logs.kanata" = "Kanata";

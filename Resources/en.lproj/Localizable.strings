@@ -51,6 +51,9 @@
 /* Menu item to toggle launching kanata-bar at macOS login. */
 "menu.startAtLogin" = "Start at Login";
 
+/* Tooltip shown when the LaunchAgent is managed by an external tool (e.g. nix-darwin). */
+"menu.startAtLogin.external.tooltip" = "Managed by an external tool (e.g. nix-darwin)";
+
 /* Submenu title for log file access. */
 "menu.logs" = "Logs";
 

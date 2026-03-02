@@ -35,6 +35,7 @@
 
 /* Launch app at macOS login */
 "menu.startAtLogin" = "Abrir no login";
+"menu.startAtLogin.external.tooltip" = "Gerenciado por uma ferramenta externa (ex. nix-darwin)";
 
 /* Submenu title for log files */
 "menu.logs" = "Logs";
