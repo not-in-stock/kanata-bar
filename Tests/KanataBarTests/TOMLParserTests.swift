@@ -129,4 +129,36 @@ final class TOMLDecoderTests: XCTestCase {
         XCTAssertEqual(config.extraArgs, ["--log"])
         XCTAssertEqual(config.pamTid, "auto")
     }
+
+    // MARK: - IconTransition
+
+    func testIconTransitionFlow() {
+        let config = Config.decode(#"icon_transition = "flow""#)
+        XCTAssertEqual(config.iconTransition, .flow)
+    }
+
+    func testIconTransitionPages() {
+        let config = Config.decode(#"icon_transition = "pages""#)
+        XCTAssertEqual(config.iconTransition, .pages)
+    }
+
+    func testIconTransitionCards() {
+        let config = Config.decode(#"icon_transition = "cards""#)
+        XCTAssertEqual(config.iconTransition, .cards)
+    }
+
+    func testIconTransitionOff() {
+        let config = Config.decode(#"icon_transition = "off""#)
+        XCTAssertEqual(config.iconTransition, .off)
+    }
+
+    func testIconTransitionDefault() {
+        let config = Config.decode("port = 5829")
+        XCTAssertNil(config.iconTransition)
+    }
+
+    func testIconTransitionInvalidValue() {
+        let config = Config.decode(#"icon_transition = "invalid""#)
+        XCTAssertNil(config.iconTransition)
+    }
 }

@@ -50,13 +50,15 @@ extension AppDelegate {
     func buildLaunchAgentPlist() -> String {
         let skip: Set<String> = [Constants.CLI.installAgent, Constants.CLI.uninstallAgent, Constants.CLI.noAutostart, "--"]
         let args = CommandLine.arguments.filter { !skip.contains($0) }
+        return Self.buildPlist(args: args, cwd: FileManager.default.currentDirectoryPath)
+    }
 
+    static func buildPlist(args: [String], cwd: String) -> String {
         let binary: String
         let arg0 = args[0]
         if arg0.hasPrefix("/") {
             binary = arg0
         } else {
-            let cwd = FileManager.default.currentDirectoryPath
             binary = "\(cwd)/\(arg0)"
         }
 
@@ -71,7 +73,7 @@ extension AppDelegate {
         <plist version="1.0">
         <dict>
             <key>Label</key>
-            <string>\(Self.agentLabel)</string>
+            <string>\(agentLabel)</string>
             <key>ProgramArguments</key>
             <array>
         \(programArgs)

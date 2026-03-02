@@ -62,4 +62,27 @@ final class ConfigTests: XCTestCase {
         let result = Config.resolveKanataPath("~/bin/kanata")
         XCTAssertEqual(result, NSHomeDirectory() + "/bin/kanata")
     }
+
+    // MARK: - isBinaryAccessible
+
+    func testIsBinaryAccessibleWithRealExecutable() {
+        // /bin/ls always exists and is executable
+        XCTAssertTrue(Config.isBinaryAccessible("/bin/ls"))
+    }
+
+    func testIsBinaryAccessibleWithNonexistentPath() {
+        XCTAssertFalse(Config.isBinaryAccessible("/nonexistent/path/kanata"))
+    }
+
+    func testIsBinaryAccessibleWithBareName() {
+        // Bare "kanata" means unresolved — should return false
+        XCTAssertFalse(Config.isBinaryAccessible("kanata"))
+    }
+
+    func testIsBinaryAccessibleWithNonExecutableFile() throws {
+        let tmp = NSTemporaryDirectory() + "kanata-bar-test-\(UUID().uuidString)"
+        FileManager.default.createFile(atPath: tmp, contents: nil)
+        defer { try? FileManager.default.removeItem(atPath: tmp) }
+        XCTAssertFalse(Config.isBinaryAccessible(tmp))
+    }
 }
