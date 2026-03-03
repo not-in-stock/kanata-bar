@@ -3,6 +3,7 @@ import AppKit
 extension AppDelegate {
     func buildMenu() {
         let menu = NSMenu()
+        menu.autoenablesItems = false
 
         addHeader(to: menu)
         addStatusItems(to: menu)
