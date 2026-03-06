@@ -80,7 +80,7 @@ class IconManager {
 
     // MARK: - Animation
 
-    private func slideTo(_ newImage: NSImage?, for state: AppState) {
+    private func slideTo(_: NSImage?, for state: AppState) {
         guard let button else { return }
 
         animating = true

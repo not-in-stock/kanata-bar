@@ -24,11 +24,6 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
     var restartTimestamps: [Date] = []
     var restartWorkItem: DispatchWorkItem?
 
-    var currentLayer: String? {
-        if case .running(let layer) = appState { return layer }
-        return nil
-    }
-
     // Menu items that change state
     var startItem: NSMenuItem!
     var stopItem: NSMenuItem!
