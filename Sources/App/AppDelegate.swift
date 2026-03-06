@@ -43,6 +43,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
 
     public func applicationDidFinishLaunching(_ notification: Notification) {
         guard !isAlreadyRunning() else { return }
+        truncateLog()
 
         let config = loadConfig()
         autostart = config.kanataBar.autostartKanata

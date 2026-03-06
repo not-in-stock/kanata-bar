@@ -14,6 +14,10 @@ extension AppDelegate {
         return logsDir.appendingPathComponent(Constants.Log.kanataFilename)
     }
 
+    func truncateLog() {
+        FileManager.default.createFile(atPath: appLogURL.path, contents: nil)
+    }
+
     func log(_ message: String) {
         let entry = "\(logTimestamp()) \(message)\n"
         print("kanata-bar: \(message)")
