@@ -39,5 +39,3 @@
 "accessibility.layer" = "Kanata \uB808\uC774\uC5B4: %@";
 "accessibility.startAtLogin" = "\uB85C\uADF8\uC778 \uC2DC Kanata Bar \uC5F4\uAE30";
 
-/* Status bar */
-"status.placeholder" = "K?";

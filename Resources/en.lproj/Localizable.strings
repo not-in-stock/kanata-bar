@@ -131,6 +131,3 @@
 
 /* ----- Status Bar ----- */
 
-/* Fallback text shown in the menu bar when no layer icon is available
-   and the layer name is unknown. "K?" = Kanata status unknown. */
-"status.placeholder" = "K?";

@@ -39,5 +39,3 @@
 "accessibility.layer" = "Couche Kanata : %@";
 "accessibility.startAtLogin" = "Ouvrir Kanata Bar \U00E0 la connexion";
 
-/* Status bar */
-"status.placeholder" = "K?";

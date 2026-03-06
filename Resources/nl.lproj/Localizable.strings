@@ -39,5 +39,3 @@
 "accessibility.layer" = "Kanata-laag: %@";
 "accessibility.startAtLogin" = "Kanata Bar openen bij inloggen";
 
-/* Status bar */
-"status.placeholder" = "K?";
