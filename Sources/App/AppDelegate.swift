@@ -54,6 +54,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         setupMenuBar(config)
 
         registerHelperIfNeeded()
+        migrateFromLaunchAgent()
         detectOrAutostart()
 
         kanataClient.start()

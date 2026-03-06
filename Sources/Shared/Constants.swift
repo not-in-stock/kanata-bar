@@ -12,8 +12,6 @@ public enum Constants {
     public static let configFilename = "config.toml"
 
     public enum CLI {
-        public static let installAgent = "--install-agent"
-        public static let uninstallAgent = "--uninstall-agent"
         public static let noAutostart = "--no-autostart"
         public static let iconsDir = "--icons-dir"
         public static let port = "--port"

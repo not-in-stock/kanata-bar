@@ -1,47 +1,56 @@
 import XCTest
 @testable import KanataBarLib
 
-final class LaunchAgentTests: XCTestCase {
+final class LoginItemTests: XCTestCase {
 
-    func testBuildPlistAbsolutePath() {
-        let plist = AppDelegate.buildPlist(
-            args: ["/Applications/Kanata Bar.app/Contents/MacOS/kanata-bar"],
-            cwd: "/Users/test"
-        )
-        XCTAssertTrue(plist.contains("<string>/Applications/Kanata Bar.app/Contents/MacOS/kanata-bar</string>"))
-        XCTAssertTrue(plist.contains("<key>RunAtLoad</key>"))
-        XCTAssertTrue(plist.contains("<true/>"))
-        XCTAssertTrue(plist.contains("<key>Label</key>"))
-        XCTAssertTrue(plist.contains("<string>com.kanata-bar</string>"))
+    // MARK: - isAgentExternal
+
+    func testIsAgentExternalReturnsFalseWhenNoPlist() {
+        // Default state: no plist in ~/Library/LaunchAgents/
+        // This test assumes the test environment doesn't have a kanata-bar plist
+        let delegate = AppDelegate()
+        XCTAssertFalse(delegate.isAgentExternal)
     }
 
-    func testBuildPlistRelativePath() {
-        let plist = AppDelegate.buildPlist(
-            args: ["kanata-bar"],
-            cwd: "/Users/test/build"
-        )
-        XCTAssertTrue(plist.contains("<string>/Users/test/build/kanata-bar</string>"))
+    // MARK: - Migration
+
+    func testMigrateRemovesRegularFile() throws {
+        let delegate = AppDelegate()
+        let dir = FileManager.default.homeDirectoryForCurrentUser.path
+            + "/Library/LaunchAgents"
+        let plistPath = "\(dir)/com.kanata-bar.plist"
+
+        // Create a regular file simulating old LaunchAgent
+        try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
+        try "test".write(toFile: plistPath, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(atPath: plistPath) }
+
+        XCTAssertTrue(FileManager.default.fileExists(atPath: plistPath))
+        delegate.migrateFromLaunchAgent()
+        XCTAssertFalse(FileManager.default.fileExists(atPath: plistPath))
     }
 
-    func testBuildPlistWithExtraArgs() {
-        let plist = AppDelegate.buildPlist(
-            args: ["/usr/local/bin/kanata-bar", "--config-file", "/path/to/config.toml", "--port", "9999"],
-            cwd: "/tmp"
-        )
-        XCTAssertTrue(plist.contains("<string>/usr/local/bin/kanata-bar</string>"))
-        XCTAssertTrue(plist.contains("<string>--config-file</string>"))
-        XCTAssertTrue(plist.contains("<string>/path/to/config.toml</string>"))
-        XCTAssertTrue(plist.contains("<string>--port</string>"))
-        XCTAssertTrue(plist.contains("<string>9999</string>"))
+    func testMigratePreservesSymlink() throws {
+        let delegate = AppDelegate()
+        let dir = FileManager.default.homeDirectoryForCurrentUser.path
+            + "/Library/LaunchAgents"
+        let plistPath = "\(dir)/com.kanata-bar.plist"
+
+        // Create a symlink simulating nix-darwin managed agent
+        try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
+        // Clean up any existing file first
+        try? FileManager.default.removeItem(atPath: plistPath)
+        try FileManager.default.createSymbolicLink(atPath: plistPath, withDestinationPath: "/dev/null")
+        defer { try? FileManager.default.removeItem(atPath: plistPath) }
+
+        delegate.migrateFromLaunchAgent()
+        // Symlink should NOT be removed
+        XCTAssertTrue(FileManager.default.fileExists(atPath: plistPath))
     }
 
-    func testBuildPlistIsValidXML() throws {
-        let plist = AppDelegate.buildPlist(
-            args: ["/usr/local/bin/kanata-bar"],
-            cwd: "/tmp"
-        )
-        let data = plist.data(using: .utf8)!
-        let xml = try XMLDocument(data: data)
-        XCTAssertNotNil(xml.rootElement())
+    func testMigrateNoOpWhenNoPlist() {
+        let delegate = AppDelegate()
+        // Should not crash when no plist exists
+        delegate.migrateFromLaunchAgent()
     }
 }

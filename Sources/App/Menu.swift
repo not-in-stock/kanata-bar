@@ -199,7 +199,7 @@ extension AppDelegate {
             }
             startAtLoginItem?.toolTip = NSLocalizedString("menu.startAtLogin.external.tooltip", comment: "")
         } else {
-            startAtLoginItem?.state = isAgentInstalled ? .on : .off
+            startAtLoginItem?.state = isLoginItemEnabled ? .on : .off
             startAtLoginItem?.isEnabled = true
             if #available(macOS 14.0, *) {
                 startAtLoginItem?.badge = nil
