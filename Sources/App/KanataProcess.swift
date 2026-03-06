@@ -17,6 +17,7 @@ class KanataProcess {
     var onError: ((String) -> Void)?
     var onCrash: ((Int32) -> Void)?
     var onStartFailure: (() -> Void)?
+    var onEarlyExit: ((Int32) -> Void)?
 
     init(launcher: KanataLauncher, binaryPath: String, configPath: String, port: UInt16) {
         self.launcher = launcher
@@ -44,7 +45,7 @@ class KanataProcess {
                 if hadPID {
                     self.onCrash?(exitCode)
                 } else {
-                    self.onStartFailure?()
+                    self.onEarlyExit?(exitCode)
                 }
             }
         }

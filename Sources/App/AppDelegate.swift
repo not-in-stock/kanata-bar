@@ -131,9 +131,14 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
             self?.log("ERROR: \(msg)")
         }
         kanataProcess.onStartFailure = { [weak self] in
-            self?.log("kanata failed to start (sudo denied or binary missing)")
+            self?.log("kanata failed to start (auth denied)")
             self?.appState = .stopped
             Notifications.sendStartFailure()
+        }
+        kanataProcess.onEarlyExit = { [weak self] exitCode in
+            self?.log("kanata exited immediately (exit code \(exitCode))")
+            self?.appState = .stopped
+            Notifications.sendCrash()
         }
         kanataProcess.onCrash = { [weak self] exitCode in
             self?.log("kanata crashed (exit code \(exitCode))")
