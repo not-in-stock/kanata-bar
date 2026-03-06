@@ -18,13 +18,26 @@ jobs:
       - name: Build
         run: ./build.sh build
 
-      - name: Package
+      - name: Package ZIP
         run: ditto -c -k --keepParent "build/Kanata Bar.app" kanata-bar.app.zip
+
+      - name: Package DMG
+        run: |
+          brew install create-dmg
+          create-dmg \
+            --volname "Kanata Bar" \
+            --window-size 480 320 \
+            --icon "Kanata Bar.app" 120 160 \
+            --app-drop-link 360 160 \
+            kanata-bar.dmg \
+            "build/Kanata Bar.app"
 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          files: kanata-bar.app.zip
+          files: |
+            kanata-bar.app.zip
+            kanata-bar.dmg
           generate_release_notes: true
 
       - name: Notify homebrew-tap
