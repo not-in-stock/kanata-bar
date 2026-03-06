@@ -54,6 +54,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         setupMenuBar(config)
 
         registerHelperIfNeeded()
+        resetTCCIfSourceChanged()
         migrateFromLaunchAgent()
         detectOrAutostart()
 
@@ -292,6 +293,31 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         }
         restartWorkItem = workItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: workItem)
+    }
+
+    // MARK: - TCC
+
+    private func resetTCCIfSourceChanged() {
+        let currentSource = installSource()
+        let previousSource = UserDefaults.standard.string(forKey: "installSource")
+
+        if let previous = previousSource, previous != currentSource {
+            log("install source changed (\(previous) → \(currentSource)), resetting TCC")
+            let tccutil = Process()
+            tccutil.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
+            tccutil.arguments = ["reset", "ListenEvent", Bundle.main.bundleIdentifier ?? Constants.bundleID]
+            try? tccutil.run()
+            tccutil.waitUntilExit()
+        }
+
+        UserDefaults.standard.set(currentSource, forKey: "installSource")
+    }
+
+    private func installSource() -> String {
+        let path = Bundle.main.bundlePath
+        if path.contains("/nix/store/") { return "nix" }
+        if path.contains("/opt/homebrew/") || path.contains("/usr/local/Caskroom/") { return "homebrew" }
+        return "other"
     }
 
     // MARK: - Helper
