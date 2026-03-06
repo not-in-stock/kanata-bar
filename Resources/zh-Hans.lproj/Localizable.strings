@@ -11,7 +11,7 @@
 "menu.stop.short" = "停止";
 "menu.reload" = "重新加载配置";
 "menu.startAtLogin" = "登录时打开";
-"menu.startAtLogin.external.tooltip" = "由外部工具管理（如 nix-darwin）";
+"menu.startAtLogin.external.tooltip" = "由外部工具管理";
 "menu.logs" = "日志";
 "menu.logs.app" = "Kanata Bar";
 "menu.logs.kanata" = "Kanata";

@@ -37,7 +37,7 @@
 "menu.startAtLogin" = "Открывать при входе";
 
 /* Подсказка, когда LaunchAgent управляется внешним инструментом (напр. nix-darwin) */
-"menu.startAtLogin.external.tooltip" = "Управляется внешним инструментом (напр. nix-darwin)";
+"menu.startAtLogin.external.tooltip" = "Управляется внешним инструментом";
 
 /* Подменю с логами */
 "menu.logs" = "Логи";

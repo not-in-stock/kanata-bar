@@ -11,7 +11,7 @@
 "menu.stop.short" = "Stop";
 "menu.reload" = "Configuratie herladen";
 "menu.startAtLogin" = "Open bij inloggen";
-"menu.startAtLogin.external.tooltip" = "Beheerd door een extern hulpprogramma (bijv. nix-darwin)";
+"menu.startAtLogin.external.tooltip" = "Beheerd door een extern hulpprogramma";
 "menu.logs" = "Logboeken";
 "menu.logs.app" = "Kanata Bar";
 "menu.logs.kanata" = "Kanata";
