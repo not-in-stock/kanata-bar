@@ -19,7 +19,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
     var isExternal = false
     var externalPID: Int32 = -1
     var externalTimeoutWork: DispatchWorkItem?
-    var autostart = true
+    var autostart = false
     var autorestart = false
     var restartTimestamps: [Date] = []
     var restartWorkItem: DispatchWorkItem?
@@ -45,12 +45,12 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         guard !isAlreadyRunning() else { return }
 
         let config = loadConfig()
-        autostart = config.autostart
-        autorestart = config.autorestart
+        autostart = config.kanataBar.autostartKanata
+        autorestart = config.kanataBar.autorestartKanata
 
         setupKanataProcess(config)
         setupNotificationPermission()
-        setupTCPClient(port: config.port)
+        setupTCPClient(port: config.kanata.port)
         setupMenuBar(config)
 
         registerHelperIfNeeded()
@@ -87,35 +87,35 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         var config = Config.load(from: configFilePath)
 
         if let idx = args.firstIndex(of: Constants.CLI.kanata), idx + 1 < args.count {
-            config.kanata = args[idx + 1]
+            config.kanata.path = args[idx + 1]
         }
         if let idx = args.firstIndex(of: Constants.CLI.config), idx + 1 < args.count {
-            config.config = args[idx + 1]
+            config.kanata.config = args[idx + 1]
         }
         if let idx = args.firstIndex(of: Constants.CLI.port), idx + 1 < args.count, let p = UInt16(args[idx + 1]) {
-            config.port = p
+            config.kanata.port = p
         }
         if let idx = args.firstIndex(of: Constants.CLI.iconsDir), idx + 1 < args.count {
-            config.iconsDir = args[idx + 1]
+            config.kanataBar.iconsDir = args[idx + 1]
         }
         if args.contains(Constants.CLI.noAutostart) {
-            config.autostart = false
+            config.kanataBar.autostartKanata = false
         }
 
         return config
     }
 
     private func setupKanataProcess(_ config: Config) {
-        let binaryPath = Config.resolveKanataPath(config.kanata)
-        let configPath = Config.expandTilde(config.config)
-        let port = config.port
-        let usePamTid = Config.resolvePamTid(config.pamTid)
+        let binaryPath = Config.resolveKanataPath(config.kanata.path)
+        let configPath = Config.expandTilde(config.kanata.config)
+        let port = config.kanata.port
+        let usePamTid = Config.resolvePamTid(config.kanata.pamTid)
 
         let launcher: KanataLauncher
         if usePamTid {
-            launcher = SudoLauncher(binaryPath: binaryPath, configPath: configPath, port: port, extraArgs: config.extraArgs, logURL: kanataLogURL)
+            launcher = SudoLauncher(binaryPath: binaryPath, configPath: configPath, port: port, extraArgs: config.kanata.extraArgs, logURL: kanataLogURL)
         } else {
-            launcher = AuthExecLauncher(binaryPath: binaryPath, configPath: configPath, port: port, extraArgs: config.extraArgs, logURL: kanataLogURL)
+            launcher = AuthExecLauncher(binaryPath: binaryPath, configPath: configPath, port: port, extraArgs: config.kanata.extraArgs, logURL: kanataLogURL)
         }
         kanataProcess = KanataProcess(launcher: launcher, binaryPath: binaryPath, configPath: configPath, port: port)
         kanataProcess.onStateChange = { [weak self] running in
@@ -192,8 +192,8 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.toolTip = "Kanata Bar"
         iconManager = IconManager(button: statusItem.button)
-        iconManager.iconsDir = config.iconsDir.map { Config.expandTilde($0) }
-        iconManager.transitionConfig = config.iconTransition
+        iconManager.iconsDir = config.kanataBar.iconsDir.map { Config.expandTilde($0) }
+        iconManager.transitionConfig = config.kanataBar.iconTransition
         iconManager.updateIcon(for: appState)
         buildMenu()
     }

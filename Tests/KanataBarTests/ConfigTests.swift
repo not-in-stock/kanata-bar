@@ -7,25 +7,24 @@ final class ConfigTests: XCTestCase {
 
     func testDefaultValues() {
         let config = Config.default
-        XCTAssertEqual(config.kanata, "")
-        XCTAssertEqual(config.config, "~/.config/kanata/kanata.kbd")
-        XCTAssertEqual(config.port, 5829)
-        XCTAssertNil(config.iconsDir)
-        XCTAssertTrue(config.autostart)
-        XCTAssertFalse(config.autorestart)
-        XCTAssertEqual(config.extraArgs, [])
+        XCTAssertEqual(config.kanata.path, "")
+        XCTAssertEqual(config.kanata.config, "~/.config/kanata/kanata.kbd")
+        XCTAssertEqual(config.kanata.port, 5829)
+        XCTAssertEqual(config.kanata.extraArgs, [])
+        XCTAssertNil(config.kanataBar.iconsDir)
+        XCTAssertFalse(config.kanataBar.autostartKanata)
+        XCTAssertFalse(config.kanataBar.autorestartKanata)
     }
 
     func testLoadNonexistentFileReturnsDefaults() {
         let config = Config.load(from: "/nonexistent/path/config.toml")
-        XCTAssertEqual(config.port, Config.default.port)
-        XCTAssertEqual(config.autostart, Config.default.autostart)
+        XCTAssertEqual(config.kanata.port, Config.default.kanata.port)
+        XCTAssertEqual(config.kanataBar.autostartKanata, Config.default.kanataBar.autostartKanata)
     }
 
     func testLoadNilPathNoDefaultFileReturnsDefaults() {
-        // If no default config file exists, should return defaults
         let config = Config.load(from: nil)
-        XCTAssertEqual(config.port, Config.default.port)
+        XCTAssertEqual(config.kanata.port, Config.default.kanata.port)
     }
 
     // MARK: - expandTilde
@@ -46,7 +45,6 @@ final class ConfigTests: XCTestCase {
     }
 
     func testExpandTildeMidString() {
-        // ~ in middle should not expand
         let result = Config.expandTilde("/home/~/test")
         XCTAssertEqual(result, "/home/~/test")
     }
@@ -66,7 +64,6 @@ final class ConfigTests: XCTestCase {
     // MARK: - isBinaryAccessible
 
     func testIsBinaryAccessibleWithRealExecutable() {
-        // /bin/ls always exists and is executable
         XCTAssertTrue(Config.isBinaryAccessible("/bin/ls"))
     }
 
@@ -75,7 +72,6 @@ final class ConfigTests: XCTestCase {
     }
 
     func testIsBinaryAccessibleWithBareName() {
-        // Bare "kanata" means unresolved — should return false
         XCTAssertFalse(Config.isBinaryAccessible("kanata"))
     }
 

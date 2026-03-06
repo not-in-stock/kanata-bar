@@ -11,8 +11,7 @@
 <p align="center">
   <a href="https://github.com/not-in-stock/kanata-bar/releases/latest"><img src="https://img.shields.io/github/v/release/not-in-stock/kanata-bar" alt="Release"></a>
   <a href="https://github.com/not-in-stock/kanata-bar/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/not-in-stock/kanata-bar/ci.yml?branch=main&label=build" alt="CI"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/not-in-stock/kanata-bar" alt="License"></a>
-</p>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/not-in-stock/kanata-bar" alt="License"></a> </p>
 
 Shows the current keyboard layer in the menu bar and manages the kanata process lifecycle.
 
@@ -21,7 +20,7 @@ Shows the current keyboard layer in the menu bar and manages the kanata process 
 - Menu bar icon with current layer name (or custom per-layer PNG icons)
 - Start / Stop / Reload kanata from the menu
 - Crash notifications via macOS Notification Center
-- Launch at Login via LaunchAgent
+- Launch at Login (integrates with System Settings)
 - TOML config file with CLI override support
 - Extra arguments passthrough to kanata
 
@@ -29,7 +28,7 @@ Shows the current keyboard layer in the menu bar and manages the kanata process 
 
 | Dependency | Note |
 | :--------- | :--- |
-| macOS 13+  | Uses SMAppService for XPC helper registration |
+| macOS 13+  | Uses SMAppService for login items and XPC helper |
 | [kanata](https://github.com/jtroo/kanata) | Installed via Homebrew, Nix, or manually |
 | sudo access | kanata requires root for keyboard input on macOS |
 | Xcode CLT | Only for building from source (`xcode-select --install`) |
@@ -61,23 +60,15 @@ The app bundle is at `build/Kanata Bar.app`. Move it to `/Applications` or run d
 kanata-bar looks for `~/.config/kanata-bar/config.toml`:
 
 ```toml
+[kanata]
 # Path to kanata binary (empty = search $PATH)
-kanata = ""
+path = ""
 
 # Path to kanata keyboard config
 config = "~/.config/kanata/kanata.kbd"
 
 # TCP port for layer tracking
 port = 5829
-
-# Directory with per-layer PNG icons (e.g. nav.png, base.png)
-icons_dir = "~/.config/kanata-bar/icons"
-
-# Start kanata automatically when app launches
-autostart = true
-
-# Restart kanata automatically if it crashes
-autorestart = false
 
 # Extra arguments passed to kanata
 extra_args = ["--log-layer-changes"]
@@ -86,6 +77,16 @@ extra_args = ["--log-layer-changes"]
 #   "auto"  — use sudo with PAM (TouchID if configured, recommended)
 #   "false" — use AuthorizationExecuteWithPrivileges (deprecated API)
 pam_tid = "auto"
+
+[kanata_bar]
+# Start kanata automatically when app launches
+autostart_kanata = false
+
+# Restart kanata automatically if it crashes
+autorestart_kanata = false
+
+# Directory with per-layer PNG icons (e.g. nav.png, base.png)
+icons_dir = "~/.config/kanata-bar/icons"
 ```
 
 All string values support `~` expansion.
@@ -101,8 +102,6 @@ CLI flags override config file values:
 --port <port>          TCP port (default: 5829)
 --icons-dir <path>     Directory with layer icons
 --no-autostart         Don't start kanata on launch
---install-agent        Install LaunchAgent for login autostart
---uninstall-agent      Remove LaunchAgent
 ```
 
 ## Layer icons
@@ -148,6 +147,7 @@ sudo cp /etc/pam.d/sudo_local.bak /etc/pam.d/sudo_local
 Then set in `~/.config/kanata-bar/config.toml`:
 
 ```toml
+[kanata]
 pam_tid = "auto"
 ```
 
