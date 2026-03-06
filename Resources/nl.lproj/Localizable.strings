@@ -5,9 +5,9 @@
 "menu.connecting" = "Verbinden\U2026";
 "menu.external" = "Extern";
 "menu.section.kanata" = "Kanata";
-"menu.start" = "Start kanata";
+"menu.start" = "Start Kanata";
 "menu.start.short" = "Start";
-"menu.stop" = "Stop kanata";
+"menu.stop" = "Stop Kanata";
 "menu.stop.short" = "Stop";
 "menu.reload" = "Configuratie herladen";
 "menu.startAtLogin" = "Open bij inloggen";
@@ -18,24 +18,24 @@
 "menu.quit" = "Sluit af";
 
 /* Notifications */
-"notification.startFailure.title" = "Kan kanata niet starten";
+"notification.startFailure.title" = "Kan Kanata niet starten";
 "notification.startFailure.body" = "Beheerdersbevoegdheden zijn vereist. Klik op Start om opnieuw te proberen.";
-"notification.binaryNotFound.title" = "kanata niet gevonden";
-"notification.binaryNotFound.body" = "Stel het kanata-pad in via %@";
+"notification.binaryNotFound.title" = "Kanata niet gevonden";
+"notification.binaryNotFound.body" = "Stel het Kanata-pad in via %@";
 
-"notification.crash.title" = "kanata is onverwacht gestopt";
+"notification.crash.title" = "Kanata is onverwacht gestopt";
 "notification.crash.body" = "Bekijk de logboeken voor details";
 "notification.reload.title" = "Configuratie herladen";
-"notification.reload.body" = "De kanata-configuratie is herladen";
-"notification.restart.title" = "kanata is opnieuw gestart";
-"notification.restart.body" = "kanata is automatisch herstart";
+"notification.reload.body" = "De Kanata-configuratie is herladen";
+"notification.restart.title" = "Kanata is opnieuw gestart";
+"notification.restart.body" = "Kanata is automatisch herstart";
 "notification.restart.disabled.title" = "Automatisch herstarten uitgeschakeld";
 "notification.restart.disabled.body" = "Te veel crashes binnen een minuut";
 
 /* Accessibility labels */
-"accessibility.starting" = "kanata starten";
-"accessibility.connecting" = "Verbinden met kanata";
-"accessibility.reload" = "kanata-configuratie herladen";
+"accessibility.starting" = "Kanata starten";
+"accessibility.connecting" = "Verbinden met Kanata";
+"accessibility.reload" = "Kanata-configuratie herladen";
 "accessibility.layer" = "Kanata-laag: %@";
 "accessibility.startAtLogin" = "Kanata Bar openen bij inloggen";
 

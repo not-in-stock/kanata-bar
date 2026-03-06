@@ -5,9 +5,9 @@
 "menu.connecting" = "正在连接\U2026";
 "menu.external" = "外部";
 "menu.section.kanata" = "Kanata";
-"menu.start" = "启动 kanata";
+"menu.start" = "启动 Kanata";
 "menu.start.short" = "启动";
-"menu.stop" = "停止 kanata";
+"menu.stop" = "停止 Kanata";
 "menu.stop.short" = "停止";
 "menu.reload" = "重新加载配置";
 "menu.startAtLogin" = "登录时打开";
@@ -18,24 +18,24 @@
 "menu.quit" = "退出";
 
 /* Notifications */
-"notification.startFailure.title" = "无法启动 kanata";
+"notification.startFailure.title" = "无法启动 Kanata";
 "notification.startFailure.body" = "需要管理员权限。点击"启动"重试。";
-"notification.binaryNotFound.title" = "找不到 kanata";
-"notification.binaryNotFound.body" = "请在 %@ 中设置 kanata 路径";
+"notification.binaryNotFound.title" = "找不到 Kanata";
+"notification.binaryNotFound.body" = "请在 %@ 中设置 Kanata 路径";
 
-"notification.crash.title" = "kanata 意外停止";
+"notification.crash.title" = "Kanata 意外停止";
 "notification.crash.body" = "请查看日志了解详情";
 "notification.reload.title" = "配置已重新加载";
-"notification.reload.body" = "kanata 配置已重新加载";
-"notification.restart.title" = "kanata 已重新启动";
-"notification.restart.body" = "kanata 已自动重新启动";
+"notification.reload.body" = "Kanata 配置已重新加载";
+"notification.restart.title" = "Kanata 已重新启动";
+"notification.restart.body" = "Kanata 已自动重新启动";
 "notification.restart.disabled.title" = "自动重启已禁用";
 "notification.restart.disabled.body" = "一分钟内崩溃次数过多";
 
 /* Accessibility labels */
-"accessibility.starting" = "\U6B63\U5728\U542F\U52A8 kanata";
-"accessibility.connecting" = "\U6B63\U5728\U8FDE\U63A5 kanata";
-"accessibility.reload" = "\U91CD\U65B0\U52A0\U8F7D kanata \U914D\U7F6E";
+"accessibility.starting" = "\U6B63\U5728\U542F\U52A8 Kanata";
+"accessibility.connecting" = "\U6B63\U5728\U8FDE\U63A5 Kanata";
+"accessibility.reload" = "\U91CD\U65B0\U52A0\U8F7D Kanata \U914D\U7F6E";
 "accessibility.layer" = "Kanata \U5C42: %@";
 "accessibility.startAtLogin" = "\U767B\U5F55\U65F6\U6253\U5F00 Kanata Bar";
 

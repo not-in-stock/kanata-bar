@@ -9,7 +9,7 @@
 /* Спиннер при запуске kanata */
 "menu.starting" = "Запуск\U2026";
 
-/* Спиннер при подключении к kanata по TCP */
+/* Спиннер при подключении к Kanata по TCP */
 "menu.connecting" = "Подключение\U2026";
 
 /* Бейдж на пункте Reload, когда kanata запущен извне */
@@ -19,13 +19,13 @@
 "menu.section.kanata" = "Kanata";
 
 /* Полный пункт меню (когда нет заголовка секции) */
-"menu.start" = "Запустить kanata";
+"menu.start" = "Запустить Kanata";
 
 /* Короткий пункт меню (под заголовком секции "Kanata") */
 "menu.start.short" = "Запустить";
 
 /* Полный пункт меню */
-"menu.stop" = "Остановить kanata";
+"menu.stop" = "Остановить Kanata";
 
 /* Короткий пункт меню */
 "menu.stop.short" = "Остановить";
@@ -54,23 +54,23 @@
 /* ----- Уведомления ----- */
 
 /* Не удалось запустить: отмена sudo/TouchID или бинарник не найден */
-"notification.startFailure.title" = "Не удалось запустить kanata";
+"notification.startFailure.title" = "Не удалось запустить Kanata";
 "notification.startFailure.body" = "Требуются права администратора. Нажмите «Запустить» для повторной попытки.";
 
-"notification.binaryNotFound.title" = "kanata не найдена";
-"notification.binaryNotFound.body" = "Укажите путь к kanata в %@";
+"notification.binaryNotFound.title" = "Kanata не найдена";
+"notification.binaryNotFound.body" = "Укажите путь к Kanata в %@";
 
 /* Аварийное завершение kanata */
-"notification.crash.title" = "kanata неожиданно завершилась";
+"notification.crash.title" = "Kanata неожиданно завершилась";
 "notification.crash.body" = "Подробности в логах";
 
 /* Настройки перечитаны по TCP-команде */
 "notification.reload.title" = "Настройки перечитаны";
-"notification.reload.body" = "Настройки kanata перечитаны";
+"notification.reload.body" = "Настройки Kanata перечитаны";
 
 /* Автоматический перезапуск после падения */
-"notification.restart.title" = "kanata перезапущена";
-"notification.restart.body" = "kanata была перезапущена автоматически";
+"notification.restart.title" = "Kanata перезапущена";
+"notification.restart.body" = "Kanata была перезапущена автоматически";
 
 /* Автоперезапуск отключён из-за частых падений (3 за минуту) */
 "notification.restart.disabled.title" = "Автоперезапуск отключён";
@@ -78,10 +78,10 @@
 
 /* ----- Метки для VoiceOver ----- */
 
-"accessibility.starting" = "Запуск kanata";
-"accessibility.connecting" = "Подключение к kanata";
-"accessibility.reload" = "Перечитать настройки kanata";
-"accessibility.layer" = "Слой kanata: %@";
+"accessibility.starting" = "Запуск Kanata";
+"accessibility.connecting" = "Подключение к Kanata";
+"accessibility.reload" = "Перечитать настройки Kanata";
+"accessibility.layer" = "Слой Kanata: %@";
 "accessibility.startAtLogin" = "Открывать Kanata Bar при входе";
 
 /* ----- Строка состояния ----- */

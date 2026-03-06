@@ -5,9 +5,9 @@
 "menu.connecting" = "Verbinden\U2026";
 "menu.external" = "Extern";
 "menu.section.kanata" = "Kanata";
-"menu.start" = "kanata starten";
+"menu.start" = "Kanata starten";
 "menu.start.short" = "Starten";
-"menu.stop" = "kanata stoppen";
+"menu.stop" = "Kanata stoppen";
 "menu.stop.short" = "Stoppen";
 "menu.reload" = "Konfiguration neu laden";
 "menu.startAtLogin" = "Bei Anmeldung starten";
@@ -18,24 +18,24 @@
 "menu.quit" = "Beenden";
 
 /* Notifications */
-"notification.startFailure.title" = "kanata konnte nicht gestartet werden";
+"notification.startFailure.title" = "Kanata konnte nicht gestartet werden";
 "notification.startFailure.body" = "Administratorrechte erforderlich. Klicken Sie auf Starten, um es erneut zu versuchen.";
-"notification.binaryNotFound.title" = "kanata nicht gefunden";
-"notification.binaryNotFound.body" = "Setzen Sie den kanata-Pfad in %@";
+"notification.binaryNotFound.title" = "Kanata nicht gefunden";
+"notification.binaryNotFound.body" = "Setzen Sie den Kanata-Pfad in %@";
 
-"notification.crash.title" = "kanata wurde unerwartet beendet";
+"notification.crash.title" = "Kanata wurde unerwartet beendet";
 "notification.crash.body" = "Weitere Details in den Protokollen";
 "notification.reload.title" = "Konfiguration neu geladen";
-"notification.reload.body" = "Die kanata-Konfiguration wurde neu geladen";
-"notification.restart.title" = "kanata wurde neu gestartet";
-"notification.restart.body" = "kanata wurde automatisch neu gestartet";
+"notification.reload.body" = "Die Kanata-Konfiguration wurde neu geladen";
+"notification.restart.title" = "Kanata wurde neu gestartet";
+"notification.restart.body" = "Kanata wurde automatisch neu gestartet";
 "notification.restart.disabled.title" = "Automatischer Neustart deaktiviert";
 "notification.restart.disabled.body" = "Zu viele Abstürze innerhalb einer Minute";
 
 /* Accessibility labels */
-"accessibility.starting" = "kanata starten";
-"accessibility.connecting" = "Verbindung zu kanata";
-"accessibility.reload" = "kanata-Konfiguration neu laden";
+"accessibility.starting" = "Kanata starten";
+"accessibility.connecting" = "Verbindung zu Kanata";
+"accessibility.reload" = "Kanata-Konfiguration neu laden";
 "accessibility.layer" = "Kanata-Ebene: %@";
 "accessibility.startAtLogin" = "Kanata Bar bei Anmeldung starten";
 

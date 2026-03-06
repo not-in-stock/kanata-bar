@@ -5,9 +5,9 @@
 "menu.connecting" = "Connexion\U2026";
 "menu.external" = "Externe";
 "menu.section.kanata" = "Kanata";
-"menu.start" = "Démarrer kanata";
+"menu.start" = "Démarrer Kanata";
 "menu.start.short" = "Démarrer";
-"menu.stop" = "Arrêter kanata";
+"menu.stop" = "Arrêter Kanata";
 "menu.stop.short" = "Arrêter";
 "menu.reload" = "Recharger la configuration";
 "menu.startAtLogin" = "Ouvrir à la connexion";
@@ -18,24 +18,24 @@
 "menu.quit" = "Quitter";
 
 /* Notifications */
-"notification.startFailure.title" = "Impossible de démarrer kanata";
+"notification.startFailure.title" = "Impossible de démarrer Kanata";
 "notification.startFailure.body" = "Les privilèges administrateur sont requis. Cliquez sur Démarrer pour réessayer.";
-"notification.binaryNotFound.title" = "kanata introuvable";
-"notification.binaryNotFound.body" = "Définissez le chemin de kanata dans %@";
+"notification.binaryNotFound.title" = "Kanata introuvable";
+"notification.binaryNotFound.body" = "Définissez le chemin de Kanata dans %@";
 
-"notification.crash.title" = "kanata s'est arrêté de manière inattendue";
+"notification.crash.title" = "Kanata s'est arrêté de manière inattendue";
 "notification.crash.body" = "Consultez les journaux pour plus de détails";
 "notification.reload.title" = "Configuration rechargée";
-"notification.reload.body" = "La configuration de kanata a été rechargée";
-"notification.restart.title" = "kanata a redémarré";
-"notification.restart.body" = "kanata a été redémarré automatiquement";
+"notification.reload.body" = "La configuration de Kanata a été rechargée";
+"notification.restart.title" = "Kanata a redémarré";
+"notification.restart.body" = "Kanata a été redémarré automatiquement";
 "notification.restart.disabled.title" = "Redémarrage automatique désactivé";
 "notification.restart.disabled.body" = "Trop de plantages en moins d'une minute";
 
 /* Accessibility labels */
-"accessibility.starting" = "D\U00E9marrage de kanata";
-"accessibility.connecting" = "Connexion \U00E0 kanata";
-"accessibility.reload" = "Recharger la configuration kanata";
+"accessibility.starting" = "D\U00E9marrage de Kanata";
+"accessibility.connecting" = "Connexion \U00E0 Kanata";
+"accessibility.reload" = "Recharger la configuration Kanata";
 "accessibility.layer" = "Couche Kanata : %@";
 "accessibility.startAtLogin" = "Ouvrir Kanata Bar \U00E0 la connexion";
 

@@ -34,13 +34,13 @@
 "menu.section.kanata" = "Kanata";
 
 /* Full menu item label to start kanata (used when section header is not shown). */
-"menu.start" = "Start kanata";
+"menu.start" = "Start Kanata";
 
 /* Short menu item label to start kanata (used under a "Kanata" section header). */
 "menu.start.short" = "Start";
 
 /* Full menu item label to stop kanata (used when section header is not shown). */
-"menu.stop" = "Stop kanata";
+"menu.stop" = "Stop Kanata";
 
 /* Short menu item label to stop kanata (used under a "Kanata" section header). */
 "menu.stop.short" = "Stop";
@@ -72,20 +72,20 @@
 
 /* Notification title when kanata fails to start
    (e.g. user cancelled sudo/TouchID prompt or binary not found). */
-"notification.startFailure.title" = "Failed to start kanata";
+"notification.startFailure.title" = "Failed to start Kanata";
 
 /* Notification body for start failure. Advises user to try again. */
 "notification.startFailure.body" = "Administrator privileges are required. Click Start to try again.";
 
 /* Notification title when the kanata binary cannot be found at the configured path. */
-"notification.binaryNotFound.title" = "kanata binary not found";
+"notification.binaryNotFound.title" = "Kanata binary not found";
 
 /* Notification body when the kanata binary cannot be found.
    Advises the user to set the path in config.toml. */
-"notification.binaryNotFound.body" = "Set the kanata path in %@";
+"notification.binaryNotFound.body" = "Set the Kanata path in %@";
 
 /* Notification title when kanata exits unexpectedly (crash or error). */
-"notification.crash.title" = "kanata stopped unexpectedly";
+"notification.crash.title" = "Kanata stopped unexpectedly";
 
 /* Notification body for crash. Directs user to check log files. */
 "notification.crash.body" = "Check logs for details";
@@ -94,13 +94,13 @@
 "notification.reload.title" = "Config reloaded";
 
 /* Notification body for config reload. */
-"notification.reload.body" = "kanata configuration has been reloaded";
+"notification.reload.body" = "Kanata configuration has been reloaded";
 
 /* Notification title when kanata is automatically restarted after a crash. */
-"notification.restart.title" = "kanata restarted";
+"notification.restart.title" = "Kanata restarted";
 
 /* Notification body for automatic restart. */
-"notification.restart.body" = "kanata was restarted automatically";
+"notification.restart.body" = "Kanata was restarted automatically";
 
 /* Notification title when autorestart is disabled due to too many crashes. */
 "notification.restart.disabled.title" = "Autorestart disabled";
@@ -112,14 +112,14 @@
 
 /* VoiceOver label for the spinner while kanata is starting.
    Should include "kanata" for context (section header is not read by VoiceOver). */
-"accessibility.starting" = "Starting kanata";
+"accessibility.starting" = "Starting Kanata";
 
 /* VoiceOver label for the spinner while connecting to an external kanata. */
-"accessibility.connecting" = "Connecting to kanata";
+"accessibility.connecting" = "Connecting to Kanata";
 
 /* VoiceOver label for the Reload menu item (under a section header).
    Should include "kanata" for context. */
-"accessibility.reload" = "Reload kanata config";
+"accessibility.reload" = "Reload Kanata config";
 
 /* VoiceOver label for the layer roller.
    %@ is the active keyboard layer name. */
