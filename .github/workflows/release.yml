@@ -34,3 +34,11 @@ jobs:
           gh api repos/not-in-stock/homebrew-tap/dispatches \
             -f event_type=bump-kanata-bar \
             -f "client_payload[version]=${GITHUB_REF_NAME#v}"
+
+      - name: Notify kanata-darwin
+        env:
+          GH_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: |
+          gh api repos/not-in-stock/kanata-darwin/dispatches \
+            -f event_type=bump-kanata-bar \
+            -f "client_payload[version]=${GITHUB_REF_NAME#v}"
