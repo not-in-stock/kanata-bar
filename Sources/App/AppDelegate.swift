@@ -294,11 +294,11 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
     // MARK: - TCC
 
     private func resetTCCIfSourceChanged() {
-        let currentSource = installSource()
-        let previousSource = UserDefaults.standard.string(forKey: "installSource")
+        let currentPath = resolvedBundlePath()
+        let previousPath = UserDefaults.standard.string(forKey: "installSource")
 
-        if let previous = previousSource, previous != currentSource {
-            log("install source changed (\(previous) → \(currentSource)), resetting TCC")
+        if let previous = previousPath, previous != currentPath {
+            log("install path changed (\(previous) → \(currentPath)), resetting TCC")
             let tccutil = Process()
             tccutil.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
             tccutil.arguments = ["reset", "ListenEvent", Bundle.main.bundleIdentifier ?? Constants.bundleID]
@@ -306,14 +306,12 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
             tccutil.waitUntilExit()
         }
 
-        UserDefaults.standard.set(currentSource, forKey: "installSource")
+        UserDefaults.standard.set(currentPath, forKey: "installSource")
     }
 
-    private func installSource() -> String {
-        let path = Bundle.main.bundlePath
-        if path.contains("/nix/store/") { return "nix" }
-        if path.contains("/opt/homebrew/") || path.contains("/usr/local/Caskroom/") { return "homebrew" }
-        return "other"
+    private func resolvedBundlePath() -> String {
+        let url = URL(fileURLWithPath: Bundle.main.bundlePath)
+        return url.resolvingSymlinksInPath().path
     }
 
     // MARK: - Helper
