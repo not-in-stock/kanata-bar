@@ -1,38 +1,30 @@
 import AppKit
 import Shared
 
-extension AppDelegate {
-    var appLogURL: URL {
+enum Logging {
+    static let appLogURL: URL = {
         let logsDir = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Library/Logs")
         return logsDir.appendingPathComponent(Constants.Log.appFilename)
-    }
+    }()
 
-    var kanataLogURL: URL {
+    static let kanataLogURL: URL = {
         let logsDir = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Library/Logs")
         return logsDir.appendingPathComponent(Constants.Log.kanataFilename)
-    }
+    }()
 
-    func truncateLog() {
-        FileManager.default.createFile(atPath: appLogURL.path, contents: nil)
-    }
-
-    func log(_ message: String) {
-        let entry = "\(logTimestamp()) \(message)\n"
+    static func log(_ message: String) {
+        let entry = "\(timestamp()) \(message)\n"
         print("kanata-bar: \(message)")
         appendToFile(appLogURL, entry)
     }
 
-    @objc func doViewAppLog() {
-        openInConsole(appLogURL)
+    static func truncateLog() {
+        FileManager.default.createFile(atPath: appLogURL.path, contents: nil)
     }
 
-    @objc func doViewKanataLog() {
-        openInConsole(kanataLogURL)
-    }
-
-    private func openInConsole(_ url: URL) {
+    static func openInConsole(_ url: URL) {
         if !FileManager.default.fileExists(atPath: url.path) {
             FileManager.default.createFile(atPath: url.path, contents: nil)
         }
@@ -41,13 +33,13 @@ extension AppDelegate {
                                 configuration: NSWorkspace.OpenConfiguration())
     }
 
-    private func logTimestamp() -> String {
+    private static func timestamp() -> String {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return f.string(from: Date())
     }
 
-    func appendToFile(_ url: URL, _ entry: String) {
+    private static func appendToFile(_ url: URL, _ entry: String) {
         guard let data = entry.data(using: .utf8) else { return }
         if let handle = try? FileHandle(forWritingTo: url) {
             handle.seekToEndOfFile()

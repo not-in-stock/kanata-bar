@@ -21,18 +21,18 @@ extension AppDelegate {
     func enableLoginItem() {
         do {
             try loginItemService.register()
-            log("login item registered (status: \(loginItemService.status))")
+            Logging.log("login item registered (status: \(loginItemService.status))")
         } catch {
-            log("ERROR: login item register failed: \(error)")
+            Logging.log("ERROR: login item register failed: \(error)")
         }
     }
 
     func disableLoginItem() {
         do {
             try loginItemService.unregister()
-            log("login item unregistered (status: \(loginItemService.status))")
+            Logging.log("login item unregistered (status: \(loginItemService.status))")
         } catch {
-            log("ERROR: login item unregister failed: \(error)")
+            Logging.log("ERROR: login item unregister failed: \(error)")
         }
     }
 

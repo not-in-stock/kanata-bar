@@ -218,11 +218,11 @@ extension AppDelegate {
         restartWorkItem = nil
         restartTimestamps.removeAll()
         guard Config.isBinaryAccessible(kanataProcess.binaryPath) else {
-            log("ERROR: kanata binary not found: \(kanataProcess.binaryPath)")
+            Logging.log("ERROR: kanata binary not found: \(kanataProcess.binaryPath)")
             Notifications.sendBinaryNotFound()
             return
         }
-        log("starting kanata: \(kanataProcess.binaryPath) -c \(kanataProcess.configPath) --port \(kanataProcess.port)")
+        Logging.log("starting kanata: \(kanataProcess.binaryPath) -c \(kanataProcess.configPath) --port \(kanataProcess.port)")
         appState = .starting
         kanataProcess.start()
     }

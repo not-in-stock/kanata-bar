@@ -38,7 +38,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
 
     public func applicationDidFinishLaunching(_ notification: Notification) {
         guard !isAlreadyRunning() else { return }
-        truncateLog()
+        Logging.truncateLog()
 
         let config = loadConfig()
         autostart = config.kanataBar.autostartKanata
@@ -108,37 +108,39 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         let port = config.kanata.port
         let usePamTid = Config.resolvePamTouchid(config.kanataBar.pamTouchid)
 
+        Logging.log("auth mode: \(usePamTid ? "pam_touchid" : "authexec")")
+
         let launcher: KanataLauncher
         if usePamTid {
-            launcher = SudoLauncher(binaryPath: binaryPath, configPath: configPath, port: port, extraArgs: config.kanata.extraArgs, logURL: kanataLogURL)
+            launcher = SudoLauncher(binaryPath: binaryPath, configPath: configPath, port: port, extraArgs: config.kanata.extraArgs, logURL: Logging.kanataLogURL)
         } else {
-            launcher = AuthExecLauncher(binaryPath: binaryPath, configPath: configPath, port: port, extraArgs: config.kanata.extraArgs, logURL: kanataLogURL)
+            launcher = AuthExecLauncher(binaryPath: binaryPath, configPath: configPath, port: port, extraArgs: config.kanata.extraArgs, logURL: Logging.kanataLogURL)
         }
         kanataProcess = KanataProcess(launcher: launcher, binaryPath: binaryPath, configPath: configPath, port: port)
         kanataProcess.onStateChange = { [weak self] running in
             if !running {
-                self?.log("kanata stopped")
+                Logging.log("kanata stopped")
                 self?.appState = .stopped
             }
         }
-        kanataProcess.onPIDFound = { [weak self] pid in
-            self?.log("kanata started (pid=\(pid))")
+        kanataProcess.onPIDFound = { pid in
+            Logging.log("kanata started (pid=\(pid))")
         }
-        kanataProcess.onError = { [weak self] msg in
-            self?.log("ERROR: \(msg)")
+        kanataProcess.onError = { msg in
+            Logging.log("ERROR: \(msg)")
         }
         kanataProcess.onStartFailure = { [weak self] in
-            self?.log("kanata failed to start")
+            Logging.log("kanata failed to start")
             self?.appState = .stopped
             Notifications.sendStartFailure()
         }
         kanataProcess.onEarlyExit = { [weak self] exitCode in
-            self?.log("kanata exited immediately (exit code \(exitCode))")
+            Logging.log("kanata exited immediately (exit code \(exitCode))")
             self?.appState = .stopped
             Notifications.sendCrash()
         }
         kanataProcess.onCrash = { [weak self] exitCode in
-            self?.log("kanata crashed (exit code \(exitCode))")
+            Logging.log("kanata crashed (exit code \(exitCode))")
             if self?.autorestart == true {
                 self?.appState = .restarting
                 self?.scheduleRestart()
@@ -157,13 +159,13 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
 
     private func setupTCPClient(port: UInt16) {
         kanataClient = KanataClient(port: port)
-        kanataClient.onConfigReload = { [weak self] in
-            self?.log("config reloaded")
+        kanataClient.onConfigReload = {
+            Logging.log("config reloaded")
             Notifications.sendReload()
         }
         kanataClient.onLayerChange = { [weak self] layer in
             guard let self else { return }
-            self.log("layer: \(layer)")
+            Logging.log("layer: \(layer)")
             self.externalTimeoutWork?.cancel()
             self.externalTimeoutWork = nil
             self.appState = .running(layer)
@@ -172,7 +174,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         kanataClient.onConnectionChange = { [weak self] connected in
             guard let self else { return }
             if connected != wasConnected {
-                self.log("TCP \(connected ? "connected" : "disconnected")")
+                Logging.log("TCP \(connected ? "connected" : "disconnected")")
                 wasConnected = connected
             }
             if connected {
@@ -202,18 +204,18 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
 
     private func detectOrAutostart() {
         if let pid = KanataProcess.findExternalKanataPID() {
-            log("detected external kanata (pid=\(pid)), connecting...")
+            Logging.log("detected external kanata (pid=\(pid)), connecting...")
             isExternal = true
             externalPID = pid
             appState = .starting
         } else if autostart {
             let binaryPath = kanataProcess.binaryPath
             if Config.isBinaryAccessible(binaryPath) {
-                log("starting kanata: \(binaryPath) -c \(kanataProcess.configPath) --port \(kanataProcess.port)")
+                Logging.log("starting kanata: \(binaryPath) -c \(kanataProcess.configPath) --port \(kanataProcess.port)")
                 appState = .starting
                 kanataProcess.start()
             } else {
-                log("ERROR: kanata binary not found: \(binaryPath)")
+                Logging.log("ERROR: kanata binary not found: \(binaryPath)")
                 Notifications.sendBinaryNotFound()
             }
         }
@@ -221,11 +223,11 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
 
     private func logStartupInfo() {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
-        log("starting [version=\(version)]")
-        log("kanata binary: \(kanataProcess.binaryPath)")
-        log("kanata config: \(kanataProcess.configPath)")
-        log("TCP port: \(kanataProcess.port)")
-        if let dir = iconManager.iconsDir { log("icons dir: \(dir)") }
+        Logging.log("starting [version=\(version)]")
+        Logging.log("kanata binary: \(kanataProcess.binaryPath)")
+        Logging.log("kanata config: \(kanataProcess.configPath)")
+        Logging.log("TCP port: \(kanataProcess.port)")
+        if let dir = iconManager.iconsDir { Logging.log("icons dir: \(dir)") }
     }
 
     public func applicationWillTerminate(_ notification: Notification) {
@@ -252,7 +254,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         externalTimeoutWork?.cancel()
         let work = DispatchWorkItem { [weak self] in
             guard let self, self.isExternal, self.appState == .starting else { return }
-            self.log("external kanata not responding, stopping")
+            Logging.log("external kanata not responding, stopping")
             self.externalTimeoutWork = nil
             self.appState = .stopped
         }
@@ -264,7 +266,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         let now = Date()
         restartTimestamps = restartTimestamps.filter { now.timeIntervalSince($0) < 60 }
         if restartTimestamps.count >= 3 {
-            log("autorestart disabled: too many crashes")
+            Logging.log("autorestart disabled: too many crashes")
             autorestart = false
             appState = .stopped
             Notifications.sendAutorestartDisabled()
@@ -276,12 +278,12 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
             guard let self, self.appState == .restarting else { return }
             self.restartWorkItem = nil
             guard Config.isBinaryAccessible(self.kanataProcess.binaryPath) else {
-                self.log("ERROR: kanata binary not found: \(self.kanataProcess.binaryPath)")
+                Logging.log("ERROR: kanata binary not found: \(self.kanataProcess.binaryPath)")
                 self.appState = .stopped
                 Notifications.sendBinaryNotFound()
                 return
             }
-            self.log("autorestarting kanata...")
+            Logging.log("autorestarting kanata...")
             self.appState = .starting
             self.kanataProcess.start()
             Notifications.sendRestart()
@@ -297,7 +299,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         let previousPath = UserDefaults.standard.string(forKey: "installSource")
 
         if let previous = previousPath, previous != currentPath {
-            log("install path changed (\(previous) → \(currentPath)), resetting TCC")
+            Logging.log("install path changed (\(previous) → \(currentPath)), resetting TCC")
             let tccutil = Process()
             tccutil.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
             tccutil.arguments = ["reset", "ListenEvent", Bundle.main.bundleIdentifier ?? Constants.bundleID]
@@ -311,6 +313,16 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
     private func resolvedBundlePath() -> String {
         let url = URL(fileURLWithPath: Bundle.main.bundlePath)
         return url.resolvingSymlinksInPath().path
+    }
+
+    // MARK: - Logs
+
+    @objc func doViewAppLog() {
+        Logging.openInConsole(Logging.appLogURL)
+    }
+
+    @objc func doViewKanataLog() {
+        Logging.openInConsole(Logging.kanataLogURL)
     }
 
     // MARK: - Helper
