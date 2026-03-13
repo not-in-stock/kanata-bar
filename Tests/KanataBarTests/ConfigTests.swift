@@ -81,4 +81,8 @@ final class ConfigTests: XCTestCase {
         defer { try? FileManager.default.removeItem(atPath: tmp) }
         XCTAssertFalse(Config.isBinaryAccessible(tmp))
     }
+
+    func testIsBinaryAccessibleWithDirectory() {
+        XCTAssertFalse(Config.isBinaryAccessible("/usr/bin"))
+    }
 }

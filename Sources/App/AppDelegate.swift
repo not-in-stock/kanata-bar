@@ -128,7 +128,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
             self?.log("ERROR: \(msg)")
         }
         kanataProcess.onStartFailure = { [weak self] in
-            self?.log("kanata failed to start (auth denied)")
+            self?.log("kanata failed to start")
             self?.appState = .stopped
             Notifications.sendStartFailure()
         }

@@ -182,6 +182,10 @@ struct Config: Codable {
 
     static func isBinaryAccessible(_ path: String) -> Bool {
         guard path != Constants.kanataBinaryName else { return false }  // unresolved bare name
+        var isDir: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir), !isDir.boolValue else {
+            return false
+        }
         return FileManager.default.isExecutableFile(atPath: path)
     }
 }
