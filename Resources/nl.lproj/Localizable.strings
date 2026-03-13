@@ -7,6 +7,9 @@
 "menu.section.kanata" = "Kanata";
 "menu.start" = "Start Kanata";
 "menu.start.short" = "Start";
+
+"menu.start.binaryNotFound" = "Kanata-binary niet gevonden";
+
 "menu.stop" = "Stop Kanata";
 "menu.stop.short" = "Stop";
 "menu.reload" = "Configuratie herladen";

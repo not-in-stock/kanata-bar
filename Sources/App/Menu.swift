@@ -14,6 +14,7 @@ extension AppDelegate {
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: NSLocalizedString("menu.quit", comment: ""), action: #selector(doQuit), keyEquivalent: "q"))
 
+        menu.delegate = self
         statusItem.menu = menu
         updateMenuState()
     }
@@ -205,6 +206,23 @@ extension AppDelegate {
                 startAtLoginItem?.badge = nil
             }
             startAtLoginItem?.toolTip = nil
+        }
+    }
+
+    // MARK: - Menu Delegate
+
+    public func menuWillOpen(_ menu: NSMenu) {
+        guard appState == .stopped, !isExternal else { return }
+        let accessible = Config.isBinaryAccessible(kanataProcess.binaryPath)
+        startItem?.isEnabled = accessible
+        startItem?.toolTip = accessible ? nil : NSLocalizedString("menu.start.binaryNotFound", comment: "")
+        if !accessible && !binaryNotFoundNotified {
+            binaryNotFoundNotified = true
+            Logging.log("kanata binary not found: \(kanataProcess.binaryPath)")
+            Notifications.sendBinaryNotFound()
+        }
+        if accessible {
+            binaryNotFoundNotified = false
         }
     }
 

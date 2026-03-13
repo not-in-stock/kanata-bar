@@ -7,6 +7,9 @@
 "menu.section.kanata" = "Kanata";
 "menu.start" = "Kanata starten";
 "menu.start.short" = "Starten";
+
+"menu.start.binaryNotFound" = "Kanata-Binary nicht gefunden";
+
 "menu.stop" = "Kanata stoppen";
 "menu.stop.short" = "Stoppen";
 "menu.reload" = "Konfiguration neu laden";

@@ -7,6 +7,9 @@
 "menu.section.kanata" = "Kanata";
 "menu.start" = "Kanata 시작";
 "menu.start.short" = "시작";
+
+"menu.start.binaryNotFound" = "Kanata 바이너리를 찾을 수 없습니다";
+
 "menu.stop" = "Kanata 중단";
 "menu.stop.short" = "중단";
 "menu.reload" = "설정 다시 불러오기";

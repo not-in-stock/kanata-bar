@@ -24,6 +24,8 @@
 /* Short menu item (under "Kanata" section header) */
 "menu.start.short" = "Iniciar";
 
+"menu.start.binaryNotFound" = "Binário do Kanata não encontrado";
+
 /* Full menu item */
 "menu.stop" = "Parar Kanata";
 

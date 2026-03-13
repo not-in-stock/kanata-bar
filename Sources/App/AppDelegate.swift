@@ -3,7 +3,7 @@ import ServiceManagement
 import Shared
 import UserNotifications
 
-public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
+public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUserNotificationCenterDelegate {
     var statusItem: NSStatusItem!
     var kanataClient: KanataClient!
     var kanataProcess: KanataProcess!
@@ -23,6 +23,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
     var autorestart = false
     var restartTimestamps: [Date] = []
     var restartWorkItem: DispatchWorkItem?
+    var binaryNotFoundNotified = false
 
     // Menu items that change state
     var startItem: NSMenuItem!
@@ -216,6 +217,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
                 kanataProcess.start()
             } else {
                 Logging.log("ERROR: kanata binary not found: \(binaryPath)")
+                binaryNotFoundNotified = true
                 Notifications.sendBinaryNotFound()
             }
         }
@@ -279,6 +281,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
             self.restartWorkItem = nil
             guard Config.isBinaryAccessible(self.kanataProcess.binaryPath) else {
                 Logging.log("ERROR: kanata binary not found: \(self.kanataProcess.binaryPath)")
+                self.binaryNotFoundNotified = true
                 self.appState = .stopped
                 Notifications.sendBinaryNotFound()
                 return

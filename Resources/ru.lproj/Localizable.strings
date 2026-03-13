@@ -24,6 +24,8 @@
 /* Короткий пункт меню (под заголовком секции "Kanata") */
 "menu.start.short" = "Запустить";
 
+"menu.start.binaryNotFound" = "Исполняемый файл Kanata не найден";
+
 /* Полный пункт меню */
 "menu.stop" = "Остановить Kanata";
 

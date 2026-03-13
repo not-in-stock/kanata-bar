@@ -7,6 +7,9 @@
 "menu.section.kanata" = "Kanata";
 "menu.start" = "Kanataを開始";
 "menu.start.short" = "開始";
+
+"menu.start.binaryNotFound" = "Kanataバイナリが見つかりません";
+
 "menu.stop" = "Kanataを停止";
 "menu.stop.short" = "停止";
 "menu.reload" = "設定を再読み込み";

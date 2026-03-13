@@ -7,6 +7,9 @@
 "menu.section.kanata" = "Kanata";
 "menu.start" = "启动 Kanata";
 "menu.start.short" = "启动";
+
+"menu.start.binaryNotFound" = "未找到 Kanata 可执行文件";
+
 "menu.stop" = "停止 Kanata";
 "menu.stop.short" = "停止";
 "menu.reload" = "重新加载配置";

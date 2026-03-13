@@ -39,6 +39,9 @@
 /* Short menu item label to start kanata (used under a "Kanata" section header). */
 "menu.start.short" = "Start";
 
+/* Tooltip shown on Start when the kanata binary is not found at the configured path. */
+"menu.start.binaryNotFound" = "Kanata binary not found";
+
 /* Full menu item label to stop kanata (used when section header is not shown). */
 "menu.stop" = "Stop Kanata";
 
