@@ -140,8 +140,8 @@ kanata requires root privileges for keyboard access on macOS. kanata-bar support
 
 | Mode | Config | Auth prompt | How it works |
 | :--- | :----- | :---------- | :----------- |
-| **sudo + PAM** | `pam_touchid = "auto"` | TouchID / password | `sudo -S` with stdin EOF |
-| **AuthExec** | `pam_touchid = "false"` (default) | macOS password dialog | `AuthorizationExecuteWithPrivileges` (deprecated since 10.7) |
+| **sudo + PAM** | `pam_touchid = "auto"` (default) | TouchID / password | `sudo -S` with stdin EOF |
+| **AuthExec** | `pam_touchid = "false"` | macOS password dialog | `AuthorizationExecuteWithPrivileges` (deprecated since 10.7) |
 
 Both modes start kanata in the user session so the macOS Input Monitoring permission dialog appears correctly. The app stops kanata via a privileged XPC helper (SIGTERM) or `sudo -n kill` as fallback, and connects to kanata's TCP API for real-time layer change events.
 

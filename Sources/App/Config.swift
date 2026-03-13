@@ -55,7 +55,7 @@ struct KanataBarConfig: Codable {
     static let `default` = KanataBarConfig(
         autostartKanata: false,
         autorestartKanata: false,
-        pamTouchid: "false",
+        pamTouchid: "auto",
         iconsDir: nil,
         iconTransition: nil
     )
