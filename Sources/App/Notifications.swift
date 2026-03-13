@@ -50,6 +50,16 @@ enum Notifications {
         UNUserNotificationCenter.current().add(request)
     }
 
+    static func sendPortConflict(port: UInt16) {
+        let content = UNMutableNotificationContent()
+        content.title = NSLocalizedString("notification.portConflict.title", comment: "")
+        content.body = String(format: NSLocalizedString("notification.portConflict.body", comment: ""), "\(port)")
+        content.sound = .default
+
+        let request = UNNotificationRequest(identifier: "kanata-port-conflict", content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
+    }
+
     static func sendBinaryNotFound() {
         let content = UNMutableNotificationContent()
         content.title = NSLocalizedString("notification.binaryNotFound.title", comment: "")

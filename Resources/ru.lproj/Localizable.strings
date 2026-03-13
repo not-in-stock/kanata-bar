@@ -59,6 +59,9 @@
 "notification.startFailure.title" = "Не удалось запустить Kanata";
 "notification.startFailure.body" = "Требуются права администратора. Нажмите «Запустить» для повторной попытки.";
 
+"notification.portConflict.title" = "Kanata не отвечает";
+"notification.portConflict.body" = "TCP-порт %@ может быть занят другим приложением";
+
 "notification.binaryNotFound.title" = "Kanata не найдена";
 "notification.binaryNotFound.body" = "Укажите путь к Kanata в %@";
 

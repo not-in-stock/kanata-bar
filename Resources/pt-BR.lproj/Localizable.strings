@@ -58,6 +58,9 @@
 "notification.startFailure.body" = "Privilégios de administrador são necessários. Clique em Iniciar para tentar novamente.";
 
 /* Kanata crashed */
+"notification.portConflict.title" = "Kanata não está respondendo";
+"notification.portConflict.body" = "A porta TCP %@ pode estar em uso por outro aplicativo";
+
 "notification.binaryNotFound.title" = "Kanata não encontrado";
 "notification.binaryNotFound.body" = "Defina o caminho do Kanata em %@";
 

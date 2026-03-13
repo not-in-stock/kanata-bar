@@ -23,6 +23,9 @@
 /* Notifications */
 "notification.startFailure.title" = "Kanata konnte nicht gestartet werden";
 "notification.startFailure.body" = "Administratorrechte erforderlich. Klicken Sie auf Starten, um es erneut zu versuchen.";
+"notification.portConflict.title" = "Kanata antwortet nicht";
+"notification.portConflict.body" = "TCP-Port %@ wird möglicherweise von einer anderen Anwendung verwendet";
+
 "notification.binaryNotFound.title" = "Kanata nicht gefunden";
 "notification.binaryNotFound.body" = "Setzen Sie den Kanata-Pfad in %@";
 

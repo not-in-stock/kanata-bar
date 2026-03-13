@@ -23,6 +23,9 @@
 /* Notifications */
 "notification.startFailure.title" = "Kan Kanata niet starten";
 "notification.startFailure.body" = "Beheerdersbevoegdheden zijn vereist. Klik op Start om opnieuw te proberen.";
+"notification.portConflict.title" = "Kanata reageert niet";
+"notification.portConflict.body" = "TCP-poort %@ wordt mogelijk door een andere applicatie gebruikt";
+
 "notification.binaryNotFound.title" = "Kanata niet gevonden";
 "notification.binaryNotFound.body" = "Stel het Kanata-pad in via %@";
 

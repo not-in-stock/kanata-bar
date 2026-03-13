@@ -23,6 +23,9 @@
 /* Notifications */
 "notification.startFailure.title" = "Kanataの起動に失敗しました";
 "notification.startFailure.body" = "管理者権限が必要です。「開始」をクリックして再試行してください。";
+"notification.portConflict.title" = "Kanataが応答しません";
+"notification.portConflict.body" = "TCPポート%@が他のアプリケーションで使用されている可能性があります";
+
 "notification.binaryNotFound.title" = "Kanataが見つかりません";
 "notification.binaryNotFound.body" = "%@でKanataのパスを設定してください";
 

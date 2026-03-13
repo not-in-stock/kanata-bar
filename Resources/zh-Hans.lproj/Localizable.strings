@@ -23,6 +23,9 @@
 /* Notifications */
 "notification.startFailure.title" = "无法启动 Kanata";
 "notification.startFailure.body" = "需要管理员权限。点击"启动"重试。";
+"notification.portConflict.title" = "Kanata 无响应";
+"notification.portConflict.body" = "TCP 端口 %@ 可能被其他应用程序占用";
+
 "notification.binaryNotFound.title" = "找不到 Kanata";
 "notification.binaryNotFound.body" = "请在 %@ 中设置 Kanata 路径";
 

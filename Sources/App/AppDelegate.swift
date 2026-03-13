@@ -14,6 +14,13 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUse
             guard appState != oldValue else { return }
             iconManager?.updateAnimated(for: appState)
             updateMenuState()
+
+            if case .starting = appState, !isExternal {
+                scheduleStartingTimeout()
+            } else {
+                startingTimeoutWork?.cancel()
+                startingTimeoutWork = nil
+            }
         }
     }
     var isExternal = false
@@ -23,6 +30,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUse
     var autorestart = false
     var restartTimestamps: [Date] = []
     var restartWorkItem: DispatchWorkItem?
+    var startingTimeoutWork: DispatchWorkItem?
     var binaryNotFoundNotified = false
 
     // Menu items that change state
@@ -250,6 +258,19 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUse
                                        willPresent notification: UNNotification,
                                        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         completionHandler([.banner, .sound])
+    }
+
+    private func scheduleStartingTimeout() {
+        startingTimeoutWork?.cancel()
+        let port = kanataProcess.port
+        let work = DispatchWorkItem { [weak self] in
+            guard let self, self.appState == .starting, !self.isExternal else { return }
+            self.startingTimeoutWork = nil
+            Logging.log("TCP not connected after 10s, port \(port) may be in use")
+            Notifications.sendPortConflict(port: port)
+        }
+        startingTimeoutWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10.0, execute: work)
     }
 
     private func scheduleExternalTimeout() {

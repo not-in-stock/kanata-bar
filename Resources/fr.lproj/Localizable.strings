@@ -23,6 +23,9 @@
 /* Notifications */
 "notification.startFailure.title" = "Impossible de démarrer Kanata";
 "notification.startFailure.body" = "Les privilèges administrateur sont requis. Cliquez sur Démarrer pour réessayer.";
+"notification.portConflict.title" = "Kanata ne répond pas";
+"notification.portConflict.body" = "Le port TCP %@ est peut-être utilisé par une autre application";
+
 "notification.binaryNotFound.title" = "Kanata introuvable";
 "notification.binaryNotFound.body" = "Définissez le chemin de Kanata dans %@";
 

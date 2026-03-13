@@ -80,6 +80,12 @@
 /* Notification body for start failure. Advises user to try again. */
 "notification.startFailure.body" = "Administrator privileges are required. Click Start to try again.";
 
+/* Notification title when TCP connection to kanata is not established within timeout. */
+"notification.portConflict.title" = "Kanata not responding";
+
+/* Notification body for port conflict. %@ is the port number. */
+"notification.portConflict.body" = "TCP port %@ may be in use by another application";
+
 /* Notification title when the kanata binary cannot be found at the configured path. */
 "notification.binaryNotFound.title" = "Kanata binary not found";
 
