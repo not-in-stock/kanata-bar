@@ -156,11 +156,9 @@ class AuthExecLauncher: KanataLauncher {
     func stop() {
         let pid = monitoredPID
         guard pid > 0 else { return }
-        killViaAuthExec(signal: "TERM", pid: pid)
-        DispatchQueue.global().asyncAfter(deadline: .now() + 3.0) { [weak self] in
-            guard isProcessAlive(pid) else { return }
-            self?.killViaAuthExec(signal: "KILL", pid: pid)
-        }
+        // kanata on macOS ignores SIGTERM/SIGINT (no signal handlers) and
+        // AuthExec I/O goes to file, so pipe-break is impossible — SIGKILL is the only option.
+        killViaAuthExec(signal: "KILL", pid: pid)
     }
 
     // MARK: - Cleanup

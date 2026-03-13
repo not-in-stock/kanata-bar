@@ -122,17 +122,10 @@ class SudoLauncher: KanataLauncher {
             self?.stopViaSudoers(pid: pid)
         } as! HelperProtocol
 
-        proxy.sendSignal(SIGTERM, toProcessID: pid) { [weak self] success, _ in
+        // kanata on macOS ignores SIGTERM — send SIGKILL directly
+        proxy.sendSignal(SIGKILL, toProcessID: pid) { [weak self] success, _ in
             if !success {
                 self?.stopViaSudoers(pid: pid)
-                return
-            }
-            DispatchQueue.global().asyncAfter(deadline: .now() + 3.0) {
-                proxy.isProcessAlive(pid) { alive in
-                    if alive {
-                        proxy.sendSignal(SIGKILL, toProcessID: pid) { _, _ in }
-                    }
-                }
             }
         }
     }
@@ -141,13 +134,8 @@ class SudoLauncher: KanataLauncher {
 
     private func stopViaSudoers(pid: Int32? = nil) {
         guard let pid, pid > 0 else { return }
-        sudoKill(signal: "TERM", pid: pid)
-        DispatchQueue.global().asyncAfter(deadline: .now() + 3.0) { [weak self] in
-            guard self != nil else { return }
-            if isProcessAlive(pid) {
-                self?.sudoKill(signal: "KILL", pid: pid)
-            }
-        }
+        // kanata on macOS ignores SIGTERM — send SIGKILL directly
+        sudoKill(signal: "KILL", pid: pid)
     }
 
     private func sudoKill(signal: String, pid: Int32) {
