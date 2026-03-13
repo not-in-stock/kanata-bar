@@ -203,6 +203,12 @@ class IconManager {
     }
 
     private func makeTextBadge(_ text: String) -> NSImage {
+        let emoji = text.unicodeScalars.contains { $0.properties.isEmojiPresentation }
+
+        if emoji {
+            return makeEmojiBadge(text)
+        }
+
         let size: CGFloat = 18
         let cornerRadius: CGFloat = 3
         let font = NSFontManager.shared.convert(
@@ -228,6 +234,30 @@ class IconManager {
             return true
         }
         image.isTemplate = true
+        image.accessibilityDescription = "Kanata Bar"
+        return image
+    }
+
+    private func makeEmojiBadge(_ text: String) -> NSImage {
+        let size: CGFloat = 18
+        let cornerRadius: CGFloat = 3
+        let font = NSFont.systemFont(ofSize: 11)
+        let attrs: [NSAttributedString.Key: Any] = [.font: font]
+        let textSize = (text as NSString).size(withAttributes: attrs)
+
+        let image = NSImage(size: NSSize(width: size, height: size), flipped: false) { rect in
+            let borderRect = rect.insetBy(dx: 0.5, dy: 0.5)
+            let path = NSBezierPath(roundedRect: borderRect, xRadius: cornerRadius, yRadius: cornerRadius)
+            path.lineWidth = 1
+            NSColor.labelColor.withAlphaComponent(0.5).setStroke()
+            path.stroke()
+
+            let x = (size - textSize.width) / 2
+            let y = (size - textSize.height) / 2
+            (text as NSString).draw(at: NSPoint(x: x, y: y), withAttributes: attrs)
+            return true
+        }
+        image.isTemplate = false
         image.accessibilityDescription = "Kanata Bar"
         return image
     }
