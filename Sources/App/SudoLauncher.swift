@@ -55,9 +55,14 @@ class SudoLauncher: KanataLauncher {
             p.terminationHandler = { [weak self] proc in
                 let exitCode = proc.terminationStatus
                 DispatchQueue.main.async {
+                    let pidWasDiscovered = (self?.discoveredPID ?? -1) > 0
                     self?.sudoProcess = nil
                     self?.discoveredPID = -1
-                    self?.onExited?(exitCode)
+                    if !pidWasDiscovered && exitCode != 0 {
+                        self?.onFailure?()
+                    } else {
+                        self?.onExited?(exitCode)
+                    }
                 }
             }
 

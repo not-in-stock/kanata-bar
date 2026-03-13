@@ -268,7 +268,6 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
             autorestart = false
             appState = .stopped
             Notifications.sendAutorestartDisabled()
-            Notifications.sendCrash()
             return
         }
         restartTimestamps.append(now)
