@@ -1,9 +1,40 @@
 import AppKit
 
+private class FadingTextField: NSTextField {
+    var fadeWidth: CGFloat = 24
+
+    override func draw(_ dirtyRect: NSRect) {
+        let textWidth = intrinsicContentSize.width
+        guard textWidth > bounds.width, let context = NSGraphicsContext.current?.cgContext else {
+            super.draw(dirtyRect)
+            return
+        }
+
+        let fadeStart = bounds.width - fadeWidth
+
+        context.saveGState()
+        context.beginTransparencyLayer(auxiliaryInfo: nil)
+
+        super.draw(dirtyRect)
+
+        context.setBlendMode(.destinationOut)
+        let colors = [CGColor(gray: 0, alpha: 0), CGColor(gray: 0, alpha: 1)] as CFArray
+        if let gradient = CGGradient(colorsSpace: nil, colors: colors, locations: [0, 1]) {
+            context.drawLinearGradient(gradient,
+                                       start: CGPoint(x: fadeStart, y: 0),
+                                       end: CGPoint(x: bounds.width, y: 0),
+                                       options: [])
+        }
+
+        context.endTransparencyLayer()
+        context.restoreGState()
+    }
+}
+
 class LayerRollerView: NSView {
     private let prefixLabel: NSTextField
-    private var currentLabel: NSTextField
-    private var nextLabel: NSTextField
+    private var currentLabel: FadingTextField
+    private var nextLabel: FadingTextField
     private var currentCenterY: NSLayoutConstraint!
     private var nextCenterY: NSLayoutConstraint!
     private var currentText = ""
@@ -11,11 +42,12 @@ class LayerRollerView: NSView {
     private var pendingLayer: String?
     private let viewHeight: CGFloat = 22
     private var leadingConstraint: NSLayoutConstraint!
+    private let trailingMargin: CGFloat = 14
 
     init(prefix: String, width: CGFloat = 200) {
         prefixLabel = NSTextField(labelWithString: prefix)
-        currentLabel = NSTextField(labelWithString: "")
-        nextLabel = NSTextField(labelWithString: "")
+        currentLabel = FadingTextField(labelWithString: "")
+        nextLabel = FadingTextField(labelWithString: "")
         super.init(frame: NSRect(x: 0, y: 0, width: width, height: viewHeight))
         wantsLayer = true
         layer?.masksToBounds = true
@@ -33,9 +65,13 @@ class LayerRollerView: NSView {
         for label in [currentLabel, nextLabel] {
             label.font = NSFont.menuFont(ofSize: 14)
             label.textColor = .secondaryLabelColor
+            label.lineBreakMode = .byClipping
             label.translatesAutoresizingMaskIntoConstraints = false
             addSubview(label)
-            label.leadingAnchor.constraint(equalTo: prefixLabel.trailingAnchor, constant: 0).isActive = true
+            NSLayoutConstraint.activate([
+                label.leadingAnchor.constraint(equalTo: prefixLabel.trailingAnchor, constant: 0),
+                label.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -trailingMargin),
+            ])
         }
 
         currentCenterY = currentLabel.centerYAnchor.constraint(equalTo: centerYAnchor)
@@ -134,4 +170,5 @@ class LayerRollerView: NSView {
         nextLabel.alphaValue = 0
         nextCenterY.constant = -viewHeight
     }
+
 }
