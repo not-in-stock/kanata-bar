@@ -240,21 +240,70 @@ class IconManager {
 
     private func makeEmojiBadge(_ text: String) -> NSImage {
         let size: CGFloat = 18
-        let cornerRadius: CGFloat = 3
-        let font = NSFont.systemFont(ofSize: 11)
+        let scale = NSScreen.main?.backingScaleFactor ?? 2
+        let pxSize = Int(size * scale)
+        let font = NSFont.systemFont(ofSize: 12)
         let attrs: [NSAttributedString.Key: Any] = [.font: font]
         let textSize = (text as NSString).size(withAttributes: attrs)
+        let imageSize = NSSize(width: size, height: size)
+        let x = (size - textSize.width) / 2
+        let y = (size - textSize.height) / 2
 
-        let image = NSImage(size: NSSize(width: size, height: size), flipped: false) { rect in
-            let borderRect = rect.insetBy(dx: 0.5, dy: 0.5)
-            let path = NSBezierPath(roundedRect: borderRect, xRadius: cornerRadius, yRadius: cornerRadius)
-            path.lineWidth = 1
-            NSColor.labelColor.withAlphaComponent(0.5).setStroke()
-            path.stroke()
+        // 1. Render emoji + shadow into offscreen bitmap
+        guard let bCtx = CGContext(data: nil, width: pxSize, height: pxSize,
+                                    bitsPerComponent: 8, bytesPerRow: pxSize * 4,
+                                    space: CGColorSpaceCreateDeviceRGB(),
+                                    bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return NSImage(size: imageSize) }
 
-            let x = (size - textSize.width) / 2
-            let y = (size - textSize.height) / 2
+        bCtx.scaleBy(x: scale, y: scale)
+        let prev = NSGraphicsContext.current
+        NSGraphicsContext.current = NSGraphicsContext(cgContext: bCtx, flipped: false)
+
+        bCtx.setShadow(offset: .zero, blur: 3.6, color: CGColor(gray: 0, alpha: 1))
+        for _ in 0..<3 {
             (text as NSString).draw(at: NSPoint(x: x, y: y), withAttributes: attrs)
+        }
+
+        NSGraphicsContext.current = prev
+
+        // 2. Threshold alpha → crisp outline
+        if let data = bCtx.data {
+            let px = data.bindMemory(to: UInt8.self, capacity: pxSize * pxSize * 4)
+            for i in 0..<(pxSize * pxSize) {
+                let a = i * 4 + 3
+                px[a] = min(255, UInt8(min(Int(px[a]) * 8, 255)))
+            }
+        }
+
+        guard let outlineCG = bCtx.makeImage() else { return NSImage(size: imageSize) }
+
+        // 3. Composite: tinted outline + color emoji
+        let image = NSImage(size: imageSize, flipped: false) { _ in
+            guard let ctx = NSGraphicsContext.current?.cgContext else { return true }
+            let rect = CGRect(origin: .zero, size: imageSize)
+
+            // Subtle drop shadow behind the sticker
+            ctx.setShadow(offset: CGSize(width: 0, height: -0.5), blur: 2.0, color: CGColor(gray: 0, alpha: 0.4))
+
+            // Outline + emoji drawn inside shadow scope
+            ctx.beginTransparencyLayer(auxiliaryInfo: nil)
+
+            // White outline
+            ctx.saveGState()
+            ctx.beginTransparencyLayer(auxiliaryInfo: nil)
+            ctx.draw(outlineCG, in: rect)
+            ctx.setBlendMode(.sourceIn)
+            ctx.setFillColor(NSColor.white.cgColor)
+            ctx.fill(rect)
+            ctx.endTransparencyLayer()
+            ctx.restoreGState()
+
+            // Color emoji on top
+            (text as NSString).draw(at: NSPoint(x: x, y: y), withAttributes: attrs)
+
+            ctx.endTransparencyLayer()
+
             return true
         }
         image.isTemplate = false
