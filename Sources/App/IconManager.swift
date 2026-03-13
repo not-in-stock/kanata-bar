@@ -181,21 +181,13 @@ class IconManager {
     private func loadPlaceholder() -> NSImage? {
         if let cached = cache["__placeholder"] { return cached }
 
-        let candidates = [
-            iconsDir.map { "\($0)/placeholder.png" },
-            Bundle.main.path(forResource: "placeholder", ofType: "png")
-        ].compactMap { $0 }
-
-        for path in candidates {
-            if let image = NSImage(contentsOfFile: path) {
-                image.isTemplate = true
-                image.size = NSSize(width: 18, height: 18)
-                image.accessibilityDescription = "Kanata Bar"
-                cache["__placeholder"] = image
-                return image
-            }
-        }
-        return nil
+        guard let path = Bundle.main.path(forResource: "placeholder", ofType: "png"),
+              let image = NSImage(contentsOfFile: path) else { return nil }
+        image.isTemplate = true
+        image.size = NSSize(width: 18, height: 18)
+        image.accessibilityDescription = "Kanata Bar"
+        cache["__placeholder"] = image
+        return image
     }
 
     private func loadIcon(layer: String, from dir: String) -> NSImage? {
