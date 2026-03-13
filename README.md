@@ -86,12 +86,12 @@ port = 5829
 # Extra arguments passed to kanata
 extra_args = ["--log-layer-changes"]
 
+[kanata_bar]
 # Privilege escalation mode:
 #   "auto"  — use sudo with PAM (TouchID if configured, recommended)
 #   "false" — use AuthorizationExecuteWithPrivileges (deprecated API)
-pam_tid = "auto"
+pam_touchid = "auto"
 
-[kanata_bar]
 # Start kanata automatically when app launches
 autostart_kanata = false
 
@@ -140,8 +140,8 @@ kanata requires root privileges for keyboard access on macOS. kanata-bar support
 
 | Mode | Config | Auth prompt | How it works |
 | :--- | :----- | :---------- | :----------- |
-| **sudo + PAM** | `pam_tid = "auto"` | TouchID / password | `sudo -S` with stdin EOF |
-| **AuthExec** | `pam_tid = "false"` (default) | macOS password dialog | `AuthorizationExecuteWithPrivileges` (deprecated since 10.7) |
+| **sudo + PAM** | `pam_touchid = "auto"` | TouchID / password | `sudo -S` with stdin EOF |
+| **AuthExec** | `pam_touchid = "false"` (default) | macOS password dialog | `AuthorizationExecuteWithPrivileges` (deprecated since 10.7) |
 
 Both modes start kanata in the user session so the macOS Input Monitoring permission dialog appears correctly. The app stops kanata via a privileged XPC helper (SIGTERM) or `sudo -n kill` as fallback, and connects to kanata's TCP API for real-time layer change events.
 
@@ -155,7 +155,7 @@ The AuthExec mode uses a deprecated macOS API that Apple may remove in a future 
 ./scripts/enable-pam-tid.sh
 ```
 
-The script creates `/etc/pam.d/sudo_local` with `pam_tid.so` (survives macOS updates). Then set `pam_tid = "auto"` in your config.
+The script creates `/etc/pam.d/sudo_local` with `pam_tid.so` (survives macOS updates). Then set `pam_touchid = "auto"` in your config.
 
 ## Logs
 

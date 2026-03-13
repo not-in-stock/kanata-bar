@@ -106,7 +106,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCen
         let binaryPath = Config.resolveKanataPath(config.kanata.path)
         let configPath = Config.expandTilde(config.kanata.config)
         let port = config.kanata.port
-        let usePamTid = Config.resolvePamTid(config.kanata.pamTid)
+        let usePamTid = Config.resolvePamTouchid(config.kanataBar.pamTouchid)
 
         let launcher: KanataLauncher
         if usePamTid {

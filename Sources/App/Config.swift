@@ -7,28 +7,24 @@ struct KanataConfig: Codable {
     var config: String
     var port: UInt16
     var extraArgs: [String]
-    var pamTid: String  // "false" or "auto"
 
     enum CodingKeys: String, CodingKey {
         case path, config, port
         case extraArgs = "extra_args"
-        case pamTid = "pam_tid"
     }
 
     static let `default` = KanataConfig(
         path: "",
         config: "~/.config/kanata/kanata.kbd",
         port: 5829,
-        extraArgs: [],
-        pamTid: "false"
+        extraArgs: []
     )
 
-    init(path: String, config: String, port: UInt16, extraArgs: [String], pamTid: String) {
+    init(path: String, config: String, port: UInt16, extraArgs: [String]) {
         self.path = path
         self.config = config
         self.port = port
         self.extraArgs = extraArgs
-        self.pamTid = pamTid
     }
 
     init(from decoder: Decoder) throws {
@@ -38,19 +34,20 @@ struct KanataConfig: Codable {
         config = (try? c.decode(String.self, forKey: .config)) ?? d.config
         port = (try? c.decode(UInt16.self, forKey: .port)) ?? d.port
         extraArgs = (try? c.decode([String].self, forKey: .extraArgs)) ?? d.extraArgs
-        pamTid = (try? c.decode(String.self, forKey: .pamTid)) ?? d.pamTid
     }
 }
 
 struct KanataBarConfig: Codable {
     var autostartKanata: Bool
     var autorestartKanata: Bool
+    var pamTouchid: String  // "false" or "auto"
     var iconsDir: String?
     var iconTransition: IconTransition?
 
     enum CodingKeys: String, CodingKey {
         case autostartKanata = "autostart_kanata"
         case autorestartKanata = "autorestart_kanata"
+        case pamTouchid = "pam_touchid"
         case iconsDir = "icons_dir"
         case iconTransition = "icon_transition"
     }
@@ -58,13 +55,15 @@ struct KanataBarConfig: Codable {
     static let `default` = KanataBarConfig(
         autostartKanata: false,
         autorestartKanata: false,
+        pamTouchid: "false",
         iconsDir: nil,
         iconTransition: nil
     )
 
-    init(autostartKanata: Bool, autorestartKanata: Bool, iconsDir: String?, iconTransition: IconTransition?) {
+    init(autostartKanata: Bool, autorestartKanata: Bool, pamTouchid: String, iconsDir: String?, iconTransition: IconTransition?) {
         self.autostartKanata = autostartKanata
         self.autorestartKanata = autorestartKanata
+        self.pamTouchid = pamTouchid
         self.iconsDir = iconsDir
         self.iconTransition = iconTransition
     }
@@ -74,6 +73,7 @@ struct KanataBarConfig: Codable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         autostartKanata = (try? c.decode(Bool.self, forKey: .autostartKanata)) ?? d.autostartKanata
         autorestartKanata = (try? c.decode(Bool.self, forKey: .autorestartKanata)) ?? d.autorestartKanata
+        pamTouchid = (try? c.decode(String.self, forKey: .pamTouchid)) ?? d.pamTouchid
         iconsDir = try? c.decode(String.self, forKey: .iconsDir)
         iconTransition = try? c.decode(IconTransition.self, forKey: .iconTransition)
     }
@@ -140,7 +140,7 @@ struct Config: Codable {
         return config
     }
 
-    static func resolvePamTid(_ value: String) -> Bool {
+    static func resolvePamTouchid(_ value: String) -> Bool {
         guard value == "auto" else { return false }
         for path in ["/etc/pam.d/sudo_local", "/etc/pam.d/sudo"] {
             guard let contents = try? String(contentsOfFile: path, encoding: .utf8) else { continue }

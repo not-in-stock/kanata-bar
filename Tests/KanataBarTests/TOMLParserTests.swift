@@ -137,15 +137,15 @@ final class TOMLDecoderTests: XCTestCase {
         let input = """
         [kanata]
         extra_args = ["--log"]
-        pam_tid = "auto"
 
         [kanata_bar]
+        pam_touchid = "auto"
         icons_dir = "/path/to/icons"
         """
         let config = Config.decode(input)
         XCTAssertEqual(config.kanataBar.iconsDir, "/path/to/icons")
         XCTAssertEqual(config.kanata.extraArgs, ["--log"])
-        XCTAssertEqual(config.kanata.pamTid, "auto")
+        XCTAssertEqual(config.kanataBar.pamTouchid, "auto")
     }
 
     // MARK: - IconTransition
