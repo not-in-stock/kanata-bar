@@ -234,7 +234,7 @@ extension AppDelegate {
         externalTimeoutWork = nil
         restartWorkItem?.cancel()
         restartWorkItem = nil
-        restartTimestamps.removeAll()
+        crashRateLimiter.reset()
         guard Config.isBinaryAccessible(kanataProcess.binaryPath) else {
             Logging.log("ERROR: kanata binary not found: \(kanataProcess.binaryPath)")
             Notifications.sendBinaryNotFound()

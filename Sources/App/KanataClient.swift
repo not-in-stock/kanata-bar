@@ -104,14 +104,11 @@ class KanataClient {
     }
 
     private func parseLine(_ line: String) {
-        guard let data = line.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-        else { return }
-
-        if let layerChange = json["LayerChange"] as? [String: Any],
-           let newLayer = layerChange["new"] as? String {
-            DispatchQueue.main.async { self.onLayerChange?(newLayer) }
-        } else if json["ConfigFileReload"] != nil {
+        guard let event = KanataEvent.parse(line) else { return }
+        switch event {
+        case .layerChange(let layer):
+            DispatchQueue.main.async { self.onLayerChange?(layer) }
+        case .configReload:
             DispatchQueue.main.async { self.onConfigReload?() }
         }
     }

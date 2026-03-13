@@ -28,7 +28,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUse
     var externalTimeoutWork: DispatchWorkItem?
     var autostart = false
     var autorestart = false
-    var restartTimestamps: [Date] = []
+    var crashRateLimiter = CrashRateLimiter()
     var restartWorkItem: DispatchWorkItem?
     var startingTimeoutWork: DispatchWorkItem?
     var binaryNotFoundNotified = false
@@ -286,16 +286,13 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUse
     }
 
     private func scheduleRestart() {
-        let now = Date()
-        restartTimestamps = restartTimestamps.filter { now.timeIntervalSince($0) < 60 }
-        if restartTimestamps.count >= 3 {
+        if !crashRateLimiter.recordCrash() {
             Logging.log("autorestart disabled: too many crashes")
             autorestart = false
             appState = .stopped
             Notifications.sendAutorestartDisabled()
             return
         }
-        restartTimestamps.append(now)
 
         let workItem = DispatchWorkItem { [weak self] in
             guard let self, self.appState == .restarting else { return }
