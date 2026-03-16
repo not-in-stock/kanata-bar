@@ -212,6 +212,7 @@ extension AppDelegate {
     // MARK: - Menu Delegate
 
     public func menuWillOpen(_ menu: NSMenu) {
+        updateStartAtLoginState()
         guard appState == .stopped, !isExternal else { return }
         let accessible = Config.isBinaryAccessible(kanataProcess.binaryPath)
         startItem?.isEnabled = accessible
