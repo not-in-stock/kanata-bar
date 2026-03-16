@@ -9,13 +9,42 @@ extension AppDelegate {
         loginItemService.status == .enabled
     }
 
-    /// External LaunchAgent (nix-darwin symlink or brew service) detected.
+    /// External LaunchAgent detected — a launchd agent with a label containing our bundle ID
+    /// exists but was not registered by this app (e.g. nix-darwin, brew, or SMAppService wrapper).
     var isAgentExternal: Bool {
+        // Check 1: symlink in ~/Library/LaunchAgents/ (legacy nix-darwin or brew)
         let plistPath = FileManager.default.homeDirectoryForCurrentUser.path
             + "/Library/LaunchAgents/\(Constants.bundleID).plist"
-        guard FileManager.default.fileExists(atPath: plistPath) else { return false }
-        let attrs = try? FileManager.default.attributesOfItem(atPath: plistPath)
-        return attrs?[.type] as? FileAttributeType == .typeSymbolicLink
+        if FileManager.default.fileExists(atPath: plistPath) {
+            let attrs = try? FileManager.default.attributesOfItem(atPath: plistPath)
+            if attrs?[.type] as? FileAttributeType == .typeSymbolicLink {
+                return true
+            }
+        }
+
+        // Check 2: any registered agent with a label containing our bundle ID but different
+        // from our own (covers SMAppService wrappers and other registration methods).
+        let pipe = Pipe()
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+        proc.arguments = ["list"]
+        proc.standardOutput = pipe
+        proc.standardError = FileHandle.nullDevice
+        do {
+            try proc.run()
+            proc.waitUntilExit()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            if let output = String(data: data, encoding: .utf8) {
+                for line in output.components(separatedBy: "\n") {
+                    let label = line.components(separatedBy: "\t").last ?? ""
+                    if label.contains(Constants.bundleID) && label != Constants.bundleID {
+                        return true
+                    }
+                }
+            }
+        } catch {}
+
+        return false
     }
 
     func enableLoginItem() {
