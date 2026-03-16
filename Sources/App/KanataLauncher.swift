@@ -30,12 +30,7 @@ func killLeftoverKanata() {
 }
 
 func isProcessAlive(_ pid: Int32) -> Bool {
-    let p = Process()
-    p.executableURL = URL(fileURLWithPath: "/bin/ps")
-    p.arguments = ["-p", "\(pid)"]
-    p.standardOutput = Pipe()
-    p.standardError = Pipe()
-    try? p.run()
-    p.waitUntilExit()
-    return p.terminationStatus == 0
+    // kill(pid, 0) checks existence without sending a signal.
+    // EPERM means the process exists but is owned by another user (e.g. root).
+    kill(pid, 0) == 0 || errno == EPERM
 }
