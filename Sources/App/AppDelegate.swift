@@ -61,6 +61,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUse
         registerHelperIfNeeded()
         resetTCCIfSourceChanged()
         migrateFromLaunchAgent()
+        resolveLoginItemConflict()
         detectOrAutostart()
 
         kanataClient.start()
