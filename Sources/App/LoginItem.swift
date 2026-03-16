@@ -40,6 +40,7 @@ extension AppDelegate {
                 if let output = String(data: data, encoding: .utf8) {
                     for line in output.components(separatedBy: "\n") {
                         let label = line.components(separatedBy: "\t").last ?? ""
+                        if label.hasPrefix("application.") { continue }
                         if label.contains(Constants.bundleID) {
                             return true
                         }
