@@ -12,42 +12,12 @@ extension AppDelegate {
     /// External LaunchAgent detected — autostart is managed by something other than this app
     /// (e.g. nix-darwin, brew, or SMAppService wrapper).
     var isAgentExternal: Bool {
-        // Check 1: symlink in ~/Library/LaunchAgents/ (legacy brew service)
-        let plistPath = FileManager.default.homeDirectoryForCurrentUser.path
-            + "/Library/LaunchAgents/\(Constants.bundleID).plist"
-        if FileManager.default.fileExists(atPath: plistPath) {
-            let attrs = try? FileManager.default.attributesOfItem(atPath: plistPath)
-            if attrs?[.type] as? FileAttributeType == .typeSymbolicLink {
-                return true
-            }
-        }
+        if hasPlistSymlink() { return true }
 
-        // Check 2: a launchd agent with a label containing our bundle ID is loaded externally.
-        // Covers nix-darwin legacy launchd and darwin-smapp wrappers.
-        // Skip "application.*" entries (that's the running app itself).
-        // Only check when the app hasn't registered itself via SMAppService — if isLoginItemEnabled
-        // is true, "com.kanata-bar" in launchctl is our own registration, not external.
+        // Only check launchctl when the app hasn't registered itself via SMAppService —
+        // if isLoginItemEnabled is true, "com.kanata-bar" in launchctl is our own registration.
         if !isLoginItemEnabled {
-            let pipe = Pipe()
-            let proc = Process()
-            proc.executableURL = URL(fileURLWithPath: "/bin/launchctl")
-            proc.arguments = ["list"]
-            proc.standardOutput = pipe
-            proc.standardError = FileHandle.nullDevice
-            do {
-                try proc.run()
-                proc.waitUntilExit()
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                if let output = String(data: data, encoding: .utf8) {
-                    for line in output.components(separatedBy: "\n") {
-                        let label = line.components(separatedBy: "\t").last ?? ""
-                        if label.hasPrefix("application.") { continue }
-                        if label.contains(Constants.bundleID) {
-                            return true
-                        }
-                    }
-                }
-            } catch {}
+            return !findExternalLaunchdLabels(excludeOwn: false).isEmpty
         }
 
         return false
@@ -58,45 +28,12 @@ extension AppDelegate {
     func resolveLoginItemConflict() {
         guard isLoginItemEnabled else { return }
 
-        // Check for external agents directly (bypass isAgentExternal which skips
-        // Check 2 when isLoginItemEnabled is true).
-        var hasExternalAgent = false
+        // Check even when isLoginItemEnabled is true — exclude our own exact label
+        // to distinguish external wrappers from our own SMAppService registration.
+        let hasExternal = hasPlistSymlink()
+            || !findExternalLaunchdLabels(excludeOwn: true).isEmpty
 
-        // Symlink check
-        let plistPath = FileManager.default.homeDirectoryForCurrentUser.path
-            + "/Library/LaunchAgents/\(Constants.bundleID).plist"
-        if FileManager.default.fileExists(atPath: plistPath) {
-            let attrs = try? FileManager.default.attributesOfItem(atPath: plistPath)
-            if attrs?[.type] as? FileAttributeType == .typeSymbolicLink {
-                hasExternalAgent = true
-            }
-        }
-
-        // launchctl check — look for agents other than our own SMAppService registration
-        if !hasExternalAgent {
-            let pipe = Pipe()
-            let proc = Process()
-            proc.executableURL = URL(fileURLWithPath: "/bin/launchctl")
-            proc.arguments = ["list"]
-            proc.standardOutput = pipe
-            proc.standardError = FileHandle.nullDevice
-            if let _ = try? proc.run() {
-                proc.waitUntilExit()
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                if let output = String(data: data, encoding: .utf8) {
-                    for line in output.components(separatedBy: "\n") {
-                        let label = line.components(separatedBy: "\t").last ?? ""
-                        if label.hasPrefix("application.") { continue }
-                        if label.contains(Constants.bundleID) && label != Constants.bundleID {
-                            hasExternalAgent = true
-                            break
-                        }
-                    }
-                }
-            }
-        }
-
-        if hasExternalAgent {
+        if hasExternal {
             Logging.log("external agent detected, disabling own login item to avoid conflict")
             disableLoginItem()
         }
@@ -134,12 +71,53 @@ extension AppDelegate {
     /// Remove stale LaunchAgent plist from previous versions.
     /// Only removes regular files (ours), not symlinks (nix-darwin/brew).
     func migrateFromLaunchAgent() {
-        let oldPlist = FileManager.default.homeDirectoryForCurrentUser.path
+        let path = plistPath()
+        guard FileManager.default.fileExists(atPath: path) else { return }
+        guard !isSymlink(atPath: path) else { return }
+        try? FileManager.default.removeItem(atPath: path)
+    }
+
+    // MARK: - Private Helpers
+
+    private func plistPath() -> String {
+        FileManager.default.homeDirectoryForCurrentUser.path
             + "/Library/LaunchAgents/\(Constants.bundleID).plist"
-        guard FileManager.default.fileExists(atPath: oldPlist) else { return }
-        let attrs = try? FileManager.default.attributesOfItem(atPath: oldPlist)
-        let isSymlink = attrs?[.type] as? FileAttributeType == .typeSymbolicLink
-        guard !isSymlink else { return }
-        try? FileManager.default.removeItem(atPath: oldPlist)
+    }
+
+    /// Check for a symlinked plist in ~/Library/LaunchAgents/ (legacy brew/nix-darwin).
+    private func hasPlistSymlink() -> Bool {
+        let path = plistPath()
+        guard FileManager.default.fileExists(atPath: path) else { return false }
+        return isSymlink(atPath: path)
+    }
+
+    private func isSymlink(atPath path: String) -> Bool {
+        let attrs = try? FileManager.default.attributesOfItem(atPath: path)
+        return attrs?[.type] as? FileAttributeType == .typeSymbolicLink
+    }
+
+    /// Find launchd labels containing our bundle ID, excluding `application.*` entries.
+    /// When `excludeOwn` is true, also excludes our exact bundle ID label.
+    private func findExternalLaunchdLabels(excludeOwn: Bool) -> [String] {
+        let pipe = Pipe()
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+        proc.arguments = ["list"]
+        proc.standardOutput = pipe
+        proc.standardError = FileHandle.nullDevice
+        guard let _ = try? proc.run() else { return [] }
+        proc.waitUntilExit()
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        guard let output = String(data: data, encoding: .utf8) else { return [] }
+
+        var results: [String] = []
+        for line in output.components(separatedBy: "\n") {
+            let label = line.components(separatedBy: "\t").last ?? ""
+            if label.hasPrefix("application.") { continue }
+            if !label.contains(Constants.bundleID) { continue }
+            if excludeOwn && label == Constants.bundleID { continue }
+            results.append(label)
+        }
+        return results
     }
 }
