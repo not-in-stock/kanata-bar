@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="icon.png" width="128" alt="kanata-bar icon">
+  <img src="doc/images/icon.png" width="128" alt="kanata-bar icon">
 </p>
 
 <h1 align="center">kanata-bar</h1>
@@ -156,6 +156,18 @@ The AuthExec mode uses a deprecated macOS API that Apple may remove in a future 
 ```
 
 The script creates `/etc/pam.d/sudo_local` with `pam_tid.so` (survives macOS updates). Then set `pam_touchid = "auto"` in your config.
+
+## Notifications
+
+kanata-bar sends macOS notifications for config reloads, crashes, and auto-restart events.
+
+Since the app is ad-hoc signed (no Apple Developer ID), macOS creates the notification entry with banners **disabled** by default. To receive notifications, enable them manually:
+
+**System Settings → Notifications → Kanata Bar → Allow Notifications**
+
+<p align="center">
+  <img src="doc/images/kanata-bar-notifications-setting.png" width="420" alt="Enable notifications in System Settings">
+</p>
 
 ## Logs
 
