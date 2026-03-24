@@ -15,6 +15,7 @@ class SudoLauncher: KanataLauncher {
 
     private var sudoProcess: Process?
     private var discoveredPID: Int32 = -1
+    private var stoppedByUser = false
     private(set) var stopMode: StopMode
 
     var onStarted: ((Int32) -> Void)?
@@ -39,6 +40,7 @@ class SudoLauncher: KanataLauncher {
     // MARK: - Start
 
     func start() {
+        stoppedByUser = false
         DispatchQueue.global(qos: .userInitiated).async { [self] in
             killLeftoverKanata()
 
@@ -56,9 +58,11 @@ class SudoLauncher: KanataLauncher {
                 let exitCode = proc.terminationStatus
                 DispatchQueue.main.async {
                     let pidWasDiscovered = (self?.discoveredPID ?? -1) > 0
+                    let wasStopped = self?.stoppedByUser ?? false
                     self?.sudoProcess = nil
                     self?.discoveredPID = -1
-                    if !pidWasDiscovered && exitCode != 0 {
+                    self?.stoppedByUser = false
+                    if !wasStopped && !pidWasDiscovered && exitCode != 0 {
                         self?.onFailure?()
                     } else {
                         self?.onExited?(exitCode)
@@ -81,6 +85,7 @@ class SudoLauncher: KanataLauncher {
     // MARK: - Stop
 
     func stop() {
+        stoppedByUser = true
         // sudo may still be waiting for auth — kill it
         if let proc = sudoProcess, proc.isRunning {
             proc.terminate()
