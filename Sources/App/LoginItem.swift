@@ -105,7 +105,7 @@ extension AppDelegate {
         proc.arguments = ["list"]
         proc.standardOutput = pipe
         proc.standardError = FileHandle.nullDevice
-        guard let _ = try? proc.run() else { return [] }
+        guard (try? proc.run()) != nil else { return [] }
         proc.waitUntilExit()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         guard let output = String(data: data, encoding: .utf8) else { return [] }
