@@ -13,7 +13,7 @@ class AuthExecLauncher: KanataLauncher {
 
     private var authRef: AuthorizationRef?
     private var authExecPipe: UnsafeMutablePointer<FILE>?
-    private var monitorTask: Task<Void, Never>?
+    private var processSource: DispatchSourceProcess?
     private var monitoredPID: Int32 = -1
 
     var onEvent: ((LauncherEvent) -> Void)?
@@ -129,8 +129,8 @@ class AuthExecLauncher: KanataLauncher {
             authRef = nil
         }
 
-        monitorTask?.cancel()
-        monitorTask = nil
+        processSource?.cancel()
+        processSource = nil
         monitoredPID = -1
     }
 
@@ -138,20 +138,24 @@ class AuthExecLauncher: KanataLauncher {
 
     private func startProcessMonitor(pid: Int32) {
         guard pid > 0 else { return }
-        monitorTask = Task.detached { [weak self] in
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 2_000_000_000)
-                guard !Task.isCancelled else { return }
-                if !isProcessAlive(pid) {
-                    await MainActor.run { [weak self] in
-                        guard let self else { return }
-                        self.monitorTask = nil
-                        self.monitoredPID = -1
-                        self.onEvent?(.exited(code: 1))
-                    }
-                    return
-                }
-            }
+        let source = DispatchSource.makeProcessSource(
+            identifier: pid, eventMask: .exit, queue: .main)
+        source.setEventHandler { [weak self] in
+            guard let self else { return }
+            self.processSource = nil
+            self.monitoredPID = -1
+            self.onEvent?(.exited(code: 1))
+        }
+        source.resume()
+        processSource = source
+
+        // Safety net: if the process exited before kevent registration,
+        // the event handler will never fire. Detect this immediately.
+        if !isProcessAlive(pid) {
+            processSource?.cancel()
+            processSource = nil
+            monitoredPID = -1
+            onEvent?(.exited(code: 1))
         }
     }
 
