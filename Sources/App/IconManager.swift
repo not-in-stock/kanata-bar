@@ -7,6 +7,7 @@ enum IconTransition: String, Codable {
     case cards  // card flip: squeeze X to center axis, expand from center
 }
 
+@MainActor
 class IconManager {
     private weak var button: NSStatusBarButton?
 
@@ -141,9 +142,11 @@ class IconManager {
 
             newView.animator().frame = bounds
             newView.animator().alphaValue = 1.0
-        }, completionHandler: { [weak self] in
-            guard let self, self.oldOverlay === oldView else { return }
-            self.finishAnimation(for: state)
+        }, completionHandler: {
+            MainActor.assumeIsolated { [weak self] in
+                guard let self, self.oldOverlay === oldView else { return }
+                self.finishAnimation(for: state)
+            }
         })
     }
 

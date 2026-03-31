@@ -2,7 +2,7 @@ import Foundation
 import ServiceManagement
 import Shared
 
-private let loginItemService = SMAppService.mainApp
+@MainActor private let loginItemService = SMAppService.mainApp
 
 extension AppDelegate {
     var isLoginItemEnabled: Bool {

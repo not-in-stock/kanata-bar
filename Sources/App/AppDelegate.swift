@@ -3,7 +3,8 @@ import ServiceManagement
 import Shared
 import UserNotifications
 
-public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUserNotificationCenterDelegate {
+@MainActor
+public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @preconcurrency UNUserNotificationCenterDelegate {
     var statusItem: NSStatusItem!
     var kanataClient: KanataClient!
     var kanataProcess: KanataProcess!

@@ -1,6 +1,7 @@
 import UserNotifications
 import Shared
 
+@MainActor
 enum Notifications {
     static func sendReload() {
         let content = UNMutableNotificationContent()

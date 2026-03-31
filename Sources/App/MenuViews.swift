@@ -139,13 +139,15 @@ class LayerRollerView: NSView {
 
             layoutSubtreeIfNeeded()
         }, completionHandler: { [self] in
-            finishAnimation()
+            MainActor.assumeIsolated {
+                self.finishAnimation()
 
-            if let pending = pendingLayer {
-                pendingLayer = nil
-                if pending != currentText {
-                    currentText = pending
-                    animateTo(pending)
+                if let pending = self.pendingLayer {
+                    self.pendingLayer = nil
+                    if pending != self.currentText {
+                        self.currentText = pending
+                        self.animateTo(pending)
+                    }
                 }
             }
         })

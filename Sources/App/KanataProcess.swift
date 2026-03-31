@@ -2,6 +2,7 @@ import Foundation
 import Shared
 
 /// Coordinates kanata lifecycle. Delegates launch/stop to a `KanataLauncher`.
+@MainActor
 class KanataProcess {
     private let launcher: KanataLauncher
     private var stoppedByUser = false
@@ -91,7 +92,7 @@ class KanataProcess {
     // MARK: - Detection
 
     /// Returns all PIDs of processes named exactly "kanata".
-    static func findKanataPIDs() -> [Int32] {
+    nonisolated static func findKanataPIDs() -> [Int32] {
         let pgrep = Process()
         pgrep.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
         pgrep.arguments = ["-x", Constants.kanataBinaryName]
@@ -107,7 +108,7 @@ class KanataProcess {
         return output.components(separatedBy: "\n").compactMap { Int32($0) }
     }
 
-    static func findExternalKanataPID() -> Int32? {
+    nonisolated static func findExternalKanataPID() -> Int32? {
         findKanataPIDs().first
     }
 }
