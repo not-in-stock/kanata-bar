@@ -204,7 +204,9 @@ class AuthExecLauncher: KanataLauncher {
             logRedirect = " > \(shellEscape(logURL.path)) 2>&1"
         }
 
-        let script = "\(kanataArgs)\(logRedirect) & KPID=$!; echo $KPID; trap 'kill $KPID 2>/dev/null' EXIT; while kill -0 \(appPID) 2>/dev/null; do sleep 1; done"
+        let script = "\(kanataArgs)\(logRedirect) & KPID=$!; echo $KPID; "
+            + "trap 'kill $KPID 2>/dev/null' EXIT; "
+            + "while kill -0 \(appPID) 2>/dev/null; do sleep 1; done"
 
         let cArgs: [UnsafeMutablePointer<CChar>?] = [strdup("-c"), strdup(script), nil]
         defer { cArgs.forEach { if let p = $0 { free(p) } } }

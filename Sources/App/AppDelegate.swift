@@ -122,10 +122,16 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
         Logging.log("auth mode: \(usePamTid ? "pam_touchid" : "authexec")")
 
         let launcher: KanataLauncher
+        let extraArgs = config.kanata.extraArgs
+        let logURL = Logging.kanataLogURL
         if usePamTid {
-            launcher = SudoLauncher(binaryPath: binaryPath, configPath: configPath, port: port, extraArgs: config.kanata.extraArgs, logURL: Logging.kanataLogURL)
+            launcher = SudoLauncher(
+                binaryPath: binaryPath, configPath: configPath,
+                port: port, extraArgs: extraArgs, logURL: logURL)
         } else {
-            launcher = AuthExecLauncher(binaryPath: binaryPath, configPath: configPath, port: port, extraArgs: config.kanata.extraArgs, logURL: Logging.kanataLogURL)
+            launcher = AuthExecLauncher(
+                binaryPath: binaryPath, configPath: configPath,
+                port: port, extraArgs: extraArgs, logURL: logURL)
         }
         kanataProcess = KanataProcess(launcher: launcher, binaryPath: binaryPath, configPath: configPath, port: port)
         kanataProcess.onStateChange = { [weak self] running in
