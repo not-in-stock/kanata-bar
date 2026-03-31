@@ -145,11 +145,11 @@ class SudoLauncher: KanataLauncher {
         conn.remoteObjectInterface = NSXPCInterface(with: HelperProtocol.self)
         conn.resume()
 
-        let proxy = conn.remoteObjectProxyWithErrorHandler { [weak self] _ in
+        guard let proxy = conn.remoteObjectProxyWithErrorHandler({ [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.stopViaSudoers(pid: pid)
             }
-        } as! HelperProtocol
+        }) as? HelperProtocol else { return }
 
         // kanata on macOS ignores SIGTERM — send SIGKILL directly
         proxy.sendSignal(SIGKILL, toProcessID: pid) { [weak self] success, _ in
