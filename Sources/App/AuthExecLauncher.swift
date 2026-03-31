@@ -251,7 +251,7 @@ class AuthExecLauncher: KanataLauncher {
         }
     }
 
-    nonisolated private static func shellEscape(_ s: String) -> String {
+    nonisolated static func shellEscape(_ s: String) -> String {
         "'" + s.replacingOccurrences(of: "'", with: "'\\''") + "'"
     }
 }
