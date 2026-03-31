@@ -1,6 +1,7 @@
 import XCTest
 @testable import KanataBarLib
 
+@MainActor
 final class LoginItemTests: XCTestCase {
 
     // MARK: - isAgentExternal
