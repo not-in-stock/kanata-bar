@@ -1,22 +1,26 @@
 import Foundation
 import Shared
 
+enum LauncherEvent {
+    case started(pid: Int32)
+    case exited(code: Int32)
+    case failed
+    case error(String)
+}
+
 /// Abstraction for the kanata launch/stop mechanism.
 /// Implementations: `SudoLauncher` (PAM/TouchID) and `AuthExecLauncher` (password dialog).
 @MainActor
 protocol KanataLauncher: AnyObject {
-    /// Start kanata asynchronously. Must eventually call one of the callbacks.
+    /// Start kanata asynchronously. Must eventually call `onEvent`.
     func start()
     /// Stop kanata (or cancel pending auth dialog).
     func stop()
     /// Force kill and free all resources (called on app quit).
     func cleanup()
 
-    // Callbacks (set by KanataProcess before start)
-    var onStarted: ((Int32) -> Void)? { get set }   // PID found
-    var onExited: ((Int32) -> Void)? { get set }     // exit code
-    var onFailure: (() -> Void)? { get set }          // auth denied / binary missing
-    var onError: ((String) -> Void)? { get set }      // error message
+    /// Single callback for all launcher events (set by KanataProcess before start).
+    var onEvent: ((LauncherEvent) -> Void)? { get set }
 }
 
 // MARK: - Shared Utilities

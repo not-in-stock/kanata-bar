@@ -29,40 +29,37 @@ class KanataProcess {
     }
 
     private func bindLauncher() {
-        launcher.onStarted = { [weak self] pid in
+        launcher.onEvent = { [weak self] event in
             guard let self else { return }
-            self.kanataPID = pid
-            self.onPIDFound?(pid)
-        }
+            switch event {
+            case .started(let pid):
+                self.kanataPID = pid
+                self.onPIDFound?(pid)
 
-        launcher.onExited = { [weak self] exitCode in
-            guard let self else { return }
-            let wasStopped = self.stoppedByUser
-            let hadPID = self.kanataPID > 0
-            self.isRunning = false
-            self.kanataPID = -1
-            self.onStateChange?(false)
-            if !wasStopped && exitCode != 0 {
-                if hadPID {
-                    self.onCrash?(exitCode)
-                } else {
-                    self.onEarlyExit?(exitCode)
+            case .exited(let exitCode):
+                let wasStopped = self.stoppedByUser
+                let hadPID = self.kanataPID > 0
+                self.isRunning = false
+                self.kanataPID = -1
+                self.onStateChange?(false)
+                if !wasStopped && exitCode != 0 {
+                    if hadPID {
+                        self.onCrash?(exitCode)
+                    } else {
+                        self.onEarlyExit?(exitCode)
+                    }
                 }
+
+            case .failed:
+                self.isRunning = false
+                self.onStateChange?(false)
+                self.onStartFailure?()
+
+            case .error(let msg):
+                self.isRunning = false
+                self.onStateChange?(false)
+                self.onError?(msg)
             }
-        }
-
-        launcher.onFailure = { [weak self] in
-            guard let self else { return }
-            self.isRunning = false
-            self.onStateChange?(false)
-            self.onStartFailure?()
-        }
-
-        launcher.onError = { [weak self] msg in
-            guard let self else { return }
-            self.isRunning = false
-            self.onStateChange?(false)
-            self.onError?(msg)
         }
     }
 

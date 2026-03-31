@@ -19,10 +19,7 @@ class SudoLauncher: KanataLauncher {
     private var stoppedByUser = false
     private(set) var stopMode: StopMode
 
-    var onStarted: ((Int32) -> Void)?
-    var onExited: ((Int32) -> Void)?
-    var onFailure: (() -> Void)?
-    var onError: ((String) -> Void)?
+    var onEvent: ((LauncherEvent) -> Void)?
 
     init(binaryPath: String, configPath: String, port: UInt16, extraArgs: [String], logURL: URL?) {
         self.binaryPath = binaryPath
@@ -72,9 +69,9 @@ class SudoLauncher: KanataLauncher {
                     self.discoveredPID = -1
                     self.stoppedByUser = false
                     if !wasStopped && !pidWasDiscovered && exitCode != 0 {
-                        self.onFailure?()
+                        self.onEvent?(.failed)
                     } else {
-                        self.onExited?(exitCode)
+                        self.onEvent?(.exited(code: exitCode))
                     }
                 }
             }
@@ -93,13 +90,13 @@ class SudoLauncher: KanataLauncher {
                     await MainActor.run { [weak self] in
                         guard let self else { return }
                         self.discoveredPID = pid
-                        self.onStarted?(pid)
+                        self.onEvent?(.started(pid: pid))
                     }
                 }
             } catch {
                 let message = error.localizedDescription
                 await MainActor.run { [weak self] in
-                    self?.onError?("failed to start kanata: \(message)")
+                    self?.onEvent?(.error("failed to start kanata: \(message)"))
                 }
             }
         }

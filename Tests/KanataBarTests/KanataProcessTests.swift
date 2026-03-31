@@ -1,27 +1,24 @@
 import XCTest
 @testable import KanataBarLib
 
-/// A mock launcher that lets tests trigger callbacks directly.
+/// A mock launcher that lets tests trigger events directly.
 @MainActor
 private class MockLauncher: KanataLauncher {
     var startCount = 0
     var stopCount = 0
     var cleanupCount = 0
 
-    var onStarted: ((Int32) -> Void)?
-    var onExited: ((Int32) -> Void)?
-    var onFailure: (() -> Void)?
-    var onError: ((String) -> Void)?
+    var onEvent: ((LauncherEvent) -> Void)?
 
     func start() { startCount += 1 }
     func stop() { stopCount += 1 }
     func cleanup() { cleanupCount += 1 }
 
-    // Test helpers — simulate launcher callbacks
-    func simulateStarted(pid: Int32) { onStarted?(pid) }
-    func simulateExited(code: Int32) { onExited?(code) }
-    func simulateFailure() { onFailure?() }
-    func simulateError(_ msg: String) { onError?(msg) }
+    // Test helpers — simulate launcher events
+    func simulateStarted(pid: Int32) { onEvent?(.started(pid: pid)) }
+    func simulateExited(code: Int32) { onEvent?(.exited(code: code)) }
+    func simulateFailure() { onEvent?(.failed) }
+    func simulateError(_ msg: String) { onEvent?(.error(msg)) }
 }
 
 @MainActor

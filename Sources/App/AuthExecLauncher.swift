@@ -16,10 +16,7 @@ class AuthExecLauncher: KanataLauncher {
     private var monitorTask: Task<Void, Never>?
     private var monitoredPID: Int32 = -1
 
-    var onStarted: ((Int32) -> Void)?
-    var onExited: ((Int32) -> Void)?
-    var onFailure: (() -> Void)?
-    var onError: ((String) -> Void)?
+    var onEvent: ((LauncherEvent) -> Void)?
 
     // AuthorizationExecuteWithPrivileges loaded via dlsym (unavailable in Swift SDK)
     private typealias AuthExecFn = @convention(c) (
@@ -79,20 +76,20 @@ class AuthExecLauncher: KanataLauncher {
                     self.authRef = auth
                     self.authExecPipe = pipe
                     self.monitoredPID = pid
-                    self.onStarted?(pid)
+                    self.onEvent?(.started(pid: pid))
                     self.startProcessMonitor(pid: pid)
                 }
 
             case .authFailed(let auth):
                 if let auth { AuthorizationFree(auth, []) }
-                await MainActor.run { [weak self] in self?.onFailure?() }
+                await MainActor.run { [weak self] in self?.onEvent?(.failed) }
 
             case .error(let message):
-                await MainActor.run { [weak self] in self?.onError?(message) }
+                await MainActor.run { [weak self] in self?.onEvent?(.error(message)) }
 
             case .noPID(let pipe):
                 fclose(pipe)
-                await MainActor.run { [weak self] in self?.onFailure?() }
+                await MainActor.run { [weak self] in self?.onEvent?(.failed) }
             }
         }
     }
@@ -150,7 +147,7 @@ class AuthExecLauncher: KanataLauncher {
                         guard let self else { return }
                         self.monitorTask = nil
                         self.monitoredPID = -1
-                        self.onExited?(1)
+                        self.onEvent?(.exited(code: 1))
                     }
                     return
                 }
