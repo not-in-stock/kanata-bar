@@ -6,10 +6,11 @@ final class LoginItemTests: XCTestCase {
 
     // MARK: - isAgentExternal
 
-    func testIsAgentExternalReturnsFalseWhenNoPlist() {
-        // Default state: no plist in ~/Library/LaunchAgents/
-        // This test assumes the test environment doesn't have a kanata-bar plist
+    func testIsAgentExternalReturnsFalseWhenNoPlist() throws {
+        // Skip if the host already has an external kanata-bar agent (e.g. nix-darwin)
         let delegate = AppDelegate()
+        try XCTSkipIf(delegate.isAgentExternal,
+                       "external kanata-bar agent registered on this machine")
         XCTAssertFalse(delegate.isAgentExternal)
     }
 
