@@ -3,6 +3,6 @@ import KanataBarLib
 
 let app = NSApplication.shared
 app.setActivationPolicy(.accessory)
-let delegate = AppDelegate()
+let delegate = MainActor.assumeIsolated { AppDelegate() }
 app.delegate = delegate
 app.run()

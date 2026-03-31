@@ -3,6 +3,7 @@ import Network
 import Shared
 
 /// Connects to kanata's TCP server and reports layer changes.
+@MainActor
 class KanataClient {
     private var connection: NWConnection?
     private let host: String
@@ -10,14 +11,10 @@ class KanataClient {
     private let queue = DispatchQueue(label: "\(Constants.bundleID).tcp")
     private var reconnectDelay: TimeInterval = 1.0
     private var shouldReconnect = true
+    private var reconnectTask: Task<Void, Never>?
 
-    /// Called on the main queue when the layer changes.
     var onLayerChange: ((String) -> Void)?
-
-    /// Called on the main queue when config reload succeeds.
     var onConfigReload: (() -> Void)?
-
-    /// Called on the main queue when connection state changes.
     var onConnectionChange: ((Bool) -> Void)?
 
     init(host: String = Constants.defaultHost, port: UInt16 = Constants.defaultPort) {
@@ -32,6 +29,8 @@ class KanataClient {
 
     func stop() {
         shouldReconnect = false
+        reconnectTask?.cancel()
+        reconnectTask = nil
         connection?.cancel()
         connection = nil
     }
@@ -55,23 +54,8 @@ class KanataClient {
         )
 
         conn.stateUpdateHandler = { [weak self] state in
-            guard let self else { return }
-            switch state {
-            case .ready:
-                self.reconnectDelay = 1.0
-                DispatchQueue.main.async { self.onConnectionChange?(true) }
-                self.readLine(from: conn)
-
-            case .failed, .cancelled:
-                DispatchQueue.main.async { self.onConnectionChange?(false) }
-                self.scheduleReconnect()
-
-            case .waiting:
-                // Port not listening yet — cancel and retry
-                conn.cancel()
-
-            default:
-                break
+            Task { @MainActor [weak self] in
+                self?.handleState(state, conn: conn)
             }
         }
 
@@ -79,27 +63,45 @@ class KanataClient {
         connection = conn
     }
 
-    private func readLine(from conn: NWConnection) {
-        // Read until newline (kanata sends newline-delimited JSON)
-        conn.receive(minimumIncompleteLength: 1, maximumLength: 4096) { [weak self] data, _, isComplete, error in
-            guard let self else { return }
+    private func handleState(_ state: NWConnection.State, conn: NWConnection) {
+        switch state {
+        case .ready:
+            reconnectDelay = 1.0
+            onConnectionChange?(true)
+            readLine(from: conn)
 
-            if let data, !data.isEmpty {
-                // May receive multiple lines in one read
-                if let text = String(data: data, encoding: .utf8) {
+        case .failed, .cancelled:
+            onConnectionChange?(false)
+            scheduleReconnect()
+
+        case .waiting:
+            // Port not listening yet — cancel and retry
+            conn.cancel()
+
+        default:
+            break
+        }
+    }
+
+    private func readLine(from conn: NWConnection) {
+        conn.receive(minimumIncompleteLength: 1, maximumLength: 4096) { [weak self] data, _, isComplete, error in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+
+                if let data, !data.isEmpty,
+                   let text = String(data: data, encoding: .utf8) {
                     for line in text.split(separator: "\n") {
                         self.parseLine(String(line))
                     }
                 }
-            }
 
-            if isComplete || error != nil {
-                conn.cancel()
-                return
-            }
+                if isComplete || error != nil {
+                    conn.cancel()
+                    return
+                }
 
-            // Continue reading
-            self.readLine(from: conn)
+                self.readLine(from: conn)
+            }
         }
     }
 
@@ -107,9 +109,9 @@ class KanataClient {
         guard let event = KanataEvent.parse(line) else { return }
         switch event {
         case .layerChange(let layer):
-            DispatchQueue.main.async { self.onLayerChange?(layer) }
+            onLayerChange?(layer)
         case .configReload:
-            DispatchQueue.main.async { self.onConfigReload?() }
+            onConfigReload?()
         }
     }
 
@@ -119,9 +121,10 @@ class KanataClient {
         let delay = reconnectDelay
         reconnectDelay = min(reconnectDelay * 2, 10.0) // exponential backoff, max 10s
 
-        queue.asyncAfter(deadline: .now() + delay) { [weak self] in
-            guard let self, self.shouldReconnect else { return }
-            self.connect()
+        reconnectTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            self?.connect()
         }
     }
 }
