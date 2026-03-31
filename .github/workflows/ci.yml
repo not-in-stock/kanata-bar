@@ -14,8 +14,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Lint
+        run: |
+          brew install swiftlint
+          swiftlint lint --strict
+
       - name: Test
         run: swift test
+
+      - name: Strict concurrency check
+        run: swift build -c release -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
 
       - name: Build
         run: ./build.sh build
