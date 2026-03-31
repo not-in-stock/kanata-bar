@@ -3,6 +3,7 @@ import Shared
 
 /// Abstraction for the kanata launch/stop mechanism.
 /// Implementations: `SudoLauncher` (PAM/TouchID) and `AuthExecLauncher` (password dialog).
+@MainActor
 protocol KanataLauncher: AnyObject {
     /// Start kanata asynchronously. Must eventually call one of the callbacks.
     func start()

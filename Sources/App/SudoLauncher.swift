@@ -4,14 +4,15 @@ import Shared
 
 /// Launches kanata via `sudo -S` with PAM/TouchID support.
 /// Stop via XPC helper or sudoers fallback.
+@MainActor
 class SudoLauncher: KanataLauncher {
     enum StopMode { case xpc, sudoers }
 
-    private let binaryPath: String
-    private let configPath: String
-    private let port: UInt16
-    private let extraArgs: [String]
-    private let logURL: URL?
+    nonisolated let binaryPath: String
+    nonisolated let configPath: String
+    nonisolated let port: UInt16
+    nonisolated let extraArgs: [String]
+    nonisolated let logURL: URL?
 
     private var sudoProcess: Process?
     private var discoveredPID: Int32 = -1
@@ -32,7 +33,7 @@ class SudoLauncher: KanataLauncher {
         self.stopMode = Self.detectStopMode()
     }
 
-    private static func detectStopMode() -> StopMode {
+    nonisolated private static func detectStopMode() -> StopMode {
         let service = SMAppService.daemon(plistName: Constants.helperPlistName)
         return service.status == .enabled ? .xpc : .sudoers
     }
@@ -41,7 +42,14 @@ class SudoLauncher: KanataLauncher {
 
     func start() {
         stoppedByUser = false
-        DispatchQueue.global(qos: .userInitiated).async { [self] in
+
+        let binaryPath = binaryPath
+        let configPath = configPath
+        let port = port
+        let extraArgs = extraArgs
+        let logURL = logURL
+
+        Task.detached {
             killLeftoverKanata()
 
             let p = Process()
@@ -52,31 +60,46 @@ class SudoLauncher: KanataLauncher {
             stdinPipe.fileHandleForWriting.closeFile()
             p.standardInput = stdinPipe
 
-            setupLogRedirect(for: p)
+            Self.setupLogRedirect(for: p, logURL: logURL)
 
             p.terminationHandler = { [weak self] proc in
                 let exitCode = proc.terminationStatus
-                DispatchQueue.main.async {
-                    let pidWasDiscovered = (self?.discoveredPID ?? -1) > 0
-                    let wasStopped = self?.stoppedByUser ?? false
-                    self?.sudoProcess = nil
-                    self?.discoveredPID = -1
-                    self?.stoppedByUser = false
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    let pidWasDiscovered = self.discoveredPID > 0
+                    let wasStopped = self.stoppedByUser
+                    self.sudoProcess = nil
+                    self.discoveredPID = -1
+                    self.stoppedByUser = false
                     if !wasStopped && !pidWasDiscovered && exitCode != 0 {
-                        self?.onFailure?()
+                        self.onFailure?()
                     } else {
-                        self?.onExited?(exitCode)
+                        self.onExited?(exitCode)
                     }
                 }
             }
 
             do {
                 try p.run()
-                sudoProcess = p
-                schedulePIDDiscovery()
+                await MainActor.run { [weak self] in
+                    self?.sudoProcess = p
+                }
+
+                // Wait for kanata to start, then discover its PID
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                guard !Task.isCancelled else { return }
+                let pids = KanataProcess.findKanataPIDs()
+                if let pid = pids.last {
+                    await MainActor.run { [weak self] in
+                        guard let self else { return }
+                        self.discoveredPID = pid
+                        self.onStarted?(pid)
+                    }
+                }
             } catch {
-                DispatchQueue.main.async {
-                    self.onError?("failed to start kanata: \(error.localizedDescription)")
+                let message = error.localizedDescription
+                await MainActor.run { [weak self] in
+                    self?.onError?("failed to start kanata: \(message)")
                 }
             }
         }
@@ -114,7 +137,6 @@ class SudoLauncher: KanataLauncher {
     // MARK: - XPC Stop
 
     private func stopViaXPC(pid: Int32? = nil) {
-        // pid is passed from KanataProcess; fall back to sudoers if XPC fails
         guard let pid else {
             stopViaSudoers()
             return
@@ -124,13 +146,17 @@ class SudoLauncher: KanataLauncher {
         conn.resume()
 
         let proxy = conn.remoteObjectProxyWithErrorHandler { [weak self] _ in
-            self?.stopViaSudoers(pid: pid)
+            Task { @MainActor [weak self] in
+                self?.stopViaSudoers(pid: pid)
+            }
         } as! HelperProtocol
 
         // kanata on macOS ignores SIGTERM — send SIGKILL directly
         proxy.sendSignal(SIGKILL, toProcessID: pid) { [weak self] success, _ in
             if !success {
-                self?.stopViaSudoers(pid: pid)
+                Task { @MainActor [weak self] in
+                    self?.stopViaSudoers(pid: pid)
+                }
             }
         }
     }
@@ -153,26 +179,11 @@ class SudoLauncher: KanataLauncher {
 
     // MARK: - Helpers
 
-    private func setupLogRedirect(for process: Process) {
+    nonisolated private static func setupLogRedirect(for process: Process, logURL: URL?) {
         guard let logURL else { return }
         FileManager.default.createFile(atPath: logURL.path, contents: nil)
         let logHandle = try? FileHandle(forWritingTo: logURL)
         process.standardOutput = logHandle
         process.standardError = logHandle
-    }
-
-    private func schedulePIDDiscovery() {
-        DispatchQueue.global().asyncAfter(deadline: .now() + 1.5) { [weak self] in
-            self?.findKanataPID()
-        }
-    }
-
-    private func findKanataPID() {
-        if let pid = KanataProcess.findKanataPIDs().last {
-            DispatchQueue.main.async {
-                self.discoveredPID = pid
-                self.onStarted?(pid)
-            }
-        }
     }
 }
