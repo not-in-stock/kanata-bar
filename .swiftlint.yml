@@ -1,0 +1,27 @@
+included:
+  - Sources
+
+excluded:
+  - .build
+
+line_length:
+  warning: 150
+  error: 200
+
+identifier_name:
+  min_length: 1
+
+type_body_length:
+  warning: 400
+  error: 600
+
+function_body_length:
+  warning: 80
+  error: 120
+
+file_length:
+  warning: 500
+  error: 700
+
+trailing_comma:
+  mandatory_comma: true
