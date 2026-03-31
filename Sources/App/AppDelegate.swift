@@ -19,19 +19,19 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
             if case .starting = appState, !isExternal {
                 scheduleStartingTimeout()
             } else {
-                startingTimeoutWork?.cancel()
-                startingTimeoutWork = nil
+                startingTimeoutTask?.cancel()
+                startingTimeoutTask = nil
             }
         }
     }
     var isExternal = false
     var externalPID: Int32 = -1
-    var externalTimeoutWork: DispatchWorkItem?
+    var externalTimeoutTask: Task<Void, Never>?
     var autostart = false
     var autorestart = false
     var crashRateLimiter = CrashRateLimiter()
-    var restartWorkItem: DispatchWorkItem?
-    var startingTimeoutWork: DispatchWorkItem?
+    var restartTask: Task<Void, Never>?
+    var startingTimeoutTask: Task<Void, Never>?
     var binaryNotFoundNotified = false
 
     // Menu items that change state
@@ -183,8 +183,8 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
         kanataClient.onLayerChange = { [weak self] layer in
             guard let self else { return }
             Logging.log("layer: \(layer)")
-            self.externalTimeoutWork?.cancel()
-            self.externalTimeoutWork = nil
+            self.externalTimeoutTask?.cancel()
+            self.externalTimeoutTask = nil
             self.appState = .running(layer)
         }
         var wasConnected = false
@@ -195,8 +195,8 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
                 wasConnected = connected
             }
             if connected {
-                self.externalTimeoutWork?.cancel()
-                self.externalTimeoutWork = nil
+                self.externalTimeoutTask?.cancel()
+                self.externalTimeoutTask = nil
             }
             if !connected {
                 if case .running = self.appState {
@@ -249,8 +249,8 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
     }
 
     public func applicationWillTerminate(_ notification: Notification) {
-        restartWorkItem?.cancel()
-        restartWorkItem = nil
+        restartTask?.cancel()
+        restartTask = nil
         kanataClient.stop()
         guard !isExternal else { return }
         if kanataProcess.isRunning {
@@ -269,28 +269,24 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
     }
 
     private func scheduleStartingTimeout() {
-        startingTimeoutWork?.cancel()
+        startingTimeoutTask?.cancel()
         let port = kanataProcess.port
-        let work = DispatchWorkItem { [weak self] in
-            guard let self, self.appState == .starting, !self.isExternal else { return }
-            self.startingTimeoutWork = nil
+        startingTimeoutTask = Task {
+            try? await Task.sleep(for: .seconds(10))
+            guard !Task.isCancelled, appState == .starting, !isExternal else { return }
             Logging.log("TCP not connected after 10s, port \(port) may be in use")
             Notifications.sendPortConflict(port: port)
         }
-        startingTimeoutWork = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10.0, execute: work)
     }
 
     private func scheduleExternalTimeout() {
-        externalTimeoutWork?.cancel()
-        let work = DispatchWorkItem { [weak self] in
-            guard let self, self.isExternal, self.appState == .starting else { return }
+        externalTimeoutTask?.cancel()
+        externalTimeoutTask = Task {
+            try? await Task.sleep(for: .seconds(5))
+            guard !Task.isCancelled, isExternal, appState == .starting else { return }
             Logging.log("external kanata not responding, stopping")
-            self.externalTimeoutWork = nil
-            self.appState = .stopped
+            appState = .stopped
         }
-        externalTimeoutWork = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0, execute: work)
     }
 
     private func scheduleRestart() {
@@ -302,23 +298,21 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
             return
         }
 
-        let workItem = DispatchWorkItem { [weak self] in
-            guard let self, self.appState == .restarting else { return }
-            self.restartWorkItem = nil
-            guard Config.isBinaryAccessible(self.kanataProcess.binaryPath) else {
-                Logging.log("ERROR: kanata binary not found: \(self.kanataProcess.binaryPath)")
-                self.binaryNotFoundNotified = true
-                self.appState = .stopped
+        restartTask = Task {
+            try? await Task.sleep(for: .seconds(2))
+            guard !Task.isCancelled, appState == .restarting else { return }
+            guard Config.isBinaryAccessible(kanataProcess.binaryPath) else {
+                Logging.log("ERROR: kanata binary not found: \(kanataProcess.binaryPath)")
+                binaryNotFoundNotified = true
+                appState = .stopped
                 Notifications.sendBinaryNotFound()
                 return
             }
             Logging.log("autorestarting kanata...")
-            self.appState = .starting
-            self.kanataProcess.start()
+            appState = .starting
+            kanataProcess.start()
             Notifications.sendRestart()
         }
-        restartWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: workItem)
     }
 
     // MARK: - TCC

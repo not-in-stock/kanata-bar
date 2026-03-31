@@ -231,10 +231,10 @@ extension AppDelegate {
 
     @objc func doStart() {
         isExternal = false
-        externalTimeoutWork?.cancel()
-        externalTimeoutWork = nil
-        restartWorkItem?.cancel()
-        restartWorkItem = nil
+        externalTimeoutTask?.cancel()
+        externalTimeoutTask = nil
+        restartTask?.cancel()
+        restartTask = nil
         crashRateLimiter.reset()
         guard Config.isBinaryAccessible(kanataProcess.binaryPath) else {
             Logging.log("ERROR: kanata binary not found: \(kanataProcess.binaryPath)")
@@ -247,8 +247,8 @@ extension AppDelegate {
     }
 
     @objc func doStop() {
-        restartWorkItem?.cancel()
-        restartWorkItem = nil
+        restartTask?.cancel()
+        restartTask = nil
         kanataProcess.stop()
         appState = .stopped
     }
