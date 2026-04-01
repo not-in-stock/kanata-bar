@@ -9,7 +9,7 @@ class KanataClient {
     private let host: String
     private let port: UInt16
     private let queue = DispatchQueue(label: "\(Constants.bundleID).tcp")
-    private var reconnectDelay: TimeInterval = 1.0
+    private var reconnectDelay: TimeInterval = Timing.initialReconnectDelay
     private var shouldReconnect = true
     private var reconnectTask: Task<Void, Never>?
 
@@ -66,7 +66,7 @@ class KanataClient {
     private func handleState(_ state: NWConnection.State, conn: NWConnection) {
         switch state {
         case .ready:
-            reconnectDelay = 1.0
+            reconnectDelay = Timing.initialReconnectDelay
             onConnectionChange?(true)
             readLine(from: conn)
 
@@ -84,7 +84,7 @@ class KanataClient {
     }
 
     private func readLine(from conn: NWConnection) {
-        conn.receive(minimumIncompleteLength: 1, maximumLength: 4096) { [weak self] data, _, isComplete, error in
+        conn.receive(minimumIncompleteLength: 1, maximumLength: Timing.tcpBufferSize) { [weak self] data, _, isComplete, error in
             Task { @MainActor [weak self] in
                 guard let self else { return }
 
@@ -119,7 +119,7 @@ class KanataClient {
         guard shouldReconnect else { return }
 
         let delay = reconnectDelay
-        reconnectDelay = min(reconnectDelay * 2, 10.0) // exponential backoff, max 10s
+        reconnectDelay = min(reconnectDelay * 2, Timing.maxReconnectDelay)
 
         reconnectTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))

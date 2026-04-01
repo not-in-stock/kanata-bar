@@ -83,7 +83,7 @@ class SudoLauncher: KanataLauncher {
                 }
 
                 // Wait for kanata to start, then discover its PID
-                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                try? await Task.sleep(nanoseconds: Timing.pidDiscoveryDelay)
                 guard !Task.isCancelled else { return }
                 let pids = KanataProcess.findKanataPIDs()
                 if let pid = pids.last {

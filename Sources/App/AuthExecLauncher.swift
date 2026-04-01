@@ -121,7 +121,7 @@ class AuthExecLauncher: KanataLauncher {
                     _ = authExec(auth, pathPtr, AuthorizationFlags(), buf.baseAddress!, nil)
                 }
             }
-            usleep(500_000)
+            usleep(Timing.cleanupGracePeriod)
         }
 
         if let auth = authRef {

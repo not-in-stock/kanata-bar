@@ -255,7 +255,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
         guard !isExternal else { return }
         if kanataProcess.isRunning {
             kanataProcess.stop()
-            usleep(500_000)
+            usleep(Timing.cleanupGracePeriod)
         }
         kanataProcess.forceKillAll()
     }
@@ -272,7 +272,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
         startingTimeoutTask?.cancel()
         let port = kanataProcess.port
         startingTimeoutTask = Task {
-            try? await Task.sleep(for: .seconds(10))
+            try? await Task.sleep(for: Timing.tcpConnectTimeout)
             guard !Task.isCancelled, appState == .starting, !isExternal else { return }
             Logging.log("TCP not connected after 10s, port \(port) may be in use")
             Notifications.sendPortConflict(port: port)
@@ -282,7 +282,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
     private func scheduleExternalTimeout() {
         externalTimeoutTask?.cancel()
         externalTimeoutTask = Task {
-            try? await Task.sleep(for: .seconds(5))
+            try? await Task.sleep(for: Timing.externalKanataTimeout)
             guard !Task.isCancelled, isExternal, appState == .starting else { return }
             Logging.log("external kanata not responding, stopping")
             appState = .stopped
@@ -299,7 +299,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
         }
 
         restartTask = Task {
-            try? await Task.sleep(for: .seconds(2))
+            try? await Task.sleep(for: Timing.restartDelay)
             guard !Task.isCancelled, appState == .restarting else { return }
             guard Config.isBinaryAccessible(kanataProcess.binaryPath) else {
                 Logging.log("ERROR: kanata binary not found: \(kanataProcess.binaryPath)")
