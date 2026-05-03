@@ -121,7 +121,7 @@ class AuthExecLauncher: KanataLauncher {
                     _ = authExec(auth, pathPtr, AuthorizationFlags(), buf.baseAddress!, nil)
                 }
             }
-            usleep(Timing.cleanupGracePeriod)
+            waitForExit(pid: pid, timeout: 0.2)
         }
 
         if let auth = authRef {
@@ -205,9 +205,11 @@ class AuthExecLauncher: KanataLauncher {
             logRedirect = " > \(shellEscape(logURL.path)) 2>&1"
         }
 
+        // SIGKILL because kanata ignores SIGTERM. 200ms poll caps the window
+        // between kanata-bar dying and kanata being killed.
         let script = "\(kanataArgs)\(logRedirect) & KPID=$!; echo $KPID; "
-            + "trap 'kill $KPID 2>/dev/null' EXIT; "
-            + "while kill -0 \(appPID) 2>/dev/null; do sleep 1; done"
+            + "trap 'kill -KILL $KPID 2>/dev/null' EXIT; "
+            + "while kill -0 \(appPID) 2>/dev/null; do sleep 0.2; done"
 
         let cArgs: [UnsafeMutablePointer<CChar>?] = [strdup("-c"), strdup(script), nil]
         defer { cArgs.forEach { if let p = $0 { free(p) } } }
@@ -242,6 +244,15 @@ class AuthExecLauncher: KanataLauncher {
     }
 
     // MARK: - Helpers
+
+    /// Block until `pid` exits or `timeout` elapses. Polls every 10ms.
+    private func waitForExit(pid: Int32, timeout: TimeInterval) {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if kill(pid, 0) != 0 { return }
+            usleep(10_000)
+        }
+    }
 
     private func killViaAuthExec(signal: String, pid: Int32) {
         guard let auth = authRef, let authExec = Self.authExecFn else { return }
