@@ -1,11 +1,23 @@
+import Darwin
 import Foundation
 import Security
 import Shared
 
+private let kProcPathMax: Int = 4 * 1024
+
 class HelperTool: NSObject, HelperProtocol {
     func sendSignal(_ sig: Int32, toProcessID pid: Int32, withReply reply: @escaping (Bool, String) -> Void) {
-        guard pid > 0 else {
+        guard pid > 1 else {
             reply(false, "invalid pid")
+            return
+        }
+        guard let path = executablePath(forPID: pid) else {
+            reply(false, "pid \(pid) not found")
+            return
+        }
+        let basename = (path as NSString).lastPathComponent
+        guard basename == Constants.kanataBinaryName else {
+            reply(false, "pid \(pid) is not \(Constants.kanataBinaryName) (\(basename))")
             return
         }
         let result = kill(pid, sig)
@@ -18,7 +30,24 @@ class HelperTool: NSObject, HelperProtocol {
     }
 
     func isProcessAlive(_ pid: Int32, withReply reply: @escaping (Bool) -> Void) {
+        guard pid > 1, let path = executablePath(forPID: pid),
+              (path as NSString).lastPathComponent == Constants.kanataBinaryName else {
+            reply(false)
+            return
+        }
         reply(kill(pid, 0) == 0)
+    }
+
+    /// Returns the absolute path of the executable backing `pid`, or nil if the
+    /// process doesn't exist or its path can't be read.
+    private func executablePath(forPID pid: pid_t) -> String? {
+        var buf = [CChar](repeating: 0, count: kProcPathMax)
+        let len = buf.withUnsafeMutableBufferPointer { ptr -> Int32 in
+            guard let base = ptr.baseAddress else { return -1 }
+            return proc_pidpath(pid, base, UInt32(ptr.count))
+        }
+        guard len > 0 else { return nil }
+        return String(cString: buf)
     }
 }
 
