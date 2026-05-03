@@ -2,9 +2,6 @@ import Foundation
 
 /// Named timing constants used across the app.
 enum Timing {
-    /// Wait for kanata to start before discovering its PID via pgrep.
-    static let pidDiscoveryDelay: UInt64 = 1_500_000_000 // nanoseconds
-
     /// Grace period after sending SIGKILL before freeing resources.
     static let cleanupGracePeriod: useconds_t = 500_000 // microseconds
 

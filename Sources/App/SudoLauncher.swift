@@ -46,18 +46,33 @@ class SudoLauncher: KanataLauncher {
         let extraArgs = extraArgs
         let logURL = logURL
 
-        Task.detached {
+        Task.detached { [weak self] in
             killLeftoverKanata()
+
+            let kanataArgs = ([binaryPath, "-c", configPath, "--port", "\(port)"] + extraArgs)
+                .map(AuthExecLauncher.shellEscape)
+                .joined(separator: " ")
+            let logRedirect: String
+            if let logURL {
+                FileManager.default.createFile(atPath: logURL.path, contents: nil)
+                logRedirect = " > \(AuthExecLauncher.shellEscape(logURL.path)) 2>&1"
+            } else {
+                logRedirect = ""
+            }
+            // Wrap kanata so its pid lands on sudo's stdout deterministically,
+            // instead of guessing via pgrep after a fixed delay.
+            let script = "\(kanataArgs)\(logRedirect) & echo $!; wait $!"
 
             let p = Process()
             p.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
-            p.arguments = ["-S", binaryPath, "-c", configPath, "--port", "\(port)"] + extraArgs
+            p.arguments = ["-S", "/bin/sh", "-c", script]
 
             let stdinPipe = Pipe()
             stdinPipe.fileHandleForWriting.closeFile()
             p.standardInput = stdinPipe
-
-            Self.setupLogRedirect(for: p, logURL: logURL)
+            let stdoutPipe = Pipe()
+            p.standardOutput = stdoutPipe
+            p.standardError = FileHandle.nullDevice
 
             p.terminationHandler = { [weak self] proc in
                 let exitCode = proc.terminationStatus
@@ -82,16 +97,12 @@ class SudoLauncher: KanataLauncher {
                     self?.sudoProcess = p
                 }
 
-                // Wait for kanata to start, then discover its PID
-                try? await Task.sleep(nanoseconds: Timing.pidDiscoveryDelay)
-                guard !Task.isCancelled else { return }
-                let pids = KanataProcess.findKanataPIDs()
-                if let pid = pids.last {
-                    await MainActor.run { [weak self] in
-                        guard let self else { return }
-                        self.discoveredPID = pid
-                        self.onEvent?(.started(pid: pid))
-                    }
+                guard let pid = Self.readPID(from: stdoutPipe.fileHandleForReading),
+                      !Task.isCancelled else { return }
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    self.discoveredPID = pid
+                    self.onEvent?(.started(pid: pid))
                 }
             } catch {
                 let message = error.localizedDescription
@@ -176,11 +187,20 @@ class SudoLauncher: KanataLauncher {
 
     // MARK: - Helpers
 
-    nonisolated private static func setupLogRedirect(for process: Process, logURL: URL?) {
-        guard let logURL else { return }
-        FileManager.default.createFile(atPath: logURL.path, contents: nil)
-        let logHandle = try? FileHandle(forWritingTo: logURL)
-        process.standardOutput = logHandle
-        process.standardError = logHandle
+    /// Read the first newline-terminated line from `handle` and parse it as a pid.
+    /// Blocks until data arrives or the pipe closes (EOF → returns nil).
+    nonisolated private static func readPID(from handle: FileHandle) -> Int32? {
+        var buf = ""
+        while true {
+            let data = handle.availableData
+            if data.isEmpty { return nil }
+            guard let chunk = String(data: data, encoding: .utf8) else { continue }
+            for ch in chunk {
+                if ch == "\n" {
+                    return Int32(buf.trimmingCharacters(in: .whitespacesAndNewlines))
+                }
+                buf.append(ch)
+            }
+        }
     }
 }
