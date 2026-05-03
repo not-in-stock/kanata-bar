@@ -34,6 +34,7 @@ let package = Package(
             dependencies: ["Shared"],
             path: "Sources/Helper",
             linkerSettings: [
+                .linkedFramework("Security"),
                 .unsafeFlags([
                     "-Xlinker", "-sectcreate",
                     "-Xlinker", "__TEXT",
