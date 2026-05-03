@@ -87,7 +87,16 @@ cat > "$BUNDLE/Contents/Info.plist" << PLIST
 </plist>
 PLIST
 
-cat > build/helper-info.plist << PLIST
+# Templated helper plist — overwrites the in-tree placeholder so the embedded
+# `__info_plist` section carries the real version, not 0.0.0. SMAppService keys
+# daemon registrations by version; without this, updates can keep the stale
+# helper binary registered. Restored on exit so the working tree stays clean.
+HELPER_PLIST="Resources/helper-info.plist"
+HELPER_PLIST_BACKUP="$(mktemp)"
+cp "$HELPER_PLIST" "$HELPER_PLIST_BACKUP"
+trap 'mv "$HELPER_PLIST_BACKUP" "$HELPER_PLIST"' EXIT
+
+cat > "$HELPER_PLIST" << PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
