@@ -92,6 +92,15 @@ extra_args = ["--log-layer-changes"]
 #   "false" — use AuthorizationExecuteWithPrivileges (deprecated API)
 pam_touchid = "auto"
 
+# Launch mechanism (experimental):
+#   "auto"   — sudo/AuthExec per pam_touchid above (default)
+#   "helper" — root XPC helper supervises kanata: zero prompts after the
+#              one-time Login Items approval, and kanata can't outlive the app.
+#              Falls back to "auto" until the helper is approved and TCC was
+#              granted to the current binary (a first run still bootstraps
+#              through the user session so macOS can show the TCC dialog).
+launcher = "auto"
+
 # Start kanata automatically when app launches
 autostart_kanata = false
 

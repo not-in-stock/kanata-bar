@@ -5,7 +5,95 @@ import Shared
 
 private let kProcPathMax: Int = 4 * 1024
 
+private func helperLog(_ message: String) {
+    FileHandle.standardError.write(Data("kanata-bar-helper: \(message)\n".utf8))
+}
+
+/// Owns a single supervised kanata child. Serial-queue guarded so the XPC
+/// exported-object callbacks (delivered on an internal queue) can't race on the
+/// child state. Uses `Process` so the child is reaped automatically and its exit
+/// clears the single-child guard.
+final class KanataSupervisor {
+    private let queue = DispatchQueue(label: "com.kanata-bar.helper.supervisor")
+    private var child: Process?
+
+    /// Launch kanata. Returns the child pid, or -1 and an error message.
+    func start(path: String, args: [String], log: FileHandle?) -> (pid: Int32, message: String) {
+        queue.sync {
+            if let child, child.isRunning {
+                return (-1, "kanata already running (pid \(child.processIdentifier))")
+            }
+            // Phase-1 trust: same basename rule as sendSignal. Real cdhash consent
+            // is phase 2 — do not widen this without it.
+            guard (path as NSString).lastPathComponent == Constants.kanataBinaryName else {
+                return (-1, "refusing to launch non-kanata binary \(path)")
+            }
+
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: path)
+            process.arguments = args
+            process.standardInput = FileHandle.nullDevice
+            process.standardOutput = log ?? FileHandle.nullDevice
+            process.standardError = log ?? FileHandle.nullDevice
+            process.terminationHandler = { [weak self] proc in
+                guard let self else { return }
+                self.queue.async {
+                    if self.child === proc { self.child = nil }
+                }
+                helperLog("kanata exited (status \(proc.terminationStatus))")
+            }
+
+            do {
+                try process.run()
+                child = process
+                let pid = process.processIdentifier
+                helperLog("launched kanata pid \(pid): \(path) \(args.joined(separator: " "))")
+                return (pid, "started")
+            } catch {
+                return (-1, "launch failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// SIGKILL the current child, if any. Returns whether one was running.
+    func stop(reason: String) -> (stopped: Bool, message: String) {
+        queue.sync {
+            guard let child, child.isRunning else { return (false, "no kanata child running") }
+            let pid = child.processIdentifier
+            helperLog("killing kanata pid \(pid): \(reason)")
+            kill(pid, SIGKILL)
+            return (true, "SIGKILL sent to pid \(pid)")
+        }
+    }
+}
+
 class HelperTool: NSObject, HelperProtocol {
+    let supervisor: KanataSupervisor
+
+    init(supervisor: KanataSupervisor) {
+        self.supervisor = supervisor
+    }
+
+    func startKanata(path: String, args: [String], log: FileHandle?,
+                     withReply reply: @escaping (Int32, String) -> Void) {
+        let result = supervisor.start(path: path, args: args, log: log)
+        // Tie the child's lifetime to the app connection that started it: if the
+        // app dies (even `kill -9`), that connection invalidates and we SIGKILL
+        // kanata — closing the "kanata outlives the app" bug at the root.
+        if result.pid > 0, let connection = NSXPCConnection.current() {
+            let supervisor = supervisor
+            connection.invalidationHandler = {
+                _ = supervisor.stop(reason: "app XPC connection invalidated")
+            }
+        }
+        reply(result.pid, result.message)
+    }
+
+    func stopKanata(withReply reply: @escaping (Bool, String) -> Void) {
+        let result = supervisor.stop(reason: "stopKanata requested")
+        reply(result.stopped, result.message)
+    }
+
     func sendSignal(_ sig: Int32, toProcessID pid: Int32, withReply reply: @escaping (Bool, String) -> Void) {
         guard pid > 1 else {
             reply(false, "invalid pid")
@@ -52,11 +140,14 @@ class HelperTool: NSObject, HelperProtocol {
 }
 
 class HelperDelegate: NSObject, NSXPCListenerDelegate {
-    let tool = HelperTool()
+    // One supervisor shared across all connections → one kanata child total.
+    let supervisor = KanataSupervisor()
+    let tool: HelperTool
     let requirement: String?
 
     init(requirement: String?) {
         self.requirement = requirement
+        self.tool = HelperTool(supervisor: supervisor)
     }
 
     func listener(
@@ -68,7 +159,7 @@ class HelperDelegate: NSObject, NSXPCListenerDelegate {
             return false
         }
         connection.setCodeSigningRequirement(requirement)
-        connection.exportedInterface = NSXPCInterface(with: HelperProtocol.self)
+        connection.exportedInterface = HelperInterface.make()
         connection.exportedObject = tool
         connection.resume()
         return true

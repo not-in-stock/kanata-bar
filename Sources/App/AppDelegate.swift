@@ -119,16 +119,21 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
         let port = config.kanata.port
         let usePamTid = Config.resolvePamTouchid(config.kanataBar.pamTouchid)
 
-        Logging.log("auth mode: \(usePamTid ? "pam_touchid" : "authexec")")
-
         let launcher: KanataLauncher
         let extraArgs = config.kanata.extraArgs
         let logURL = Logging.kanataLogURL
-        if usePamTid {
+        if shouldUseHelperLauncher(config) {
+            Logging.log("auth mode: helper supervisor (experimental)")
+            launcher = HelperLauncher(
+                binaryPath: binaryPath, configPath: configPath,
+                port: port, extraArgs: extraArgs, logURL: logURL)
+        } else if usePamTid {
+            Logging.log("auth mode: pam_touchid")
             launcher = SudoLauncher(
                 binaryPath: binaryPath, configPath: configPath,
                 port: port, extraArgs: extraArgs, logURL: logURL)
         } else {
+            Logging.log("auth mode: authexec")
             launcher = AuthExecLauncher(
                 binaryPath: binaryPath, configPath: configPath,
                 port: port, extraArgs: extraArgs, logURL: logURL)
@@ -166,6 +171,32 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
                 Notifications.sendCrash()
             }
         }
+    }
+
+    /// Whether to route kanata through the root XPC helper supervisor.
+    ///
+    /// Experimental (`launcher = "helper"`), and only when the helper is actually
+    /// `.enabled` and TCC was granted to the *current* binary. A root daemon
+    /// cannot show the Input Monitoring dialog, so a first run or a fingerprint
+    /// change must still bootstrap through a user-session launcher. This runs
+    /// before `resetTCCIfSourceChanged()`, so `installSource` still holds the
+    /// previously-registered fingerprint — exactly the comparison we want.
+    private func shouldUseHelperLauncher(_ config: Config) -> Bool {
+        guard config.kanataBar.launcher == "helper" else { return false }
+
+        let service = SMAppService.daemon(plistName: Constants.helperPlistName)
+        guard service.status == .enabled else {
+            Logging.log("launcher=helper requested but helper not enabled (status \(service.status.rawValue)); using bootstrap launcher")
+            return false
+        }
+
+        let stored = UserDefaults.standard.string(forKey: "installSource")
+        guard let stored, stored == installFingerprint() else {
+            Logging.log("launcher=helper requested but TCC fingerprint changed/unset; using bootstrap launcher to re-grant")
+            return false
+        }
+
+        return true
     }
 
     private func setupNotificationPermission() {

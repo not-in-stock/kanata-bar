@@ -41,6 +41,7 @@ struct KanataBarConfig: Codable {
     var autostartKanata: Bool
     var autorestartKanata: Bool
     var pamTouchid: String  // "false" or "auto"
+    var launcher: String  // "auto" (sudo/authexec) or "helper" (experimental supervisor)
     var iconsDir: String?
     var iconTransition: IconTransition?
 
@@ -48,6 +49,7 @@ struct KanataBarConfig: Codable {
         case autostartKanata = "autostart_kanata"
         case autorestartKanata = "autorestart_kanata"
         case pamTouchid = "pam_touchid"
+        case launcher = "launcher"
         case iconsDir = "icons_dir"
         case iconTransition = "icon_transition"
     }
@@ -56,14 +58,16 @@ struct KanataBarConfig: Codable {
         autostartKanata: false,
         autorestartKanata: false,
         pamTouchid: "auto",
+        launcher: "auto",
         iconsDir: nil,
         iconTransition: nil
     )
 
-    init(autostartKanata: Bool, autorestartKanata: Bool, pamTouchid: String, iconsDir: String?, iconTransition: IconTransition?) {
+    init(autostartKanata: Bool, autorestartKanata: Bool, pamTouchid: String, launcher: String, iconsDir: String?, iconTransition: IconTransition?) {
         self.autostartKanata = autostartKanata
         self.autorestartKanata = autorestartKanata
         self.pamTouchid = pamTouchid
+        self.launcher = launcher
         self.iconsDir = iconsDir
         self.iconTransition = iconTransition
     }
@@ -74,6 +78,7 @@ struct KanataBarConfig: Codable {
         autostartKanata = (try? c.decode(Bool.self, forKey: .autostartKanata)) ?? d.autostartKanata
         autorestartKanata = (try? c.decode(Bool.self, forKey: .autorestartKanata)) ?? d.autorestartKanata
         pamTouchid = (try? c.decode(String.self, forKey: .pamTouchid)) ?? d.pamTouchid
+        launcher = (try? c.decode(String.self, forKey: .launcher)) ?? d.launcher
         iconsDir = try? c.decode(String.self, forKey: .iconsDir)
         iconTransition = try? c.decode(IconTransition.self, forKey: .iconTransition)
     }
