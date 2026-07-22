@@ -24,7 +24,9 @@ extension AppDelegate {
 
     /// Returns a string that changes whenever the app binary or install location changes.
     /// Combines resolved bundle path with the executable's CDHash (which is what macOS TCC validates).
-    private func installFingerprint() -> String {
+    /// Also used by helper registration to detect an install-source switch that
+    /// leaves a stale SMAppService record (see `registerHelperIfNeeded`).
+    func installFingerprint() -> String {
         let path = resolvedBundlePath()
         let cdHash = executableCDHash() ?? "unknown"
         return "\(path)|\(cdHash)"

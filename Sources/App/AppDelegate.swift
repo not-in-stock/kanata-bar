@@ -329,16 +329,37 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
 
     func registerHelperIfNeeded() {
         let service = SMAppService.daemon(plistName: Constants.helperPlistName)
+
+        // Detect an install-source switch (nix ↔ brew ↔ classic — all share
+        // bundle-id com.kanata-bar). Such a switch can leave SMAppService
+        // reporting a stale `.enabled` for a helper that no longer exists in
+        // launchd/BTM: the shipped code then trusts `.enabled`, returns, and the
+        // helper is silently absent with nothing to approve. We track the
+        // fingerprint of the bundle we last registered from (separate key from
+        // TCC's, so this doesn't depend on call order) and drop the stale record
+        // when it changes.
+        let fingerprint = installFingerprint()
+        let lastRegistered = UserDefaults.standard.string(forKey: "helperInstallSource")
+        if let lastRegistered, lastRegistered != fingerprint, service.status == .enabled {
+            Logging.log("install source changed while helper .enabled — clearing stale registration")
+            try? service.unregister()
+        }
+
         switch service.status {
         case .enabled:
-            return
-        case .notRegistered, .requiresApproval:
+            UserDefaults.standard.set(fingerprint, forKey: "helperInstallSource")
+        case .notRegistered, .requiresApproval, .notFound:
             do {
                 try service.register()
+                UserDefaults.standard.set(fingerprint, forKey: "helperInstallSource")
+                Logging.log("helper registered (status: \(service.status.rawValue))")
             } catch {
-                print("helper registration failed: \(error) (falling back to sudo for stop)")
+                // register() reports "Operation not permitted" when the daemon is
+                // registered but awaiting the user's approval in System Settings ›
+                // General › Login Items & Extensions › Allow in the Background.
+                Logging.log("helper awaiting approval in Login Items: \(error.localizedDescription)")
             }
-        default:
+        @unknown default:
             break
         }
     }
