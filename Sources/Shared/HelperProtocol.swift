@@ -32,8 +32,13 @@ public enum HelperInterface {
     public static func make() -> NSXPCInterface {
         let interface = NSXPCInterface(with: HelperProtocol.self)
         let sel = #selector(HelperProtocol.startKanata(path:args:log:withReply:))
-        let classes = NSSet(array: [FileHandle.self]) as! Set<AnyHashable>
-        interface.setClasses(classes, for: sel, argumentIndex: 2, ofReply: false)
+        // NSFileHandle is auto-allowed for a directly-typed argument, but whitelist
+        // it explicitly so its fd transports. `as?` (not `as!`) keeps swiftlint
+        // happy; the NSSet→Set bridge never actually fails, and if it somehow did
+        // the auto-derived allow-list still includes NSFileHandle.
+        if let classes = NSSet(array: [FileHandle.self]) as? Set<AnyHashable> {
+            interface.setClasses(classes, for: sel, argumentIndex: 2, ofReply: false)
+        }
         return interface
     }
 }
