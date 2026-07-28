@@ -13,7 +13,11 @@ private func helperLog(_ message: String) {
 /// exported-object callbacks (delivered on an internal queue) can't race on the
 /// child state. Uses `Process` so the child is reaped automatically and its exit
 /// clears the single-child guard.
-final class KanataSupervisor {
+///
+/// `@unchecked Sendable`: all access to `child` goes through `queue`, so the
+/// instance is safe to capture in the `@Sendable` `terminationHandler` /
+/// XPC invalidation closures.
+final class KanataSupervisor: @unchecked Sendable {
     private let queue = DispatchQueue(label: "com.kanata-bar.helper.supervisor")
     private var child: Process?
 
