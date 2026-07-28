@@ -18,6 +18,7 @@ class SudoLauncher: KanataLauncher {
     private var discoveredPID: Int32 = -1
     private var stoppedByUser = false
     private(set) var stopMode: StopMode
+    private var processSource: DispatchSourceProcess?
 
     var onEvent: ((LauncherEvent) -> Void)?
 
@@ -59,9 +60,16 @@ class SudoLauncher: KanataLauncher {
             } else {
                 logRedirect = ""
             }
-            // Wrap kanata so its pid lands on sudo's stdout deterministically,
-            // instead of guessing via pgrep after a fixed delay.
-            let script = "\(kanataArgs)\(logRedirect) & echo $!; wait $!"
+            // Report kanata's pid on stdout deterministically, then self-clean:
+            // an EXIT trap SIGKILLs kanata if this wrapper ever exits, and the
+            // poll loop makes the wrapper exit when the app dies (crash or quit),
+            // so kanata can't be orphaned when sudo/the wrapper is torn down.
+            // kanata's own exit is tracked app-side via DispatchSourceProcess.
+            // Mirrors AuthExecLauncher.
+            let appPID = ProcessInfo.processInfo.processIdentifier
+            let script = "\(kanataArgs)\(logRedirect) & KPID=$!; echo $KPID; "
+                + "trap 'kill -KILL $KPID 2>/dev/null' EXIT; "
+                + "while kill -0 \(appPID) 2>/dev/null; do sleep 0.2; done"
 
             let p = Process()
             p.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
@@ -81,12 +89,14 @@ class SudoLauncher: KanataLauncher {
                     let pidWasDiscovered = self.discoveredPID > 0
                     let wasStopped = self.stoppedByUser
                     self.sudoProcess = nil
-                    self.discoveredPID = -1
+                    // Once kanata's pid is known its exit is owned by the process
+                    // monitor, and this wrapper now only exits when the app is
+                    // going away — so don't surface that as a kanata event. Only
+                    // report a pre-pid failure (auth denied / kanata never ran).
+                    guard !pidWasDiscovered else { return }
                     self.stoppedByUser = false
-                    if !wasStopped && !pidWasDiscovered && exitCode != 0 {
+                    if !wasStopped && exitCode != 0 {
                         self.onEvent?(.failed)
-                    } else {
-                        self.onEvent?(.exited(code: exitCode))
                     }
                 }
             }
@@ -103,6 +113,7 @@ class SudoLauncher: KanataLauncher {
                     guard let self else { return }
                     self.discoveredPID = pid
                     self.onEvent?(.started(pid: pid))
+                    self.startProcessMonitor(pid: pid)
                 }
             } catch {
                 let message = error.localizedDescription
@@ -117,8 +128,11 @@ class SudoLauncher: KanataLauncher {
 
     func stop() {
         stoppedByUser = true
-        // sudo may still be waiting for auth — kill it
-        if let proc = sudoProcess, proc.isRunning {
+        // Cancel a pending auth prompt only while kanata hasn't started yet.
+        // Once it's running, terminating sudo would kill the wrapper shell
+        // without running its EXIT trap (a default SIGTERM doesn't) and orphan
+        // the backgrounded kanata — so SIGKILL kanata by pid instead.
+        if discoveredPID <= 0, let proc = sudoProcess, proc.isRunning {
             proc.terminate()
             return
         }
@@ -131,9 +145,39 @@ class SudoLauncher: KanataLauncher {
         }
     }
 
+    // MARK: - Process Monitor
+
+    /// Detect kanata's own exit (crash or an out-of-band kill) client-side, the
+    /// same way `AuthExecLauncher` does — the sudo wrapper no longer `wait`s on
+    /// kanata (it polls the app instead), so it can't report this.
+    private func startProcessMonitor(pid: Int32) {
+        guard pid > 0 else { return }
+        let source = DispatchSource.makeProcessSource(
+            identifier: pid, eventMask: .exit, queue: .main)
+        source.setEventHandler { [weak self] in
+            guard let self else { return }
+            self.processSource = nil
+            self.discoveredPID = -1
+            self.onEvent?(.exited(code: 1))
+        }
+        source.resume()
+        processSource = source
+
+        // Safety net: if kanata exited before kevent registration, the handler
+        // never fires. Detect it immediately.
+        if !isProcessAlive(pid) {
+            processSource?.cancel()
+            processSource = nil
+            discoveredPID = -1
+            onEvent?(.exited(code: 1))
+        }
+    }
+
     // MARK: - Cleanup
 
     func cleanup() {
+        processSource?.cancel()
+        processSource = nil
         let pkill = Process()
         pkill.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
         pkill.arguments = ["-n", "/usr/bin/pkill", "-x", Constants.kanataBinaryName]
