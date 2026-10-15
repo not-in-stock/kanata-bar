@@ -53,6 +53,11 @@ if ! command -v swift &>/dev/null; then
   echo "Install Xcode Command Line Tools: xcode-select --install" >&2
   exit 1
 fi
+if ! command -v resvg &>/dev/null; then
+  echo "error: resvg not found (needed to rasterize the app icon)" >&2
+  echo "Install it: brew install resvg" >&2
+  exit 1
+fi
 
 echo "=== Building kanata-bar $VERSION ==="
 
@@ -136,7 +141,7 @@ PLIST
 # --- Icon ---
 
 mkdir -p "$BUNDLE/Contents/Resources"
-[ -f Resources/AppIcon.icns ] && cp Resources/AppIcon.icns "$BUNDLE/Contents/Resources/"
+scripts/make-icns.sh Resources/icon/kanata-bar-icon-macos.svg "$BUNDLE/Contents/Resources/AppIcon.icns"
 [ -f Resources/placeholder.png ] && cp Resources/placeholder.png "$BUNDLE/Contents/Resources/"
 [ -f Resources/sign.png ] && cp Resources/sign.png "$BUNDLE/Contents/Resources/"
 [ -d Resources/en.lproj ] && cp -r Resources/en.lproj "$BUNDLE/Contents/Resources/"

@@ -1,0 +1,221 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Kanata bar icon: pink mechanical keycap with a neon cocktail glyph.
+       Surfaces are painted in the PSD; here they are approximated by a base colour plus
+       soft elliptical radial gradients fitted to the raster layers (pure SVG, no mesh). -->
+  <defs>
+    <clipPath id="clip_icon"><path d="M 587.76 0 c 159.02 0 238.54 0 298.39 32.90 a 266.00 266.00 0 0 1 104.95 104.95 c 32.90 59.85 32.90 139.36 32.90 298.39 L 1024.00 587.76 c 0 159.02 0 238.54 -32.90 298.39 a 266.00 266.00 0 0 1 -104.95 104.95 c -59.85 32.90 -139.36 32.90 -298.39 32.90 L 436.24 1024.00 c -159.02 0 -238.54 0 -298.39 -32.90 a 266.00 266.00 0 0 1 -104.95 -104.95 c -32.90 -59.85 -32.90 -139.36 -32.90 -298.39 L 0 436.24 c 0 -159.02 0 -238.54 32.90 -298.39 a 266.00 266.00 0 0 1 104.95 -104.95 c 59.85 -32.90 139.36 -32.90 298.39 -32.90 Z"/></clipPath>
+    <clipPath id="clip_top"><path d="M 285.41,23.71 C 436.47,16.78 587.53,16.78 738.59,23.71 C 803.24,26.92 859.83,83.5 863.06,148.15 C 869.99,298.54 869.99,448.94 863.06,599.33 C 859.83,663.98 803.24,720.56 738.59,723.77 C 587.53,730.7 436.47,730.7 285.41,723.77 C 220.76,720.56 164.17,663.98 160.94,599.33 C 154.01,448.94 154.01,298.54 160.94,148.15 C 164.17,83.5 220.76,26.92 285.41,23.71 Z"/></clipPath>
+    <radialGradient id="key_side_g0" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1"
+      gradientTransform="translate(373.2 2072.2) rotate(23.4) scale(751.0 5442.9)">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="1.000"/>
+      <stop offset="0.2" stop-color="#ffffff" stop-opacity="0.850"/>
+      <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.550"/>
+      <stop offset="0.6" stop-color="#ffffff" stop-opacity="0.250"/>
+      <stop offset="0.8" stop-color="#ffffff" stop-opacity="0.070"/>
+      <stop offset="1.0" stop-color="#ffffff" stop-opacity="0.000"/>
+    </radialGradient>
+    <radialGradient id="key_side_g1" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1"
+      gradientTransform="translate(550.2 921.0) rotate(-97.2) scale(818.5 1643.3)">
+      <stop offset="0" stop-color="#ff94e8" stop-opacity="1.000"/>
+      <stop offset="0.2" stop-color="#ff94e8" stop-opacity="0.850"/>
+      <stop offset="0.4" stop-color="#ff94e8" stop-opacity="0.550"/>
+      <stop offset="0.6" stop-color="#ff94e8" stop-opacity="0.250"/>
+      <stop offset="0.8" stop-color="#ff94e8" stop-opacity="0.070"/>
+      <stop offset="1.0" stop-color="#ff94e8" stop-opacity="0.000"/>
+    </radialGradient>
+    <radialGradient id="key_side_g2" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1"
+      gradientTransform="translate(94.5 818.3) rotate(25.0) scale(154.3 551.9)">
+      <stop offset="0" stop-color="#f3c0ec" stop-opacity="0.681"/>
+      <stop offset="0.2" stop-color="#f3c0ec" stop-opacity="0.579"/>
+      <stop offset="0.4" stop-color="#f3c0ec" stop-opacity="0.375"/>
+      <stop offset="0.6" stop-color="#f3c0ec" stop-opacity="0.170"/>
+      <stop offset="0.8" stop-color="#f3c0ec" stop-opacity="0.048"/>
+      <stop offset="1.0" stop-color="#f3c0ec" stop-opacity="0.000"/>
+    </radialGradient>
+    <radialGradient id="key_side_g3" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1"
+      gradientTransform="translate(947.4 779.0) rotate(-11.6) scale(265.2 980.9)">
+      <stop offset="0" stop-color="#f7d3f3" stop-opacity="1.000"/>
+      <stop offset="0.2" stop-color="#f7d3f3" stop-opacity="0.850"/>
+      <stop offset="0.4" stop-color="#f7d3f3" stop-opacity="0.550"/>
+      <stop offset="0.6" stop-color="#f7d3f3" stop-opacity="0.250"/>
+      <stop offset="0.8" stop-color="#f7d3f3" stop-opacity="0.070"/>
+      <stop offset="1.0" stop-color="#f7d3f3" stop-opacity="0.000"/>
+    </radialGradient>
+    <radialGradient id="key_side_g4" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1"
+      gradientTransform="translate(534.5 951.5) rotate(5.7) scale(820.1 235.5)">
+      <stop offset="0" stop-color="#ef9be8" stop-opacity="0.810"/>
+      <stop offset="0.2" stop-color="#ef9be8" stop-opacity="0.689"/>
+      <stop offset="0.4" stop-color="#ef9be8" stop-opacity="0.446"/>
+      <stop offset="0.6" stop-color="#ef9be8" stop-opacity="0.203"/>
+      <stop offset="0.8" stop-color="#ef9be8" stop-opacity="0.057"/>
+      <stop offset="1.0" stop-color="#ef9be8" stop-opacity="0.000"/>
+    </radialGradient>
+    <radialGradient id="key_side_g5" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1"
+      gradientTransform="translate(115.4 1178.0) rotate(1.1) scale(243.5 287.1)">
+      <stop offset="0" stop-color="#bc9ad6" stop-opacity="0.494"/>
+      <stop offset="0.2" stop-color="#bc9ad6" stop-opacity="0.420"/>
+      <stop offset="0.4" stop-color="#bc9ad6" stop-opacity="0.272"/>
+      <stop offset="0.6" stop-color="#bc9ad6" stop-opacity="0.124"/>
+      <stop offset="0.8" stop-color="#bc9ad6" stop-opacity="0.035"/>
+      <stop offset="1.0" stop-color="#bc9ad6" stop-opacity="0.000"/>
+    </radialGradient>
+    <radialGradient id="key_side_g6" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1"
+      gradientTransform="translate(797.8 568.9) rotate(4.8) scale(87.4 261.3)">
+      <stop offset="0" stop-color="#f4b6e9" stop-opacity="1.000"/>
+      <stop offset="0.2" stop-color="#f4b6e9" stop-opacity="0.850"/>
+      <stop offset="0.4" stop-color="#f4b6e9" stop-opacity="0.550"/>
+      <stop offset="0.6" stop-color="#f4b6e9" stop-opacity="0.250"/>
+      <stop offset="0.8" stop-color="#f4b6e9" stop-opacity="0.070"/>
+      <stop offset="1.0" stop-color="#f4b6e9" stop-opacity="0.000"/>
+    </radialGradient>
+    <radialGradient id="key_side_g7" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1"
+      gradientTransform="translate(217.0 16.6) rotate(-4.1) scale(549.1 450.3)">
+      <stop offset="0" stop-color="#f4aaea" stop-opacity="0.582"/>
+      <stop offset="0.2" stop-color="#f4aaea" stop-opacity="0.495"/>
+      <stop offset="0.4" stop-color="#f4aaea" stop-opacity="0.320"/>
+      <stop offset="0.6" stop-color="#f4aaea" stop-opacity="0.145"/>
+      <stop offset="0.8" stop-color="#f4aaea" stop-opacity="0.041"/>
+      <stop offset="1.0" stop-color="#f4aaea" stop-opacity="0.000"/>
+    </radialGradient>
+    <radialGradient id="key_side_g8" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1"
+      gradientTransform="translate(660.8 79.5) rotate(-2.1) scale(472.9 402.5)">
+      <stop offset="0" stop-color="#f1c6ef" stop-opacity="0.458"/>
+      <stop offset="0.2" stop-color="#f1c6ef" stop-opacity="0.389"/>
+      <stop offset="0.4" stop-color="#f1c6ef" stop-opacity="0.252"/>
+      <stop offset="0.6" stop-color="#f1c6ef" stop-opacity="0.114"/>
+      <stop offset="0.8" stop-color="#f1c6ef" stop-opacity="0.032"/>
+      <stop offset="1.0" stop-color="#f1c6ef" stop-opacity="0.000"/>
+    </radialGradient>
+    <radialGradient id="key_side_g9" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1"
+      gradientTransform="translate(33.1 659.8) rotate(0.5) scale(249.3 293.0)">
+      <stop offset="0" stop-color="#f4b8f1" stop-opacity="0.538"/>
+      <stop offset="0.2" stop-color="#f4b8f1" stop-opacity="0.458"/>
+      <stop offset="0.4" stop-color="#f4b8f1" stop-opacity="0.296"/>
+      <stop offset="0.6" stop-color="#f4b8f1" stop-opacity="0.135"/>
+      <stop offset="0.8" stop-color="#f4b8f1" stop-opacity="0.038"/>
+      <stop offset="1.0" stop-color="#f4b8f1" stop-opacity="0.000"/>
+    </radialGradient>
+    <radialGradient id="key_top_g0" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1"
+      gradientTransform="translate(-132.2 -183.6) rotate(-25.3) scale(506.1 9544.9)">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="1.000"/>
+      <stop offset="0.2" stop-color="#ffffff" stop-opacity="0.850"/>
+      <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.550"/>
+      <stop offset="0.6" stop-color="#ffffff" stop-opacity="0.250"/>
+      <stop offset="0.8" stop-color="#ffffff" stop-opacity="0.070"/>
+      <stop offset="1.0" stop-color="#ffffff" stop-opacity="0.000"/>
+    </radialGradient>
+    <radialGradient id="key_top_g1" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1"
+      gradientTransform="translate(507.2 742.2) rotate(2.7) scale(151.2 163.7)">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="1.000"/>
+      <stop offset="0.2" stop-color="#ffffff" stop-opacity="0.850"/>
+      <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.550"/>
+      <stop offset="0.6" stop-color="#ffffff" stop-opacity="0.250"/>
+      <stop offset="0.8" stop-color="#ffffff" stop-opacity="0.070"/>
+      <stop offset="1.0" stop-color="#ffffff" stop-opacity="0.000"/>
+    </radialGradient>
+    <radialGradient id="key_top_g2" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1"
+      gradientTransform="translate(-215.2 -713.8) rotate(-23.1) scale(829.9 2933.1)">
+      <stop offset="0" stop-color="#b80676" stop-opacity="0.265"/>
+      <stop offset="0.2" stop-color="#b80676" stop-opacity="0.225"/>
+      <stop offset="0.4" stop-color="#b80676" stop-opacity="0.146"/>
+      <stop offset="0.6" stop-color="#b80676" stop-opacity="0.066"/>
+      <stop offset="0.8" stop-color="#b80676" stop-opacity="0.019"/>
+      <stop offset="1.0" stop-color="#b80676" stop-opacity="0.000"/>
+    </radialGradient>
+    <radialGradient id="key_top_g3" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1"
+      gradientTransform="translate(531.2 197.1) rotate(12.0) scale(476.6 716.1)">
+      <stop offset="0" stop-color="#ffb2ff" stop-opacity="0.532"/>
+      <stop offset="0.2" stop-color="#ffb2ff" stop-opacity="0.452"/>
+      <stop offset="0.4" stop-color="#ffb2ff" stop-opacity="0.292"/>
+      <stop offset="0.6" stop-color="#ffb2ff" stop-opacity="0.133"/>
+      <stop offset="0.8" stop-color="#ffb2ff" stop-opacity="0.037"/>
+      <stop offset="1.0" stop-color="#ffb2ff" stop-opacity="0.000"/>
+    </radialGradient>
+    <radialGradient id="key_top_g4" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1"
+      gradientTransform="translate(227.0 -13.6) rotate(-11.0) scale(243.3 718.3)">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.503"/>
+      <stop offset="0.2" stop-color="#ffffff" stop-opacity="0.428"/>
+      <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.277"/>
+      <stop offset="0.6" stop-color="#ffffff" stop-opacity="0.126"/>
+      <stop offset="0.8" stop-color="#ffffff" stop-opacity="0.035"/>
+      <stop offset="1.0" stop-color="#ffffff" stop-opacity="0.000"/>
+    </radialGradient>
+    <radialGradient id="key_top_g5" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1"
+      gradientTransform="translate(302.9 750.6) rotate(-10.0) scale(2816.7 142.9)">
+      <stop offset="0" stop-color="#ffa0ff" stop-opacity="0.282"/>
+      <stop offset="0.2" stop-color="#ffa0ff" stop-opacity="0.239"/>
+      <stop offset="0.4" stop-color="#ffa0ff" stop-opacity="0.155"/>
+      <stop offset="0.6" stop-color="#ffa0ff" stop-opacity="0.070"/>
+      <stop offset="0.8" stop-color="#ffa0ff" stop-opacity="0.020"/>
+      <stop offset="1.0" stop-color="#ffa0ff" stop-opacity="0.000"/>
+    </radialGradient>
+    <radialGradient id="key_top_g6" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1"
+      gradientTransform="translate(139.1 319.7) rotate(-0.8) scale(51.5 510.5)">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="1.000"/>
+      <stop offset="0.2" stop-color="#ffffff" stop-opacity="0.850"/>
+      <stop offset="0.4" stop-color="#ffffff" stop-opacity="0.550"/>
+      <stop offset="0.6" stop-color="#ffffff" stop-opacity="0.250"/>
+      <stop offset="0.8" stop-color="#ffffff" stop-opacity="0.070"/>
+      <stop offset="1.0" stop-color="#ffffff" stop-opacity="0.000"/>
+    </radialGradient>
+    <radialGradient id="key_top_g7" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1"
+      gradientTransform="translate(6.1 184.2) rotate(-0.3) scale(382.9 687.0)">
+      <stop offset="0" stop-color="#ffe2ff" stop-opacity="0.946"/>
+      <stop offset="0.2" stop-color="#ffe2ff" stop-opacity="0.804"/>
+      <stop offset="0.4" stop-color="#ffe2ff" stop-opacity="0.520"/>
+      <stop offset="0.6" stop-color="#ffe2ff" stop-opacity="0.237"/>
+      <stop offset="0.8" stop-color="#ffe2ff" stop-opacity="0.066"/>
+      <stop offset="1.0" stop-color="#ffe2ff" stop-opacity="0.000"/>
+    </radialGradient>
+    <!-- Photoshop Outer Glow: size 38 / choke 22% / opacity 34% / screen / white.
+         Screen with white == normal blending of white at the same alpha, so no blend mode needed. -->
+    <filter id="neon_glow" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+      <feMorphology in="SourceAlpha" operator="dilate" radius="7" result="d"/>
+      <feGaussianBlur in="d" stdDeviation="15" result="b"/>
+      <feFlood flood-color="#ffffff" flood-opacity="0.34"/>
+      <feComposite in2="b" operator="in" result="glow"/>
+    </filter>
+    <g id="neon_shapes" fill="none" stroke="#ffffff" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
+      <path id="frame" d="M 285.41,23.71 C 436.47,16.78 587.53,16.78 738.59,23.71 C 803.24,26.92 859.83,83.5 863.06,148.15 C 869.99,298.54 869.99,448.94 863.06,599.33 C 859.83,663.98 803.24,720.56 738.59,723.77 C 587.53,730.7 436.47,730.7 285.41,723.77 C 220.76,720.56 164.17,663.98 160.94,599.33 C 154.01,448.94 154.01,298.54 160.94,148.15 C 164.17,83.5 220.76,26.92 285.41,23.71 Z" stroke-width="42" stroke-linecap="butt" stroke-linejoin="miter"/>
+      <path id="glass" d="M 701,210 L 512,424 L 322,210 Z M 512,424.05 L 512,598.46 M 604,641 L 425,641 L 512,598.46 Z"/>
+      <path id="drink_level" d="M 651,266.92 L 429.74,266.92"/>
+      <path id="straw" d="M 469,307 L 516,344 L 656,128 C 662.56,121.23 683.6,120.78 705,124"/>
+      <g id="glare" stroke-width="38" opacity="0.839">
+        <path id="glare_right" d="M 859,747 L 941,890" opacity="0.961"/>
+        <path id="glare_left" d="M 164,747 L 82,890" opacity="0.741"/>
+      </g>
+    </g>
+  </defs>
+
+  <g id="icon" clip-path="url(#clip_icon)">
+  <g id="key_side" clip-path="url(#clip_icon)">
+    <rect x="0" y="0" width="1024" height="1024" fill="#f8b3ed"/>
+    <rect x="0" y="0" width="1024" height="1024" fill="url(#key_side_g0)"/>
+    <rect x="0" y="0" width="1024" height="1024" fill="url(#key_side_g1)"/>
+    <rect x="0" y="0" width="1024" height="1024" fill="url(#key_side_g2)"/>
+    <rect x="0" y="0" width="1024" height="1024" fill="url(#key_side_g3)"/>
+    <rect x="0" y="0" width="1024" height="1024" fill="url(#key_side_g4)"/>
+    <rect x="0" y="0" width="1024" height="1024" fill="url(#key_side_g5)"/>
+    <rect x="0" y="0" width="1024" height="1024" fill="url(#key_side_g6)"/>
+    <rect x="0" y="0" width="1024" height="1024" fill="url(#key_side_g7)"/>
+    <rect x="0" y="0" width="1024" height="1024" fill="url(#key_side_g8)"/>
+    <rect x="0" y="0" width="1024" height="1024" fill="url(#key_side_g9)"/>
+  </g>
+  <g id="key_top" clip-path="url(#clip_top)">
+    <rect x="150" y="10" width="724" height="724" fill="#f8c3f1"/>
+    <rect x="150" y="10" width="724" height="724" fill="url(#key_top_g0)"/>
+    <rect x="150" y="10" width="724" height="724" fill="url(#key_top_g1)"/>
+    <rect x="150" y="10" width="724" height="724" fill="url(#key_top_g2)"/>
+    <rect x="150" y="10" width="724" height="724" fill="url(#key_top_g3)"/>
+    <rect x="150" y="10" width="724" height="724" fill="url(#key_top_g4)"/>
+    <rect x="150" y="10" width="724" height="724" fill="url(#key_top_g5)"/>
+    <rect x="150" y="10" width="724" height="724" fill="url(#key_top_g6)"/>
+    <rect x="150" y="10" width="724" height="724" fill="url(#key_top_g7)"/>
+  </g>
+    <g id="neon_glyph">
+      <use id="neon_outer_glow" xlink:href="#neon_shapes" href="#neon_shapes" filter="url(#neon_glow)"/>
+      <use id="neon_tubes" xlink:href="#neon_shapes" href="#neon_shapes"/>
+    </g>
+  </g>
+</svg>
