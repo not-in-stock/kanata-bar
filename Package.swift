@@ -18,6 +18,8 @@ let package = Package(
             path: "Sources/App",
             linkerSettings: [
                 .linkedFramework("AppKit"),
+                .linkedFramework("ApplicationServices"),
+                .linkedFramework("CoreGraphics"),
                 .linkedFramework("Network"),
                 .linkedFramework("ServiceManagement"),
                 .linkedFramework("Security"),

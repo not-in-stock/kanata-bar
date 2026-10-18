@@ -111,6 +111,11 @@ extension AppDelegate {
         menu.addItem(startItem)
         menu.addItem(stopItem)
         menu.addItem(reloadItem)
+
+        permissionsItem = NSMenuItem(title: NSLocalizedString("menu.grantPermissions", comment: ""),
+                                     action: #selector(doGrantPermissions), keyEquivalent: "")
+        permissionsItem.isHidden = true
+        menu.addItem(permissionsItem)
     }
 
     private func addSettings(to menu: NSMenu) {
@@ -147,12 +152,19 @@ extension AppDelegate {
         startingLeading?.constant = leading
         (layerItem?.view as? LayerRollerView)?.updateLeading(leading)
 
+        // Permissions gate only surfaces while stopped; hide by default and let
+        // the .stopped case decide.
+        permissionsItem?.isHidden = true
+
         switch appState {
         case .stopped:
             startingItem?.isHidden = true
             layerItem?.isHidden = true
+            let granted = TCCPermissions.allGranted
             startItem?.isHidden = false
-            startItem?.isEnabled = true
+            startItem?.isEnabled = granted
+            startItem?.toolTip = granted ? nil : NSLocalizedString("menu.start.permissionsNeeded", comment: "")
+            permissionsItem?.isHidden = granted
             stopItem?.isHidden = true
             reloadItem?.isHidden = true
 
@@ -214,9 +226,15 @@ extension AppDelegate {
     public func menuWillOpen(_ menu: NSMenu) {
         updateStartAtLoginState()
         guard appState == .stopped, !isExternal else { return }
+        let granted = TCCPermissions.allGranted
+        permissionsItem?.isHidden = granted
         let accessible = Config.isBinaryAccessible(kanataProcess.binaryPath)
-        startItem?.isEnabled = accessible
-        startItem?.toolTip = accessible ? nil : NSLocalizedString("menu.start.binaryNotFound", comment: "")
+        startItem?.isEnabled = granted && accessible
+        if !granted {
+            startItem?.toolTip = NSLocalizedString("menu.start.permissionsNeeded", comment: "")
+        } else {
+            startItem?.toolTip = accessible ? nil : NSLocalizedString("menu.start.binaryNotFound", comment: "")
+        }
         if !accessible && !binaryNotFoundNotified {
             binaryNotFoundNotified = true
             Logging.log("kanata binary not found: \(kanataProcess.binaryPath)")
@@ -236,6 +254,10 @@ extension AppDelegate {
         restartTask?.cancel()
         restartTask = nil
         crashRateLimiter.reset()
+        guard TCCPermissions.allGranted else {
+            doGrantPermissions()
+            return
+        }
         guard Config.isBinaryAccessible(kanataProcess.binaryPath) else {
             Logging.log("ERROR: kanata binary not found: \(kanataProcess.binaryPath)")
             Notifications.sendBinaryNotFound()
@@ -255,6 +277,30 @@ extension AppDelegate {
 
     @objc func doReload() {
         kanataClient.sendReload()
+    }
+
+    @objc func doGrantPermissions() {
+        NSApp.activate(ignoringOtherApps: true)
+        // Re-surface a dialog/row for anything still missing before we show the
+        // checklist (no-op for grants already held).
+        for kind in TCCPermissions.missing { TCCPermissions.request(kind) }
+
+        let status = TCCPermissions.Kind.allCases.map { kind -> String in
+            "\(TCCPermissions.isGranted(kind) ? "✅" : "❌") \(TCCPermissions.label(kind))"
+        }.joined(separator: "\n")
+
+        let alert = NSAlert()
+        alert.messageText = NSLocalizedString("permissions.alert.title", comment: "")
+        alert.informativeText = NSLocalizedString("permissions.alert.body", comment: "") + "\n\n" + status
+        alert.addButton(withTitle: NSLocalizedString("permissions.openInputMonitoring", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString("permissions.openAccessibility", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString("permissions.done", comment: ""))
+        switch alert.runModal() {
+        case .alertFirstButtonReturn: TCCPermissions.openSettings(for: .inputMonitoring)
+        case .alertSecondButtonReturn: TCCPermissions.openSettings(for: .accessibility)
+        default: break
+        }
+        updateMenuState()
     }
 
     @objc func doQuit() {

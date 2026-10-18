@@ -61,6 +61,16 @@ enum Notifications {
         UNUserNotificationCenter.current().add(request)
     }
 
+    static func sendPermissionsNeeded() {
+        let content = UNMutableNotificationContent()
+        content.title = NSLocalizedString("notification.permissionsNeeded.title", comment: "")
+        content.body = NSLocalizedString("notification.permissionsNeeded.body", comment: "")
+        content.sound = .default
+
+        let request = UNNotificationRequest(identifier: "kanata-permissions-needed", content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
+    }
+
     static func sendBinaryNotFound() {
         let content = UNMutableNotificationContent()
         content.title = NSLocalizedString("notification.binaryNotFound.title", comment: "")

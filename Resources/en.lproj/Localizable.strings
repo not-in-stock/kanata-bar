@@ -117,6 +117,45 @@
 /* Notification body when autorestart is disabled (rate limit: 3 crashes per minute). */
 "notification.restart.disabled.body" = "Too many crashes within a minute";
 
+/* ----- Permissions ----- */
+
+/* Menu item shown while stopped when kanata's required macOS permissions are
+   missing. Opens a checklist with links to the relevant Settings panes. */
+"menu.grantPermissions" = "Grant Permissions\U2026";
+
+/* Tooltip on a disabled Start item when permissions are not yet granted. */
+"menu.start.permissionsNeeded" = "Grant Input Monitoring and Accessibility first";
+
+/* Name of the Input Monitoring permission (matches the System Settings pane).
+   Do NOT translate loosely — mirror Apple's wording for this pane. */
+"permissions.inputMonitoring" = "Input Monitoring";
+
+/* Name of the Accessibility permission (matches the System Settings pane).
+   Do NOT translate loosely — mirror Apple's wording for this pane. */
+"permissions.accessibility" = "Accessibility";
+
+/* Title of the permissions checklist alert. */
+"permissions.alert.title" = "Kanata needs two permissions";
+
+/* Body of the permissions checklist alert, shown above a ✅/❌ status list.
+   "kanata" is the product name — do NOT translate. */
+"permissions.alert.body" = "kanata runs with elevated privileges and cannot ask for these itself, so Kanata Bar requests them on its behalf. Grant both in System Settings, then Start.";
+
+/* Alert button: open the Input Monitoring pane in System Settings. */
+"permissions.openInputMonitoring" = "Open Input Monitoring\U2026";
+
+/* Alert button: open the Accessibility pane in System Settings. */
+"permissions.openAccessibility" = "Open Accessibility\U2026";
+
+/* Alert button: dismiss the permissions checklist. */
+"permissions.done" = "Done";
+
+/* Notification title when autostart is skipped because permissions are missing. */
+"notification.permissionsNeeded.title" = "Permissions needed";
+
+/* Notification body when autostart is skipped because permissions are missing. */
+"notification.permissionsNeeded.body" = "Open Kanata Bar to grant Input Monitoring and Accessibility";
+
 /* ----- Accessibility Labels ----- */
 
 /* VoiceOver label for the spinner while kanata is starting.

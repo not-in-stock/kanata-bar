@@ -45,6 +45,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
     var kanataSectionItem: NSMenuItem!
     var startAtLoginItem: NSMenuItem!
     var kanataLogsItem: NSMenuItem!
+    var permissionsItem: NSMenuItem!
 
     public func applicationDidFinishLaunching(_ notification: Notification) {
         guard !isAlreadyRunning() else { return }
@@ -61,6 +62,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
 
         registerHelperIfNeeded()
         resetTCCIfSourceChanged()
+        preflightPermissions()
         migrateFromLaunchAgent()
         resolveLoginItemConflict()
         detectOrAutostart()
@@ -257,6 +259,12 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
             externalPID = pid
             appState = .starting
         } else if autostart {
+            guard TCCPermissions.allGranted else {
+                let missing = TCCPermissions.missing.map(TCCPermissions.label).joined(separator: ", ")
+                Logging.log("autostart skipped: permissions not granted (\(missing))")
+                Notifications.sendPermissionsNeeded()
+                return
+            }
             let binaryPath = kanataProcess.binaryPath
             if Config.isBinaryAccessible(binaryPath) {
                 Logging.log("starting kanata: \(binaryPath) -c \(kanataProcess.configPath) --port \(kanataProcess.port)")
@@ -393,5 +401,17 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
         @unknown default:
             break
         }
+    }
+
+    // MARK: - Permissions
+
+    /// Request the TCC grants kanata needs (Input Monitoring, Accessibility) from
+    /// this user-session app, so a root-launched kanata inherits them. Only
+    /// prompts for grants that are actually missing — a no-op once both are held.
+    func preflightPermissions() {
+        let missing = TCCPermissions.missing
+        guard !missing.isEmpty else { return }
+        Logging.log("requesting missing TCC grants: \(missing.map(TCCPermissions.label).joined(separator: ", "))")
+        for kind in missing { TCCPermissions.request(kind) }
     }
 }

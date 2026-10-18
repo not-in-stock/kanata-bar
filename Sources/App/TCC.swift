@@ -10,11 +10,19 @@ extension AppDelegate {
 
         if let previous = previousSource, previous != currentSource {
             Logging.log("install source changed (\(previous) → \(currentSource)), resetting TCC")
-            let tccutil = Process()
-            tccutil.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
-            tccutil.arguments = ["reset", "ListenEvent", Bundle.main.bundleIdentifier ?? Constants.bundleID]
-            try? tccutil.run()
-            tccutil.waitUntilExit()
+            let bundleID = Bundle.main.bundleIdentifier ?? Constants.bundleID
+            // Reset BOTH grants kanata needs. ListenEvent's row is deleted so the
+            // app's next `IOHIDRequestAccess` prompts cleanly; Accessibility's row
+            // otherwise survives with a csreq pinned to the *old* cdhash — enabled
+            // toggle, silently not honoured — so drop it too and let the app
+            // re-request against the new binary. See the TCC-regrant gotcha.
+            for service in ["ListenEvent", "Accessibility"] {
+                let tccutil = Process()
+                tccutil.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
+                tccutil.arguments = ["reset", service, bundleID]
+                try? tccutil.run()
+                tccutil.waitUntilExit()
+            }
         }
 
         UserDefaults.standard.set(currentSource, forKey: "installSource")
