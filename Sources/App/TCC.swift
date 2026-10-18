@@ -12,7 +12,7 @@ extension AppDelegate {
             Logging.log("install source changed (\(previous) → \(currentSource)), resetting TCC")
             let bundleID = Bundle.main.bundleIdentifier ?? Constants.bundleID
             // Reset BOTH grants kanata needs. ListenEvent's row is deleted so the
-            // app's next `IOHIDRequestAccess` prompts cleanly; Accessibility's row
+            // app's next `CGRequestListenEventAccess` prompts cleanly; Accessibility's row
             // otherwise survives with a csreq pinned to the *old* cdhash — enabled
             // toggle, silently not honoured — so drop it too and let the app
             // re-request against the new binary. See the TCC-regrant gotcha.

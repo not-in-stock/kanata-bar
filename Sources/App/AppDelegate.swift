@@ -60,7 +60,16 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
         setupTCPClient(port: config.kanata.port)
         setupMenuBar(config)
 
-        registerHelperIfNeeded()
+        // The XPC helper is opt-in (`launcher = "helper"`). Only register its
+        // SMAppService daemon when it's actually in use — registering it otherwise
+        // puts the app in the `.smapp` TCC family, so Input Monitoring attaches to
+        // `com.kanata-bar.smapp` instead of `com.kanata-bar` (which
+        // `resetTCCIfSourceChanged` can't clear and `tccutil` can't target).
+        if config.kanataBar.launcher == "helper" {
+            registerHelperIfNeeded()
+        } else {
+            unregisterHelperIfRegistered()
+        }
         resetTCCIfSourceChanged()
         preflightPermissions()
         migrateFromLaunchAgent()
@@ -409,6 +418,25 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
                 Logging.log("helper awaiting approval in Login Items: \(error.localizedDescription)")
             }
         @unknown default:
+            break
+        }
+    }
+
+    /// Remove a helper SMAppService daemon a prior build registered, when the
+    /// helper isn't the selected launcher. Keeps the app out of the `.smapp` TCC
+    /// family so Input Monitoring attaches to the plain `com.kanata-bar` identity —
+    /// the one `resetTCCIfSourceChanged` can actually re-prompt on an update. A
+    /// no-op once unregistered (status falls through to `default`). Touches only the
+    /// daemon, never the login item (`SMAppService.mainApp`), so it doesn't fight an
+    /// external autostart manager.
+    func unregisterHelperIfRegistered() {
+        let service = SMAppService.daemon(plistName: Constants.helperPlistName)
+        switch service.status {
+        case .enabled, .requiresApproval:
+            try? service.unregister()
+            UserDefaults.standard.removeObject(forKey: "helperInstallSource")
+            Logging.log("launcher != helper — unregistered the SMAppService helper daemon")
+        default:
             break
         }
     }
