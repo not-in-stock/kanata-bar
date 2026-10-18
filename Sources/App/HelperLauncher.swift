@@ -39,6 +39,34 @@ final class HelperLauncher: KanataLauncher {
         self.logURL = logURL
     }
 
+    /// Bounded XPC round-trip that confirms the helper daemon actually launches
+    /// and answers. `SMAppService.status == .enabled` only means it's *registered*
+    /// — launchd still refuses to spawn an unsigned/ad-hoc daemon at full SIP
+    /// (`OS_REASON_CODESIGNING`). Launcher selection uses this to fall back to a
+    /// bootstrap launcher instead of hanging on a connection that never comes up.
+    /// Blocks the caller for up to `timeout`; only called on the experimental
+    /// `launcher = "helper"` path, and returns fast (<~200 ms) when healthy.
+    nonisolated static func isResponding(timeout: TimeInterval = 2.0) -> Bool {
+        let conn = NSXPCConnection(machServiceName: HelperConfig.machServiceName, options: .privileged)
+        conn.remoteObjectInterface = HelperInterface.make()
+        conn.resume()
+        defer { conn.invalidate() }
+
+        let flag = ProbeFlag()
+        let sema = DispatchSemaphore(value: 0)
+        guard let proxy = conn.remoteObjectProxyWithErrorHandler({ _ in sema.signal() }) as? HelperProtocol else {
+            return false
+        }
+        // Any reply proves the daemon spawned and XPC works. The helper rejects
+        // pid 1 as "not kanata" and replies false — we only care that it replies.
+        proxy.isProcessAlive(1) { _ in
+            flag.set()
+            sema.signal()
+        }
+        _ = sema.wait(timeout: .now() + timeout)
+        return flag.isSet
+    }
+
     // MARK: - Start
 
     func start() {
@@ -154,4 +182,14 @@ final class HelperLauncher: KanataLauncher {
         try? logHandle?.close()
         logHandle = nil
     }
+}
+
+/// Lock-guarded Bool so the XPC reply (delivered on the connection's queue) can be
+/// read safely by the probe's caller. `@unchecked Sendable` — all access is behind
+/// the lock.
+private final class ProbeFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value = false
+    func set() { lock.lock(); value = true; lock.unlock() }
+    var isSet: Bool { lock.lock(); defer { lock.unlock() }; return value }
 }

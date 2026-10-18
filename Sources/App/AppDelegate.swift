@@ -198,6 +198,15 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
             return false
         }
 
+        // `.enabled` is only a registration state — launchd can still refuse to
+        // spawn the daemon (e.g. an unsigned/ad-hoc helper at full SIP,
+        // OS_REASON_CODESIGNING). Probe it so we fall back to bootstrap instead of
+        // hanging HelperLauncher on a connection that never comes up.
+        guard HelperLauncher.isResponding() else {
+            Logging.log("launcher=helper enabled but helper not responding (can't spawn — needs signing at full SIP?); using bootstrap launcher")
+            return false
+        }
+
         return true
     }
 
