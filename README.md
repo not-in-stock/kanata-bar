@@ -24,7 +24,8 @@ Shows the current keyboard layer in the menu bar and manages the kanata process 
 - Connects to an already running kanata automatically
 - Crash notifications via macOS Notification Center
 - Launch at Login (integrates with System Settings)
-- Auto-reset Input Monitoring permission when install source changes
+- Guided first-run permissions: requests Input Monitoring + Accessibility and gates Start until both are granted
+- Auto-reset the permissions when the install source changes
 - TOML config file with CLI override support
 
 ## Requirements
@@ -33,6 +34,8 @@ Shows the current keyboard layer in the menu bar and manages the kanata process 
 | :--------- | :--- |
 | macOS 13+  | Uses SMAppService for login items and XPC helper |
 | [kanata](https://github.com/jtroo/kanata) | Installed via Homebrew, Nix, or manually |
+| [Karabiner VirtualHIDDevice](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice) | Driver + daemon kanata needs to emit remapped keys on macOS |
+| Input Monitoring + Accessibility | Both TCC permissions; kanata-bar requests them on first run (see [Permissions](#permissions)) |
 | sudo access | kanata requires root for keyboard input on macOS |
 | Xcode CLT | Only for building from source (`xcode-select --install`) |
 
@@ -143,18 +146,54 @@ Place PNG files named after your layers in the icons directory:
 
 If no icon is found for a layer, the menu bar shows the layer name abbreviation.
 
+## Permissions
+
+kanata needs **two** TCC permissions on macOS, and kanata-bar must hold them itself
+so the root-launched kanata inherits them:
+
+- **Input Monitoring** — to read key events
+- **Accessibility** — required in addition to Input Monitoring
+
+On first run the app requests both and keeps **Start** disabled until both are
+granted; use **Grant Permissions…** in the menu for a checklist with direct links to
+the right System Settings panes.
+
+> **Launch from Finder, not a terminal.** macOS attributes Input Monitoring to the
+> process that launches the app. Opening the app via `open` from a terminal grants
+> the permission to the *terminal* instead, so the dialog/row may never appear for
+> Kanata Bar. Launch it from Finder (or Login Items) the first time.
+
+When the install source changes (e.g. a rebuild with a new code signature) the old
+grants no longer apply, so kanata-bar resets both and re-requests them.
+
 ## How it works
 
-kanata requires root privileges for keyboard access on macOS. kanata-bar supports two privilege escalation methods:
+kanata requires root privileges for keyboard access on macOS. kanata-bar can obtain
+it several ways:
 
 | Mode | Config | Auth prompt | How it works |
 | :--- | :----- | :---------- | :----------- |
-| **sudo + PAM** | `pam_touchid = "auto"` (default) | TouchID / password | `sudo -S` with stdin EOF |
-| **AuthExec** | `pam_touchid = "false"` | macOS password dialog | `AuthorizationExecuteWithPrivileges` (deprecated since 10.7) |
+| **sudo + PAM** | `pam_touchid = "auto"` (default) | TouchID / password each start | `sudo -S` — silent if a passwordless `sudoers` rule is installed (see below) |
+| **AuthExec** | `pam_touchid = "false"` | macOS password dialog each start | `AuthorizationExecuteWithPrivileges` (deprecated since 10.7) |
+| **XPC helper** | `launcher = "helper"` | one-time Login Items approval, then none | root `SMAppService` daemon supervises kanata (experimental — see note below) |
 
-Both modes start kanata in the user session so the macOS Input Monitoring permission dialog appears correctly. The app stops kanata via a privileged XPC helper (SIGTERM) or `sudo -n kill` as fallback, and connects to kanata's TCP API for real-time layer change events.
+The default (sudo / AuthExec) starts kanata in the **user session** so the macOS
+permission dialogs appear against kanata-bar. The app stops kanata via a
+**stop-sentinel**: a small root wrapper watches a user-owned file and SIGKILLs kanata
+the moment it disappears or the app exits — so **Stop needs no second auth prompt**,
+and kanata can never outlive the app. kanata-bar connects to kanata's TCP API for
+real-time layer-change events.
 
-If kanata is already running when kanata-bar launches, the app detects it automatically and connects without starting a new instance.
+If kanata is already running when kanata-bar launches, the app detects it
+automatically and connects without starting a new instance (Stop is hidden in this
+case — the app only manages instances it started).
+
+> **Zero-prompt on a locked-down Mac.** With full SIP, the XPC helper needs a paid
+> Apple Developer ID to launch, so it is not yet a shipping option. A passwordless
+> `sudoers` rule (`services.kanata.sudoers = true` in the Nix module) makes
+> `sudo + PAM` prompt-free instead — but it is a **local privilege-escalation risk**
+> (kanata's `cmd` actions can run arbitrary commands as root), so treat it as opt-in,
+> not a default.
 
 ### Recommended: enable sudo TouchID
 
