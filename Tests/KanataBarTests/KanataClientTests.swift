@@ -295,6 +295,33 @@ final class KanataClientTests: XCTestCase {
         XCTAssertFalse(reconnected)
     }
 
+    // MARK: - Rapid Restart
+
+    /// A rapid start→stop→start must leave exactly one live connection: a leaked
+    /// first connection would also receive the broadcast and double the event.
+    func testRapidRestartDeliversEventsExactlyOnce() throws {
+        let server = try MockTCPServer()
+        defer { server.stop() }
+
+        let client = KanataClient(port: server.port)
+        var connected = false
+        var layers: [String] = []
+        client.onConnectionChange = { connected = $0 }
+        client.onLayerChange = { layers.append($0) }
+        client.start()
+        client.stop()
+        client.start()
+        defer { client.stop() }
+
+        waitUntil { connected }
+        server.send(#"{"LayerChange":{"new":"once"}}"# + "\n")
+        waitUntil { !layers.isEmpty }
+        // Give a leaked connection time to deliver a duplicate
+        RunLoop.main.run(until: Date().addingTimeInterval(0.3))
+
+        XCTAssertEqual(layers, ["once"])
+    }
+
     // MARK: - Unknown Events
 
     func testUnknownEventIgnored() throws {

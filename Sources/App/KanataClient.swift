@@ -47,6 +47,7 @@ class KanataClient {
     }
 
     private func connect() {
+        connection?.cancel()
         let conn = NWConnection(
             host: NWEndpoint.Host(host),
             port: NWEndpoint.Port(rawValue: port)!,
@@ -64,6 +65,9 @@ class KanataClient {
     }
 
     private func handleState(_ state: NWConnection.State, conn: NWConnection) {
+        // A connection we cancelled in connect()/stop() still delivers its
+        // terminal state — reacting to it would schedule a phantom reconnect.
+        guard conn === connection else { return }
         switch state {
         case .ready:
             reconnectDelay = Timing.initialReconnectDelay
@@ -117,6 +121,7 @@ class KanataClient {
 
     private func scheduleReconnect() {
         guard shouldReconnect else { return }
+        reconnectTask?.cancel()
 
         let delay = reconnectDelay
         reconnectDelay = min(reconnectDelay * 2, Timing.maxReconnectDelay)
