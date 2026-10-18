@@ -1,13 +1,17 @@
 import Foundation
-import ServiceManagement
-import Shared
 
 /// Launches kanata via `sudo -S` with PAM/TouchID support.
-/// Stop via XPC helper or sudoers fallback.
+///
+/// Stop is **privilege-free**. The root wrapper shell polls a user-owned *stop
+/// sentinel* file and exits when it disappears, running its `EXIT` trap to
+/// SIGKILL kanata. So `stop()` just deletes the sentinel — no second privileged
+/// call, and no dependency on the XPC helper or a passwordless-`sudoers` rule,
+/// both of which can be unavailable (the helper doesn't launch on a full-SIP
+/// machine without proper signing; `services.kanata.sudoers` may be off). The
+/// same wrapper also polls the app's pid, so kanata is reaped if the app crashes
+/// or quits. kanata's own exit is tracked app-side via `DispatchSourceProcess`.
 @MainActor
 class SudoLauncher: KanataLauncher {
-    enum StopMode { case xpc, sudoers }
-
     nonisolated let binaryPath: String
     nonisolated let configPath: String
     nonisolated let port: UInt16
@@ -17,7 +21,6 @@ class SudoLauncher: KanataLauncher {
     private var sudoProcess: Process?
     private var discoveredPID: Int32 = -1
     private var stoppedByUser = false
-    private(set) var stopMode: StopMode
     private var processSource: DispatchSourceProcess?
 
     var onEvent: ((LauncherEvent) -> Void)?
@@ -28,12 +31,12 @@ class SudoLauncher: KanataLauncher {
         self.port = port
         self.extraArgs = extraArgs
         self.logURL = logURL
-        self.stopMode = Self.detectStopMode()
     }
 
-    nonisolated private static func detectStopMode() -> StopMode {
-        let service = SMAppService.daemon(plistName: Constants.helperPlistName)
-        return service.status == .enabled ? .xpc : .sudoers
+    /// User-owned sentinel the root wrapper watches. Deleting it makes the wrapper
+    /// exit and SIGKILL kanata via its EXIT trap — this is how `stop()` works.
+    nonisolated private static var stopSentinelPath: String {
+        NSHomeDirectory() + "/Library/Caches/com.kanata-bar/kanata-stop.sentinel"
     }
 
     // MARK: - Start
@@ -60,16 +63,24 @@ class SudoLauncher: KanataLauncher {
             } else {
                 logRedirect = ""
             }
-            // Report kanata's pid on stdout deterministically, then self-clean:
-            // an EXIT trap SIGKILLs kanata if this wrapper ever exits, and the
-            // poll loop makes the wrapper exit when the app dies (crash or quit),
-            // so kanata can't be orphaned when sudo/the wrapper is torn down.
-            // kanata's own exit is tracked app-side via DispatchSourceProcess.
-            // Mirrors AuthExecLauncher.
+
+            // Create the stop sentinel the wrapper watches (see `stopSentinelPath`).
+            let sentinel = Self.stopSentinelPath
+            try? FileManager.default.createDirectory(
+                atPath: (sentinel as NSString).deletingLastPathComponent,
+                withIntermediateDirectories: true)
+            FileManager.default.createFile(atPath: sentinel, contents: nil)
+
+            // Report kanata's pid on stdout, then self-clean: an EXIT trap SIGKILLs
+            // kanata whenever this wrapper exits, and the poll loop exits when the
+            // app dies (crash/quit) OR the stop sentinel is deleted (explicit Stop)
+            // — so kanata can't be orphaned and can be stopped without a second
+            // privileged call. Mirrors AuthExecLauncher's EXIT-trap wrapper.
             let appPID = ProcessInfo.processInfo.processIdentifier
+            let escSentinel = AuthExecLauncher.shellEscape(sentinel)
             let script = "\(kanataArgs)\(logRedirect) & KPID=$!; echo $KPID; "
                 + "trap 'kill -KILL $KPID 2>/dev/null' EXIT; "
-                + "while kill -0 \(appPID) 2>/dev/null; do sleep 0.2; done"
+                + "while kill -0 \(appPID) 2>/dev/null && [ -e \(escSentinel) ]; do sleep 0.2; done"
 
             let p = Process()
             p.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
@@ -90,9 +101,9 @@ class SudoLauncher: KanataLauncher {
                     let wasStopped = self.stoppedByUser
                     self.sudoProcess = nil
                     // Once kanata's pid is known its exit is owned by the process
-                    // monitor, and this wrapper now only exits when the app is
-                    // going away — so don't surface that as a kanata event. Only
-                    // report a pre-pid failure (auth denied / kanata never ran).
+                    // monitor, and this wrapper now only exits when the app is going
+                    // away or on an explicit Stop — don't surface that as a kanata
+                    // event. Only report a pre-pid failure (auth denied / never ran).
                     guard !pidWasDiscovered else { return }
                     self.stoppedByUser = false
                     if !wasStopped && exitCode != 0 {
@@ -128,28 +139,20 @@ class SudoLauncher: KanataLauncher {
 
     func stop() {
         stoppedByUser = true
-        // Cancel a pending auth prompt only while kanata hasn't started yet.
-        // Once it's running, terminating sudo would kill the wrapper shell
-        // without running its EXIT trap (a default SIGTERM doesn't) and orphan
-        // the backgrounded kanata — so SIGKILL kanata by pid instead.
+        // Delete the sentinel → the root wrapper's poll loop exits → its EXIT trap
+        // SIGKILLs kanata. Privilege-free; needs neither the helper nor sudoers.
+        try? FileManager.default.removeItem(atPath: Self.stopSentinelPath)
+        // If kanata hasn't started yet we're still at the sudo auth prompt — cancel
+        // it by terminating sudo (no backgrounded kanata to orphan yet).
         if discoveredPID <= 0, let proc = sudoProcess, proc.isRunning {
             proc.terminate()
-            return
-        }
-        let pid = discoveredPID
-        switch stopMode {
-        case .xpc:
-            stopViaXPC(pid: pid)
-        case .sudoers:
-            stopViaSudoers(pid: pid)
         }
     }
 
     // MARK: - Process Monitor
 
-    /// Detect kanata's own exit (crash or an out-of-band kill) client-side, the
-    /// same way `AuthExecLauncher` does — the sudo wrapper no longer `wait`s on
-    /// kanata (it polls the app instead), so it can't report this.
+    /// Detect kanata's own exit (crash, explicit Stop, or app teardown) client-side,
+    /// the same way `AuthExecLauncher` does — the wrapper no longer `wait`s on kanata.
     private func startProcessMonitor(pid: Int32) {
         guard pid > 0 else { return }
         let source = DispatchSource.makeProcessSource(
@@ -178,55 +181,9 @@ class SudoLauncher: KanataLauncher {
     func cleanup() {
         processSource?.cancel()
         processSource = nil
-        let pkill = Process()
-        pkill.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
-        pkill.arguments = ["-n", "/usr/bin/pkill", "-x", Constants.kanataBinaryName]
-        pkill.standardInput = FileHandle.nullDevice
-        try? pkill.run()
-        pkill.waitUntilExit()
-    }
-
-    // MARK: - XPC Stop
-
-    private func stopViaXPC(pid: Int32? = nil) {
-        guard let pid else {
-            stopViaSudoers()
-            return
-        }
-        let conn = NSXPCConnection(machServiceName: HelperConfig.machServiceName, options: .privileged)
-        conn.remoteObjectInterface = NSXPCInterface(with: HelperProtocol.self)
-        conn.resume()
-
-        guard let proxy = conn.remoteObjectProxyWithErrorHandler({ [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.stopViaSudoers(pid: pid)
-            }
-        }) as? HelperProtocol else { return }
-
-        // kanata on macOS ignores SIGTERM — send SIGKILL directly
-        proxy.sendSignal(SIGKILL, toProcessID: pid) { [weak self] success, _ in
-            if !success {
-                Task { @MainActor [weak self] in
-                    self?.stopViaSudoers(pid: pid)
-                }
-            }
-        }
-    }
-
-    // MARK: - Sudoers Stop
-
-    private func stopViaSudoers(pid: Int32? = nil) {
-        guard let pid, pid > 0 else { return }
-        // kanata on macOS ignores SIGTERM — send SIGKILL directly
-        sudoKill(signal: "KILL", pid: pid)
-    }
-
-    private func sudoKill(signal: String, pid: Int32) {
-        let p = Process()
-        p.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
-        p.arguments = ["-n", "/bin/kill", "-\(signal)", "\(pid)"]
-        p.standardInput = FileHandle.nullDevice
-        try? p.run()
+        // Deleting the sentinel makes any still-running wrapper exit and reap
+        // kanata; the wrapper's app-pid poll is the backstop if this races.
+        try? FileManager.default.removeItem(atPath: Self.stopSentinelPath)
     }
 
     // MARK: - Helpers
