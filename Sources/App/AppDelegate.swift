@@ -79,8 +79,9 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
         if running.count > 1 {
             print("kanata-bar is already running, exiting.")
             fflush(stdout)
-            NSApplication.shared.terminate(nil)
-            return true
+            // Not NSApplication.terminate: it synchronously runs
+            // applicationWillTerminate against still-nil dependencies.
+            exit(0)
         }
         return false
     }
@@ -299,8 +300,8 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
     public func applicationWillTerminate(_ notification: Notification) {
         restartTask?.cancel()
         restartTask = nil
-        kanataClient.stop()
-        guard !isExternal else { return }
+        kanataClient?.stop()
+        guard !isExternal, let kanataProcess else { return }
         if kanataProcess.isRunning {
             kanataProcess.stop()
             usleep(Timing.cleanupGracePeriod)
