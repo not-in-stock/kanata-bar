@@ -89,3 +89,16 @@
 
 /* ----- Status Bar ----- */
 
+/* ----- Permissões ----- */
+
+"menu.grantPermissions" = "Conceder permissões\U2026";
+"menu.start.permissionsNeeded" = "Primeiro conceda Monitoramento de Entrada e Acessibilidade";
+"permissions.inputMonitoring" = "Monitoramento de Entrada";
+"permissions.accessibility" = "Acessibilidade";
+"permissions.alert.title" = "O Kanata precisa de duas permissões";
+"permissions.alert.body" = "O kanata é executado com privilégios elevados e não pode solicitá-las sozinho, então o Kanata Bar as solicita em seu nome. Conceda ambas nos Ajustes do Sistema e clique em Iniciar.";
+"permissions.openInputMonitoring" = "Abrir Monitoramento de Entrada\U2026";
+"permissions.openAccessibility" = "Abrir Acessibilidade\U2026";
+"permissions.done" = "Concluído";
+"notification.permissionsNeeded.title" = "Permissões necessárias";
+"notification.permissionsNeeded.body" = "Abra o Kanata Bar para conceder Monitoramento de Entrada e Acessibilidade";

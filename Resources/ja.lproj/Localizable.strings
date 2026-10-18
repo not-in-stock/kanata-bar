@@ -45,3 +45,16 @@
 "accessibility.layer" = "Kanata\U30EC\U30A4\U30E4\U30FC: %@";
 "accessibility.startAtLogin" = "Kanata Bar\U3092\U30ED\U30B0\U30A4\U30F3\U6642\U306B\U958B\U304F";
 
+/* ----- アクセス許可 ----- */
+
+"menu.grantPermissions" = "アクセス許可を付与\U2026";
+"menu.start.permissionsNeeded" = "先に「入力監視」と「アクセシビリティ」を許可してください";
+"permissions.inputMonitoring" = "入力監視";
+"permissions.accessibility" = "アクセシビリティ";
+"permissions.alert.title" = "Kanata には2つのアクセス許可が必要です";
+"permissions.alert.body" = "kanata は昇格した権限で動作するため、自身では許可を要求できません。そのため Kanata Bar が代わりに要求します。システム設定で両方を許可してから「開始」を押してください。";
+"permissions.openInputMonitoring" = "「入力監視」を開く\U2026";
+"permissions.openAccessibility" = "「アクセシビリティ」を開く\U2026";
+"permissions.done" = "完了";
+"notification.permissionsNeeded.title" = "アクセス許可が必要です";
+"notification.permissionsNeeded.body" = "Kanata Bar を開いて「入力監視」と「アクセシビリティ」を許可してください";

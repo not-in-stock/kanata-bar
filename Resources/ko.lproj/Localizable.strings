@@ -45,3 +45,16 @@
 "accessibility.layer" = "Kanata \uB808\uC774\uC5B4: %@";
 "accessibility.startAtLogin" = "\uB85C\uADF8\uC778 \uC2DC Kanata Bar \uC5F4\uAE30";
 
+/* ----- 권한 ----- */
+
+"menu.grantPermissions" = "권한 부여\U2026";
+"menu.start.permissionsNeeded" = "먼저 입력 모니터링과 손쉬운 사용을 허용하세요";
+"permissions.inputMonitoring" = "입력 모니터링";
+"permissions.accessibility" = "손쉬운 사용";
+"permissions.alert.title" = "Kanata에 두 가지 권한이 필요합니다";
+"permissions.alert.body" = "kanata는 상승된 권한으로 실행되어 스스로 권한을 요청할 수 없으므로 Kanata Bar가 대신 요청합니다. 시스템 설정에서 두 가지를 모두 허용한 다음 시작을 누르세요.";
+"permissions.openInputMonitoring" = "입력 모니터링 열기\U2026";
+"permissions.openAccessibility" = "손쉬운 사용 열기\U2026";
+"permissions.done" = "완료";
+"notification.permissionsNeeded.title" = "권한 필요";
+"notification.permissionsNeeded.body" = "Kanata Bar를 열어 입력 모니터링과 손쉬운 사용을 허용하세요";

@@ -144,7 +144,9 @@ mkdir -p "$BUNDLE/Contents/Resources"
 scripts/make-icns.sh Resources/icon/kanata-bar-icon-macos.svg "$BUNDLE/Contents/Resources/AppIcon.icns"
 [ -f Resources/placeholder.png ] && cp Resources/placeholder.png "$BUNDLE/Contents/Resources/"
 [ -f Resources/sign.png ] && cp Resources/sign.png "$BUNDLE/Contents/Resources/"
-[ -d Resources/en.lproj ] && cp -r Resources/en.lproj "$BUNDLE/Contents/Resources/"
+for lproj in Resources/*.lproj; do
+  [ -d "$lproj" ] && cp -r "$lproj" "$BUNDLE/Contents/Resources/"
+done
 
 # --- Compile ---
 
@@ -156,9 +158,20 @@ cp .build/release/kanata-bar-helper "$BUNDLE/Contents/MacOS/"
 
 # --- Sign ---
 
-echo "Signing (ad-hoc)..."
-codesign -s - -f --identifier "$HELPER_BUNDLE_ID" "$BUNDLE/Contents/MacOS/kanata-bar-helper"
-codesign -s - -f --identifier "$BUNDLE_ID" "$BUNDLE"
+# Signing identity: ad-hoc ("-") by default. Override with KANATA_BAR_SIGN_ID to
+# sign with a real keychain identity — required for the SMAppService helper daemon
+# to LAUNCH on a full-SIP machine (ad-hoc root daemons are rejected with
+# OS_REASON_CODESIGNING; any cert-based signature, even self-signed, passes). For
+# local full-SIP dev: KANATA_BAR_SIGN_ID=yabai-cert ./build.sh. Shipping still
+# needs Developer ID + notarization. Sign inside-out: helper, then the bundle.
+SIGN_ID="${KANATA_BAR_SIGN_ID:--}"
+if [ "$SIGN_ID" = "-" ]; then
+  echo "Signing (ad-hoc)..."
+else
+  echo "Signing (identity: $SIGN_ID)..."
+fi
+codesign -s "$SIGN_ID" -f --identifier "$HELPER_BUNDLE_ID" "$BUNDLE/Contents/MacOS/kanata-bar-helper"
+codesign -s "$SIGN_ID" -f --identifier "$BUNDLE_ID" "$BUNDLE"
 
 echo ""
 echo "Built: $BUNDLE"

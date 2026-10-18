@@ -45,3 +45,16 @@
 "accessibility.layer" = "Kanata-laag: %@";
 "accessibility.startAtLogin" = "Kanata Bar openen bij inloggen";
 
+/* ----- Machtigingen ----- */
+
+"menu.grantPermissions" = "Machtigingen verlenen\U2026";
+"menu.start.permissionsNeeded" = "Sta eerst Invoerregistratie en Toegankelijkheid toe";
+"permissions.inputMonitoring" = "Invoerregistratie";
+"permissions.accessibility" = "Toegankelijkheid";
+"permissions.alert.title" = "Kanata heeft twee machtigingen nodig";
+"permissions.alert.body" = "kanata draait met verhoogde rechten en kan deze niet zelf aanvragen, dus Kanata Bar vraagt ze namens kanata aan. Verleen beide in Systeeminstellingen en klik daarna op Start.";
+"permissions.openInputMonitoring" = "Invoerregistratie openen\U2026";
+"permissions.openAccessibility" = "Toegankelijkheid openen\U2026";
+"permissions.done" = "Gereed";
+"notification.permissionsNeeded.title" = "Machtigingen vereist";
+"notification.permissionsNeeded.body" = "Open Kanata Bar om Invoerregistratie en Toegankelijkheid toe te staan";

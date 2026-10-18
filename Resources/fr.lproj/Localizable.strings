@@ -45,3 +45,16 @@
 "accessibility.layer" = "Couche Kanata : %@";
 "accessibility.startAtLogin" = "Ouvrir Kanata Bar \U00E0 la connexion";
 
+/* ----- Autorisations ----- */
+
+"menu.grantPermissions" = "Accorder les autorisations\U2026";
+"menu.start.permissionsNeeded" = "Autorisez d’abord la Surveillance de la saisie et l’Accessibilité";
+"permissions.inputMonitoring" = "Surveillance de la saisie";
+"permissions.accessibility" = "Accessibilité";
+"permissions.alert.title" = "Kanata a besoin de deux autorisations";
+"permissions.alert.body" = "kanata s’exécute avec des privilèges élevés et ne peut pas les demander lui-même ; Kanata Bar les demande donc en son nom. Accordez les deux dans Réglages Système, puis cliquez sur « Démarrer ».";
+"permissions.openInputMonitoring" = "Ouvrir Surveillance de la saisie\U2026";
+"permissions.openAccessibility" = "Ouvrir Accessibilité\U2026";
+"permissions.done" = "Terminé";
+"notification.permissionsNeeded.title" = "Autorisations requises";
+"notification.permissionsNeeded.body" = "Ouvrez Kanata Bar pour accorder la Surveillance de la saisie et l’Accessibilité";
