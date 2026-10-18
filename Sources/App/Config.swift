@@ -168,21 +168,45 @@ struct Config: Codable {
         return path
     }
 
+    /// Probed when `path` is empty and `which` finds nothing. GUI apps inherit
+    /// launchd's PATH (`/usr/bin:/bin:/usr/sbin:/sbin`), which contains no package
+    /// manager directories. Ordered by installation popularity.
+    static let kanataSearchDirs = [
+        "/opt/homebrew/bin",                          // brew (Apple Silicon)
+        "/usr/local/bin",                             // brew (Intel) / manual installs
+        "/run/current-system/sw/bin",                 // nix-darwin system profile
+        "/etc/profiles/per-user/\(NSUserName())/bin", // nix-darwin user profile
+        "~/.nix-profile/bin",                         // standalone nix
+    ]
+
     static func resolveKanataPath(_ path: String) -> String {
-        if path.isEmpty {
-            let which = Process()
-            which.executableURL = URL(fileURLWithPath: "/usr/bin/which")
-            which.arguments = [Constants.kanataBinaryName]
-            let pipe = Pipe()
-            which.standardOutput = pipe
-            which.standardError = Pipe()
-            try? which.run()
-            which.waitUntilExit()
-            let output = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?
-                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            return output.isEmpty ? Constants.kanataBinaryName : output
+        guard path.isEmpty else { return expandTilde(path) }
+        if let found = whichKanata() { return found }
+        return searchKanata(in: kanataSearchDirs, isAccessible: isBinaryAccessible)
+    }
+
+    /// Returns the first accessible `<dir>/kanata`, or the bare binary name as
+    /// the "unresolved" sentinel (`isBinaryAccessible` reports it not found).
+    static func searchKanata(in dirs: [String], isAccessible: (String) -> Bool) -> String {
+        for dir in dirs {
+            let candidate = expandTilde(dir) + "/" + Constants.kanataBinaryName
+            if isAccessible(candidate) { return candidate }
         }
-        return expandTilde(path)
+        return Constants.kanataBinaryName
+    }
+
+    private static func whichKanata() -> String? {
+        let which = Process()
+        which.executableURL = URL(fileURLWithPath: "/usr/bin/which")
+        which.arguments = [Constants.kanataBinaryName]
+        let pipe = Pipe()
+        which.standardOutput = pipe
+        which.standardError = Pipe()
+        try? which.run()
+        which.waitUntilExit()
+        let output = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return output.isEmpty ? nil : output
     }
 
     static func isBinaryAccessible(_ path: String) -> Bool {

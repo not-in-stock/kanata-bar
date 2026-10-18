@@ -61,6 +61,33 @@ final class ConfigTests: XCTestCase {
         XCTAssertEqual(result, NSHomeDirectory() + "/bin/kanata")
     }
 
+    // MARK: - searchKanata
+
+    func testSearchKanataReturnsFirstAccessibleCandidate() {
+        let result = Config.searchKanata(in: ["/a", "/b", "/c"]) { $0 == "/b/kanata" || $0 == "/c/kanata" }
+        XCTAssertEqual(result, "/b/kanata")
+    }
+
+    func testSearchKanataPrefersBrewOverNix() {
+        // kanataSearchDirs is ordered by popularity: brew first, nix variants last.
+        let brew = "/opt/homebrew/bin/kanata"
+        let nix = "/run/current-system/sw/bin/kanata"
+        let result = Config.searchKanata(in: Config.kanataSearchDirs) { $0 == brew || $0 == nix }
+        XCTAssertEqual(result, brew)
+    }
+
+    func testSearchKanataExpandsTilde() {
+        let expanded = NSHomeDirectory() + "/.nix-profile/bin/kanata"
+        let result = Config.searchKanata(in: Config.kanataSearchDirs) { $0 == expanded }
+        XCTAssertEqual(result, expanded)
+    }
+
+    func testSearchKanataFallsBackToBareNameSentinel() {
+        let result = Config.searchKanata(in: Config.kanataSearchDirs) { _ in false }
+        XCTAssertEqual(result, "kanata")
+        XCTAssertFalse(Config.isBinaryAccessible(result))
+    }
+
     // MARK: - isBinaryAccessible
 
     func testIsBinaryAccessibleWithRealExecutable() {
