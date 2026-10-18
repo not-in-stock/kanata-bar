@@ -15,6 +15,7 @@ class AuthExecLauncher: KanataLauncher {
     private var authExecPipe: UnsafeMutablePointer<FILE>?
     private var processSource: DispatchSourceProcess?
     private var monitoredPID: Int32 = -1
+    private var isStarting = false
 
     var onEvent: ((LauncherEvent) -> Void)?
 
@@ -45,6 +46,11 @@ class AuthExecLauncher: KanataLauncher {
     // MARK: - Start
 
     func start() {
+        // Re-entrancy guard: a second start() would null the in-flight task's
+        // pipe/authRef from under it and end up tracking one of two kanatas.
+        guard !isStarting else { return }
+        isStarting = true
+
         // Close pipe from previous run
         if let oldPipe = authExecPipe {
             fclose(oldPipe)
@@ -76,20 +82,20 @@ class AuthExecLauncher: KanataLauncher {
                     self.authRef = auth
                     self.authExecPipe = pipe
                     self.monitoredPID = pid
-                    self.onEvent?(.started(pid: pid))
+                    self.finishStart(.started(pid: pid))
                     self.startProcessMonitor(pid: pid)
                 }
 
             case .authFailed(let auth):
                 if let auth { AuthorizationFree(auth, []) }
-                await MainActor.run { [weak self] in self?.onEvent?(.failed) }
+                await MainActor.run { [weak self] in self?.finishStart(.failed) }
 
             case .error(let message):
-                await MainActor.run { [weak self] in self?.onEvent?(.error(message)) }
+                await MainActor.run { [weak self] in self?.finishStart(.error(message)) }
 
             case .noPID(let pipe):
                 fclose(pipe)
-                await MainActor.run { [weak self] in self?.onEvent?(.failed) }
+                await MainActor.run { [weak self] in self?.finishStart(.failed) }
             }
         }
     }
@@ -205,11 +211,7 @@ class AuthExecLauncher: KanataLauncher {
             logRedirect = " > \(shellEscape(logURL.path)) 2>&1"
         }
 
-        // SIGKILL because kanata ignores SIGTERM. 200ms poll caps the window
-        // between kanata-bar dying and kanata being killed.
-        let script = "\(kanataArgs)\(logRedirect) & KPID=$!; echo $KPID; "
-            + "trap 'kill -KILL $KPID 2>/dev/null' EXIT; "
-            + "while kill -0 \(appPID) 2>/dev/null; do sleep 0.2; done"
+        let script = makeWrapperScript(kanataCommand: "\(kanataArgs)\(logRedirect)", appPID: appPID)
 
         let cArgs: [UnsafeMutablePointer<CChar>?] = [strdup("-c"), strdup(script), nil]
         defer { cArgs.forEach { if let p = $0 { free(p) } } }
@@ -267,5 +269,23 @@ class AuthExecLauncher: KanataLauncher {
 
     nonisolated static func shellEscape(_ s: String) -> String {
         "'" + s.replacingOccurrences(of: "'", with: "'\\''") + "'"
+    }
+
+    /// Terminal point of every start() path: clears the re-entrancy flag, then
+    /// reports the outcome. All start outcomes must go through here.
+    private func finishStart(_ event: LauncherEvent) {
+        isStarting = false
+        onEvent?(event)
+    }
+
+    /// Root wrapper: launches kanata, reports its pid, then exits as soon as either
+    /// kanata or the app dies. SIGKILL because kanata ignores SIGTERM; 200ms poll
+    /// caps the window between kanata-bar dying and kanata being killed. Watching
+    /// $KPID too keeps the wrapper from outliving a stopped kanata, where the EXIT
+    /// trap would later fire on a long-dead (possibly recycled) pid.
+    nonisolated static func makeWrapperScript(kanataCommand: String, appPID: Int32) -> String {
+        "\(kanataCommand) & KPID=$!; echo $KPID; "
+            + "trap 'kill -KILL $KPID 2>/dev/null' EXIT; "
+            + "while kill -0 $KPID 2>/dev/null && kill -0 \(appPID) 2>/dev/null; do sleep 0.2; done"
     }
 }

@@ -21,6 +21,7 @@ class SudoLauncher: KanataLauncher {
     private var sudoProcess: Process?
     private var discoveredPID: Int32 = -1
     private var stoppedByUser = false
+    private var isStarting = false
     private var processSource: DispatchSourceProcess?
 
     var onEvent: ((LauncherEvent) -> Void)?
@@ -42,6 +43,10 @@ class SudoLauncher: KanataLauncher {
     // MARK: - Start
 
     func start() {
+        // Re-entrancy guard: a second start() would race the in-flight detached
+        // task and leave one of two sudo wrappers untracked.
+        guard !isStarting else { return }
+        isStarting = true
         stoppedByUser = false
 
         let binaryPath = binaryPath
@@ -80,7 +85,7 @@ class SudoLauncher: KanataLauncher {
             let escSentinel = AuthExecLauncher.shellEscape(sentinel)
             let script = "\(kanataArgs)\(logRedirect) & KPID=$!; echo $KPID; "
                 + "trap 'kill -KILL $KPID 2>/dev/null' EXIT; "
-                + "while kill -0 \(appPID) 2>/dev/null && [ -e \(escSentinel) ]; do sleep 0.2; done"
+                + "while kill -0 $KPID 2>/dev/null && kill -0 \(appPID) 2>/dev/null && [ -e \(escSentinel) ]; do sleep 0.2; done"
 
             let p = Process()
             p.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
@@ -107,7 +112,9 @@ class SudoLauncher: KanataLauncher {
                     guard !pidWasDiscovered else { return }
                     self.stoppedByUser = false
                     if !wasStopped && exitCode != 0 {
-                        self.onEvent?(.failed)
+                        self.finishStart(.failed)
+                    } else {
+                        self.isStarting = false
                     }
                 }
             }
@@ -123,16 +130,23 @@ class SudoLauncher: KanataLauncher {
                 await MainActor.run { [weak self] in
                     guard let self else { return }
                     self.discoveredPID = pid
-                    self.onEvent?(.started(pid: pid))
+                    self.finishStart(.started(pid: pid))
                     self.startProcessMonitor(pid: pid)
                 }
             } catch {
                 let message = error.localizedDescription
                 await MainActor.run { [weak self] in
-                    self?.onEvent?(.error("failed to start kanata: \(message)"))
+                    self?.finishStart(.error("failed to start kanata: \(message)"))
                 }
             }
         }
+    }
+
+    /// Terminal point of every start() path: clears the re-entrancy flag, then
+    /// reports the outcome.
+    private func finishStart(_ event: LauncherEvent) {
+        isStarting = false
+        onEvent?(event)
     }
 
     // MARK: - Stop
