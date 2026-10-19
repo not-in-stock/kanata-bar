@@ -17,6 +17,11 @@ class IconManager {
     private var oldOverlay: NSImageView?
     private var newOverlay: NSImageView?
     private var animating = false
+    /// The last state `updateAnimated` rendered. Used to skip redundant work only
+    /// when the layer/state is genuinely unchanged — comparing `NSImage` identity
+    /// instead used to false-skip between two text-badge layers (`nextImage` returns
+    /// nil when a layer has no PNG, so `nil == nil` left the glyph stuck).
+    private var lastAnimatedState: AppState?
 
     init(button: NSStatusBarButton?) {
         self.button = button
@@ -30,14 +35,13 @@ class IconManager {
     // MARK: - Public
 
     func updateAnimated(for state: AppState) {
-        guard let button else {
+        guard button != nil else {
             updateIcon(for: state)
             return
         }
 
-        let newImage = nextImage(for: state)
-
-        guard newImage != button.image else { return }
+        guard state != lastAnimatedState else { return }
+        lastAnimatedState = state
 
         if effectiveTransition == .off {
             updateIcon(for: state)
@@ -48,7 +52,7 @@ class IconManager {
             cancelAnimation()
         }
 
-        slideTo(newImage, for: state)
+        slideTo(nextImage(for: state), for: state)
     }
 
     func updateIcon(for state: AppState) {
