@@ -292,13 +292,10 @@ extension AppDelegate {
         let alert = NSAlert()
         alert.messageText = NSLocalizedString("permissions.alert.title", comment: "")
         alert.informativeText = NSLocalizedString("permissions.alert.body", comment: "") + "\n\n" + status
-        alert.addButton(withTitle: NSLocalizedString("permissions.openInputMonitoring", comment: ""))
         alert.addButton(withTitle: NSLocalizedString("permissions.openAccessibility", comment: ""))
         alert.addButton(withTitle: NSLocalizedString("permissions.done", comment: ""))
-        switch alert.runModal() {
-        case .alertFirstButtonReturn: TCCPermissions.openSettings(for: .inputMonitoring)
-        case .alertSecondButtonReturn: TCCPermissions.openSettings(for: .accessibility)
-        default: break
+        if alert.runModal() == .alertFirstButtonReturn {
+            TCCPermissions.openSettings(for: .accessibility)
         }
         updateMenuState()
     }

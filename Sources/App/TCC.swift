@@ -11,18 +11,17 @@ extension AppDelegate {
         if let previous = previousSource, previous != currentSource {
             Logging.log("install source changed (\(previous) → \(currentSource)), resetting TCC")
             let bundleID = Bundle.main.bundleIdentifier ?? Constants.bundleID
-            // Reset BOTH grants kanata needs. ListenEvent's row is deleted so the
-            // app's next `CGRequestListenEventAccess` prompts cleanly; Accessibility's row
-            // otherwise survives with a csreq pinned to the *old* cdhash — enabled
-            // toggle, silently not honoured — so drop it too and let the app
-            // re-request against the new binary. See the TCC-regrant gotcha.
-            for service in ["ListenEvent", "Accessibility"] {
-                let tccutil = Process()
-                tccutil.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
-                tccutil.arguments = ["reset", service, bundleID]
-                try? tccutil.run()
-                tccutil.waitUntilExit()
-            }
+            // Reset the Accessibility grant: its csreq is pinned to the *old* cdhash, so
+            // after a rebuild/move the toggle may still show ON while `AXIsProcessTrusted()`
+            // returns false, and toggling off/on won't fix it — you'd have to remove+re-add
+            // the row by hand. Deleting it makes the next request a clean re-grant. See the
+            // TCC-regrant gotcha. (Input Monitoring is no longer requested — Accessibility
+            // covers input capture on modern macOS.)
+            let tccutil = Process()
+            tccutil.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
+            tccutil.arguments = ["reset", "Accessibility", bundleID]
+            try? tccutil.run()
+            tccutil.waitUntilExit()
         }
 
         UserDefaults.standard.set(currentSource, forKey: "installSource")

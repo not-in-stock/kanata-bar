@@ -24,8 +24,8 @@ Shows the current keyboard layer in the menu bar and manages the kanata process 
 - Connects to an already running kanata automatically
 - Crash notifications via macOS Notification Center
 - Launch at Login (integrates with System Settings)
-- Guided first-run permissions: requests Input Monitoring + Accessibility and gates Start until both are granted
-- Auto-reset the permissions when the install source changes
+- Guided first-run permission: requests Accessibility and gates Start until it's granted
+- Auto-reset the permission when the install source changes
 - TOML config file with CLI override support
 
 ## Requirements
@@ -35,7 +35,7 @@ Shows the current keyboard layer in the menu bar and manages the kanata process 
 | macOS 13+  | Uses SMAppService for login items and XPC helper |
 | [kanata](https://github.com/jtroo/kanata) | Installed via Homebrew, Nix, or manually |
 | [Karabiner VirtualHIDDevice](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice) | Driver + daemon kanata needs to emit remapped keys on macOS |
-| Input Monitoring + Accessibility | Both TCC permissions; kanata-bar requests them on first run (see [Permissions](#permissions)) |
+| Accessibility | TCC permission kanata-bar requests on first run; covers input capture (see [Permissions](#permissions)) |
 | sudo access | kanata requires root for keyboard input on macOS |
 | Xcode CLT | Only for building from source (`xcode-select --install`) |
 
@@ -148,23 +148,18 @@ If no icon is found for a layer, the menu bar shows the layer name abbreviation.
 
 ## Permissions
 
-kanata needs **two** TCC permissions on macOS, and kanata-bar must hold them itself
-so the root-launched kanata inherits them:
+kanata needs the **Accessibility** TCC permission on macOS, and kanata-bar holds it
+itself so the root-launched kanata inherits it. On modern macOS Accessibility also
+covers input capture, so **Input Monitoring is not required** (Karabiner-Elements has
+behaved the same since 16.0.0).
 
-- **Input Monitoring** — to read key events
-- **Accessibility** — required in addition to Input Monitoring
-
-On first run the app requests both and keeps **Start** disabled until both are
-granted; use **Grant Permissions…** in the menu for a checklist with direct links to
-the right System Settings panes.
-
-> **Launch from Finder, not a terminal.** macOS attributes Input Monitoring to the
-> process that launches the app. Opening the app via `open` from a terminal grants
-> the permission to the *terminal* instead, so the dialog/row may never appear for
-> Kanata Bar. Launch it from Finder (or Login Items) the first time.
+On first run the app requests Accessibility and keeps **Start** disabled until it's
+granted; use **Grant Permissions…** in the menu for a direct link to the right System
+Settings pane. Accessibility applies live (no "Quit & Reopen") and isn't sensitive to
+how the app is launched.
 
 When the install source changes (e.g. a rebuild with a new code signature) the old
-grants no longer apply, so kanata-bar resets both and re-requests them.
+grant no longer applies, so kanata-bar resets it and re-requests.
 
 ## How it works
 
