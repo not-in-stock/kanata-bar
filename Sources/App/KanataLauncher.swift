@@ -25,6 +25,30 @@ protocol KanataLauncher: AnyObject {
 
 // MARK: - Shared Utilities
 
+/// A user-owned file the root launcher wrapper polls; deleting it makes the
+/// wrapper exit and SIGKILL kanata via its `EXIT` trap. This is how `stop()`
+/// works with no second privileged call (no sudo/TouchID/AuthExec re-prompt).
+/// Shared by `SudoLauncher` and `AuthExecLauncher` so the path can never drift
+/// between the two.
+enum StopSentinel {
+    static var path: String {
+        NSHomeDirectory() + "/Library/Caches/com.kanata-bar/kanata-stop.sentinel"
+    }
+
+    /// Create the sentinel (and its directory) before launching the wrapper.
+    static func create() {
+        try? FileManager.default.createDirectory(
+            atPath: (path as NSString).deletingLastPathComponent,
+            withIntermediateDirectories: true)
+        FileManager.default.createFile(atPath: path, contents: nil)
+    }
+
+    /// Delete the sentinel → any running wrapper exits and reaps kanata.
+    static func remove() {
+        try? FileManager.default.removeItem(atPath: path)
+    }
+}
+
 func killLeftoverKanata() {
     let pkill = Process()
     pkill.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")

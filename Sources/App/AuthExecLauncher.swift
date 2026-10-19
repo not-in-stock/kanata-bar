@@ -2,7 +2,13 @@ import Foundation
 import Security
 
 /// Launches kanata via `AuthorizationExecuteWithPrivileges` (system password dialog).
-/// Uses a shell wrapper that kills kanata when the app exits.
+///
+/// Start prompts once; Stop is **privilege-free** — the root wrapper polls a
+/// user-owned stop sentinel and SIGKILLs kanata (via its EXIT trap) when the file
+/// disappears, the app dies, or kanata exits. So neither Stop nor Quit makes a
+/// second AuthExec call, which previously re-prompted for a password once the
+/// ~5-min authorization cache expired (and silently failed if dismissed). Mirrors
+/// `SudoLauncher`'s sentinel design.
 @MainActor
 class AuthExecLauncher: KanataLauncher {
     nonisolated let binaryPath: String
@@ -103,11 +109,11 @@ class AuthExecLauncher: KanataLauncher {
     // MARK: - Stop
 
     func stop() {
-        let pid = monitoredPID
-        guard pid > 0 else { return }
-        // kanata on macOS ignores SIGTERM/SIGINT (no signal handlers) and
-        // AuthExec I/O goes to file, so pipe-break is impossible — SIGKILL is the only option.
-        killViaAuthExec(signal: "KILL", pid: pid)
+        // Delete the sentinel → the root wrapper's poll loop exits → its EXIT trap
+        // SIGKILLs kanata. Privilege-free: no second AuthExec call, so no password
+        // re-prompt after the ~5-min authorization cache has expired (the old path
+        // re-prompted and silently did nothing if the user dismissed it).
+        StopSentinel.remove()
     }
 
     // MARK: - Cleanup
@@ -118,17 +124,10 @@ class AuthExecLauncher: KanataLauncher {
             authExecPipe = nil
         }
 
-        let pid = monitoredPID
-        if pid > 0, let auth = authRef, let authExec = Self.authExecFn {
-            let cArgs: [UnsafeMutablePointer<CChar>?] = [strdup("-KILL"), strdup("\(pid)"), nil]
-            defer { cArgs.forEach { if let p = $0 { free(p) } } }
-            cArgs.withUnsafeBufferPointer { buf in
-                "/bin/kill".withCString { pathPtr in
-                    _ = authExec(auth, pathPtr, AuthorizationFlags(), buf.baseAddress!, nil)
-                }
-            }
-            waitForExit(pid: pid, timeout: 0.2)
-        }
+        // The wrapper reaps kanata on app exit via its app-pid poll; deleting the
+        // sentinel is the explicit backstop. No AuthExec kill here — that re-prompted
+        // for a password on quit once the auth cache had expired.
+        StopSentinel.remove()
 
         if let auth = authRef {
             AuthorizationFree(auth, [])
@@ -211,7 +210,10 @@ class AuthExecLauncher: KanataLauncher {
             logRedirect = " > \(shellEscape(logURL.path)) 2>&1"
         }
 
-        let script = makeWrapperScript(kanataCommand: "\(kanataArgs)\(logRedirect)", appPID: appPID)
+        // Create the stop sentinel the wrapper polls (see `makeWrapperScript`), so
+        // Stop/Quit can reap kanata by deleting it — no second AuthExec call.
+        StopSentinel.create()
+        let script = makeWrapperScript(kanataCommand: "\(kanataArgs)\(logRedirect)", appPID: appPID, sentinelPath: StopSentinel.path)
 
         let cArgs: [UnsafeMutablePointer<CChar>?] = [strdup("-c"), strdup(script), nil]
         defer { cArgs.forEach { if let p = $0 { free(p) } } }
@@ -247,26 +249,6 @@ class AuthExecLauncher: KanataLauncher {
 
     // MARK: - Helpers
 
-    /// Block until `pid` exits or `timeout` elapses. Polls every 10ms.
-    private func waitForExit(pid: Int32, timeout: TimeInterval) {
-        let deadline = Date().addingTimeInterval(timeout)
-        while Date() < deadline {
-            if kill(pid, 0) != 0 { return }
-            usleep(10_000)
-        }
-    }
-
-    private func killViaAuthExec(signal: String, pid: Int32) {
-        guard let auth = authRef, let authExec = Self.authExecFn else { return }
-        let cArgs: [UnsafeMutablePointer<CChar>?] = [strdup("-\(signal)"), strdup("\(pid)"), nil]
-        defer { cArgs.forEach { if let p = $0 { free(p) } } }
-        cArgs.withUnsafeBufferPointer { buf in
-            "/bin/kill".withCString { pathPtr in
-                _ = authExec(auth, pathPtr, AuthorizationFlags(), buf.baseAddress!, nil)
-            }
-        }
-    }
-
     nonisolated static func shellEscape(_ s: String) -> String {
         "'" + s.replacingOccurrences(of: "'", with: "'\\''") + "'"
     }
@@ -278,14 +260,17 @@ class AuthExecLauncher: KanataLauncher {
         onEvent?(event)
     }
 
-    /// Root wrapper: launches kanata, reports its pid, then exits as soon as either
-    /// kanata or the app dies. SIGKILL because kanata ignores SIGTERM; 200ms poll
-    /// caps the window between kanata-bar dying and kanata being killed. Watching
-    /// $KPID too keeps the wrapper from outliving a stopped kanata, where the EXIT
-    /// trap would later fire on a long-dead (possibly recycled) pid.
-    nonisolated static func makeWrapperScript(kanataCommand: String, appPID: Int32) -> String {
-        "\(kanataCommand) & KPID=$!; echo $KPID; "
+    /// Root wrapper: launches kanata, reports its pid, then exits as soon as
+    /// kanata dies, the app dies, OR the stop sentinel is deleted. SIGKILL because
+    /// kanata ignores SIGTERM; 200ms poll caps the window between kanata-bar dying
+    /// and kanata being killed. Watching `$KPID` too keeps the wrapper from
+    /// outliving a stopped kanata (whose EXIT trap would later fire on a recycled
+    /// pid); watching the sentinel makes `stop()` privilege-free. Shared verbatim by
+    /// `SudoLauncher`.
+    nonisolated static func makeWrapperScript(kanataCommand: String, appPID: Int32, sentinelPath: String) -> String {
+        let escSentinel = shellEscape(sentinelPath)
+        return "\(kanataCommand) & KPID=$!; echo $KPID; "
             + "trap 'kill -KILL $KPID 2>/dev/null' EXIT; "
-            + "while kill -0 $KPID 2>/dev/null && kill -0 \(appPID) 2>/dev/null; do sleep 0.2; done"
+            + "while kill -0 $KPID 2>/dev/null && kill -0 \(appPID) 2>/dev/null && [ -e \(escSentinel) ]; do sleep 0.2; done"
     }
 }

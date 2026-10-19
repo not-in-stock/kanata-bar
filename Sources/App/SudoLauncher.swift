@@ -34,12 +34,6 @@ class SudoLauncher: KanataLauncher {
         self.logURL = logURL
     }
 
-    /// User-owned sentinel the root wrapper watches. Deleting it makes the wrapper
-    /// exit and SIGKILL kanata via its EXIT trap — this is how `stop()` works.
-    nonisolated private static var stopSentinelPath: String {
-        NSHomeDirectory() + "/Library/Caches/com.kanata-bar/kanata-stop.sentinel"
-    }
-
     // MARK: - Start
 
     func start() {
@@ -69,23 +63,17 @@ class SudoLauncher: KanataLauncher {
                 logRedirect = ""
             }
 
-            // Create the stop sentinel the wrapper watches (see `stopSentinelPath`).
-            let sentinel = Self.stopSentinelPath
-            try? FileManager.default.createDirectory(
-                atPath: (sentinel as NSString).deletingLastPathComponent,
-                withIntermediateDirectories: true)
-            FileManager.default.createFile(atPath: sentinel, contents: nil)
+            // Create the stop sentinel the wrapper polls (see StopSentinel) so Stop
+            // can reap kanata by deleting it — no second sudo call.
+            StopSentinel.create()
 
-            // Report kanata's pid on stdout, then self-clean: an EXIT trap SIGKILLs
-            // kanata whenever this wrapper exits, and the poll loop exits when the
-            // app dies (crash/quit) OR the stop sentinel is deleted (explicit Stop)
-            // — so kanata can't be orphaned and can be stopped without a second
-            // privileged call. Mirrors AuthExecLauncher's EXIT-trap wrapper.
+            // The wrapper reports kanata's pid, then self-cleans: its EXIT trap
+            // SIGKILLs kanata whenever it exits, and the poll loop ends when kanata
+            // dies, the app dies (crash/quit), or the stop sentinel is deleted
+            // (explicit Stop). Shared verbatim with AuthExecLauncher.
             let appPID = ProcessInfo.processInfo.processIdentifier
-            let escSentinel = AuthExecLauncher.shellEscape(sentinel)
-            let script = "\(kanataArgs)\(logRedirect) & KPID=$!; echo $KPID; "
-                + "trap 'kill -KILL $KPID 2>/dev/null' EXIT; "
-                + "while kill -0 $KPID 2>/dev/null && kill -0 \(appPID) 2>/dev/null && [ -e \(escSentinel) ]; do sleep 0.2; done"
+            let script = AuthExecLauncher.makeWrapperScript(
+                kanataCommand: "\(kanataArgs)\(logRedirect)", appPID: appPID, sentinelPath: StopSentinel.path)
 
             let p = Process()
             p.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
@@ -155,7 +143,7 @@ class SudoLauncher: KanataLauncher {
         stoppedByUser = true
         // Delete the sentinel → the root wrapper's poll loop exits → its EXIT trap
         // SIGKILLs kanata. Privilege-free; needs neither the helper nor sudoers.
-        try? FileManager.default.removeItem(atPath: Self.stopSentinelPath)
+        StopSentinel.remove()
         // If kanata hasn't started yet we're still at the sudo auth prompt — cancel
         // it by terminating sudo (no backgrounded kanata to orphan yet).
         if discoveredPID <= 0, let proc = sudoProcess, proc.isRunning {
@@ -197,7 +185,7 @@ class SudoLauncher: KanataLauncher {
         processSource = nil
         // Deleting the sentinel makes any still-running wrapper exit and reap
         // kanata; the wrapper's app-pid poll is the backstop if this races.
-        try? FileManager.default.removeItem(atPath: Self.stopSentinelPath)
+        StopSentinel.remove()
     }
 
     // MARK: - Helpers
