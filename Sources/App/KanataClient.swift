@@ -15,6 +15,8 @@ class KanataClient {
 
     var onLayerChange: ((String) -> Void)?
     var onConfigReload: (() -> Void)?
+    var onHoldActivated: ((String) -> Void)?
+    var onTapActivated: ((String) -> Void)?
     var onConnectionChange: ((Bool) -> Void)?
 
     init(host: String = Constants.defaultHost, port: UInt16 = Constants.defaultPort) {
@@ -116,6 +118,10 @@ class KanataClient {
             onLayerChange?(layer)
         case .configReload:
             onConfigReload?()
+        case .holdActivated(let key):
+            onHoldActivated?(key)
+        case .tapActivated(let key):
+            onTapActivated?(key)
         }
     }
 

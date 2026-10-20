@@ -179,3 +179,11 @@
 
 /* ----- Status Bar ----- */
 
+/* ----- Keyboard HUD ----- */
+
+/* Menu item (checkbox) that shows/hides the floating keyboard HUD window.
+   "HUD" is a common UI term (heads-up display) — keep it as is. */
+"menu.keyboardHud" = "Keyboard HUD";
+
+/* VoiceOver label for the Keyboard HUD toggle. */
+"accessibility.keyboardHud" = "Show the floating keyboard HUD";

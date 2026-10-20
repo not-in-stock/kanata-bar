@@ -124,6 +124,10 @@ extension AppDelegate {
         updateStartAtLoginState()
         menu.addItem(startAtLoginItem)
 
+        hudItem = NSMenuItem(title: NSLocalizedString("menu.keyboardHud", comment: ""), action: #selector(doToggleHud), keyEquivalent: "")
+        hudItem.setAccessibilityTitle(NSLocalizedString("accessibility.keyboardHud", comment: ""))
+        menu.addItem(hudItem)
+
         let logsItem = NSMenuItem(title: NSLocalizedString("menu.logs", comment: ""), action: nil, keyEquivalent: "")
         let logsSubmenu = NSMenu()
         logsSubmenu.addItem(NSMenuItem(title: NSLocalizedString("menu.logs.app", comment: ""), action: #selector(doViewAppLog), keyEquivalent: ""))
@@ -147,7 +151,8 @@ extension AppDelegate {
 
         // Align custom views with standard menu items.
         // When any item has a checkmark, macOS adds ~11px for the check column.
-        let hasCheck = startAtLoginItem?.state == .on
+        hudItem?.state = (hudController?.isVisible ?? false) ? .on : .off
+        let hasCheck = startAtLoginItem?.state == .on || hudItem?.state == .on
         let leading: CGFloat = hasCheck ? 25 : 14
         startingLeading?.constant = leading
         (layerItem?.view as? LayerRollerView)?.updateLeading(leading)
@@ -297,6 +302,12 @@ extension AppDelegate {
         if alert.runModal() == .alertFirstButtonReturn {
             TCCPermissions.openSettings(for: .accessibility)
         }
+        updateMenuState()
+    }
+
+    @objc func doToggleHud() {
+        if hudController == nil { setupHud() }
+        hudController?.toggle()
         updateMenuState()
     }
 

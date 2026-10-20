@@ -58,3 +58,12 @@
 "permissions.done" = "완료";
 "notification.permissionsNeeded.title" = "권한 필요";
 "notification.permissionsNeeded.body" = "Kanata Bar를 열어 입력 모니터링과 손쉬운 사용을 허용하세요";
+
+/* ----- Keyboard HUD ----- */
+
+/* Menu item (checkbox) that shows/hides the floating keyboard HUD window.
+   "HUD" is a common UI term (heads-up display) — keep it as is. */
+"menu.keyboardHud" = "키보드 HUD";
+
+/* VoiceOver label for the Keyboard HUD toggle. */
+"accessibility.keyboardHud" = "플로팅 키보드 HUD 표시";

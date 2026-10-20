@@ -15,6 +15,11 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
             guard appState != oldValue else { return }
             iconManager?.updateAnimated(for: appState)
             updateMenuState()
+            if case .running(let layer) = appState {
+                hudController?.layerChanged(layer)
+            } else {
+                hudController?.kanataStopped()
+            }
 
             if case .starting = appState, !isExternal {
                 scheduleStartingTimeout()
@@ -46,6 +51,9 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
     var startAtLoginItem: NSMenuItem!
     var kanataLogsItem: NSMenuItem!
     var permissionsItem: NSMenuItem!
+    var hudItem: NSMenuItem!
+    var hudController: HudController?
+    var hudGeometry: KeyboardLayoutKind?
 
     public func applicationDidFinishLaunching(_ notification: Notification) {
         guard !isAlreadyRunning() else { return }
@@ -54,6 +62,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
         let config = loadConfig()
         autostart = config.kanataBar.autostartKanata
         autorestart = config.kanataBar.autorestartKanata
+        hudGeometry = config.kanataBar.hudGeometryKind
 
         setupKanataProcess(config)
         setupNotificationPermission()
@@ -78,6 +87,21 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
 
         kanataClient.start()
         logStartupInfo()
+        if HudController.wasVisibleLastTime {
+            setupHud()
+            hudController?.show()
+            updateMenuState()
+        }
+    }
+
+    /// Lazily builds the HUD keyboard controller and wires it to kanata's events.
+    func setupHud() {
+        guard hudController == nil else { return }
+        let hud = HudController(configPath: kanataProcess.configPath, geometry: hudGeometry)
+        hudController = hud
+        kanataClient.onHoldActivated = { [weak hud] key in hud?.holdActivated(key) }
+        kanataClient.onTapActivated = { [weak hud] key in hud?.tapActivated(key) }
+        if case .running(let layer) = appState { hud.layerChanged(layer) }
     }
 
     // MARK: - Startup
@@ -228,9 +252,10 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
 
     private func setupTCPClient(port: UInt16) {
         kanataClient = KanataClient(port: port)
-        kanataClient.onConfigReload = {
+        kanataClient.onConfigReload = { [weak self] in
             Logging.log("config reloaded")
             Notifications.sendReload()
+            self?.hudController?.reloadConfig()
         }
         kanataClient.onLayerChange = { [weak self] layer in
             guard let self else { return }

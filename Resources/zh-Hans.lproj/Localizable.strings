@@ -58,3 +58,12 @@
 "permissions.done" = "完成";
 "notification.permissionsNeeded.title" = "需要权限";
 "notification.permissionsNeeded.body" = "打开 Kanata Bar 以授予「输入监控」和「辅助功能」";
+
+/* ----- Keyboard HUD ----- */
+
+/* Menu item (checkbox) that shows/hides the floating keyboard HUD window.
+   "HUD" is a common UI term (heads-up display) — keep it as is. */
+"menu.keyboardHud" = "键盘 HUD";
+
+/* VoiceOver label for the Keyboard HUD toggle. */
+"accessibility.keyboardHud" = "显示悬浮键盘 HUD";

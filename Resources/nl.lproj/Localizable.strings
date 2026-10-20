@@ -58,3 +58,12 @@
 "permissions.done" = "Gereed";
 "notification.permissionsNeeded.title" = "Machtigingen vereist";
 "notification.permissionsNeeded.body" = "Open Kanata Bar om Invoerregistratie en Toegankelijkheid toe te staan";
+
+/* ----- Keyboard HUD ----- */
+
+/* Menu item (checkbox) that shows/hides the floating keyboard HUD window.
+   "HUD" is a common UI term (heads-up display) — keep it as is. */
+"menu.keyboardHud" = "Toetsenbord-HUD";
+
+/* VoiceOver label for the Keyboard HUD toggle. */
+"accessibility.keyboardHud" = "Zwevende toetsenbord-HUD tonen";

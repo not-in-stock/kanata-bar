@@ -23,3 +23,23 @@ enum Timing {
     /// TCP receive buffer size in bytes.
     static let tcpBufferSize = 4096
 }
+
+// MARK: - HUD keyboard
+
+extension Timing {
+    /// How long a resolved tap stays highlighted on the HUD.
+    static let hudTapFlash: TimeInterval = 0.15
+
+    /// Ignore modifier-release evidence this soon after HoldActivated: kanata's
+    /// modifier DOWN and the TCP message arrive in either order ~20 ms apart.
+    static let hudHoldGrace: TimeInterval = 0.05
+
+    /// Hold state for actions with no observable end (macro, cmd, …).
+    static let hudHoldFallback: TimeInterval = 2.0
+
+    /// Safety cap for any hold whose end signal was missed.
+    static let hudHoldHardLimit: TimeInterval = 15.0
+
+    /// Housekeeping tick while flashes or holds are live.
+    static let hudTick: TimeInterval = 0.05
+}

@@ -111,3 +111,12 @@
 
 "notification.permissionsNeeded.title" = "Нужны разрешения";
 "notification.permissionsNeeded.body" = "Откройте Kanata Bar, чтобы выдать «Мониторинг ввода» и «Универсальный доступ»";
+
+/* ----- Keyboard HUD ----- */
+
+/* Menu item (checkbox) that shows/hides the floating keyboard HUD window.
+   "HUD" is a common UI term (heads-up display) — keep it as is. */
+"menu.keyboardHud" = "HUD-клавиатура";
+
+/* VoiceOver label for the Keyboard HUD toggle. */
+"accessibility.keyboardHud" = "Показать плавающую HUD-клавиатуру";

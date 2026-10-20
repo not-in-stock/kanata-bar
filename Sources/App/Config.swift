@@ -44,6 +44,7 @@ struct KanataBarConfig: Codable {
     var launcher: String  // "auto" (sudo/authexec) or "helper" (experimental supervisor)
     var iconsDir: String?
     var iconTransition: IconTransition?
+    var hudGeometry: String  // "auto", "ansi" or "iso"
 
     enum CodingKeys: String, CodingKey {
         case autostartKanata = "autostart_kanata"
@@ -52,6 +53,7 @@ struct KanataBarConfig: Codable {
         case launcher = "launcher"
         case iconsDir = "icons_dir"
         case iconTransition = "icon_transition"
+        case hudGeometry = "hud_geometry"
     }
 
     static let `default` = KanataBarConfig(
@@ -60,16 +62,19 @@ struct KanataBarConfig: Codable {
         pamTouchid: "auto",
         launcher: "auto",
         iconsDir: nil,
-        iconTransition: nil
+        iconTransition: nil,
+        hudGeometry: "auto"
     )
 
-    init(autostartKanata: Bool, autorestartKanata: Bool, pamTouchid: String, launcher: String, iconsDir: String?, iconTransition: IconTransition?) {
+    init(autostartKanata: Bool, autorestartKanata: Bool, pamTouchid: String, launcher: String, iconsDir: String?,
+         iconTransition: IconTransition?, hudGeometry: String = "auto") {
         self.autostartKanata = autostartKanata
         self.autorestartKanata = autorestartKanata
         self.pamTouchid = pamTouchid
         self.launcher = launcher
         self.iconsDir = iconsDir
         self.iconTransition = iconTransition
+        self.hudGeometry = hudGeometry
     }
 
     init(from decoder: Decoder) throws {
@@ -81,6 +86,12 @@ struct KanataBarConfig: Codable {
         launcher = (try? c.decode(String.self, forKey: .launcher)) ?? d.launcher
         iconsDir = try? c.decode(String.self, forKey: .iconsDir)
         iconTransition = try? c.decode(IconTransition.self, forKey: .iconTransition)
+        hudGeometry = (try? c.decode(String.self, forKey: .hudGeometry)) ?? d.hudGeometry
+    }
+
+    /// Explicit HUD geometry from config, or nil for auto-detection.
+    var hudGeometryKind: KeyboardLayoutKind? {
+        KeyboardLayoutKind(rawValue: hudGeometry.lowercased())
     }
 }
 

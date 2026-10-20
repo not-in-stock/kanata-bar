@@ -58,3 +58,12 @@
 "permissions.done" = "Terminé";
 "notification.permissionsNeeded.title" = "Autorisations requises";
 "notification.permissionsNeeded.body" = "Ouvrez Kanata Bar pour accorder la Surveillance de la saisie et l’Accessibilité";
+
+/* ----- Keyboard HUD ----- */
+
+/* Menu item (checkbox) that shows/hides the floating keyboard HUD window.
+   "HUD" is a common UI term (heads-up display) — keep it as is. */
+"menu.keyboardHud" = "HUD clavier";
+
+/* VoiceOver label for the Keyboard HUD toggle. */
+"accessibility.keyboardHud" = "Afficher le HUD clavier flottant";

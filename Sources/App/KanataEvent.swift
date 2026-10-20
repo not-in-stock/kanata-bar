@@ -4,6 +4,10 @@ import Foundation
 enum KanataEvent: Equatable {
     case layerChange(String)
     case configReload
+    /// A tap-hold key resolved as hold; `key` is kanata's OsCode name (`leftmeta`).
+    case holdActivated(String)
+    /// A tap-hold key resolved as tap.
+    case tapActivated(String)
 
     /// Parses a single JSON line from kanata's TCP stream.
     static func parse(_ line: String) -> KanataEvent? {
@@ -16,6 +20,10 @@ enum KanataEvent: Equatable {
             return .layerChange(newLayer)
         } else if json["ConfigFileReload"] != nil {
             return .configReload
+        } else if let hold = json["HoldActivated"] as? [String: Any], let key = hold["key"] as? String {
+            return .holdActivated(key.lowercased())
+        } else if let tap = json["TapActivated"] as? [String: Any], let key = tap["key"] as? String {
+            return .tapActivated(key.lowercased())
         }
 
         return nil
