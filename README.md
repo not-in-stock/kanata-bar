@@ -168,7 +168,7 @@ it several ways:
 
 | Mode | Config | Auth prompt | How it works |
 | :--- | :----- | :---------- | :----------- |
-| **sudo + PAM** | `pam_touchid = "auto"` (default) | TouchID / password each start | `sudo -S` — silent if a passwordless `sudoers` rule is installed (see below) |
+| **sudo + PAM** | `pam_touchid = "auto"` (default) | TouchID / password each start | `sudo -S` with PAM (TouchID if configured) |
 | **AuthExec** | `pam_touchid = "false"` | macOS password dialog each start | `AuthorizationExecuteWithPrivileges` (deprecated since 10.7) |
 | **XPC helper** | `launcher = "helper"` | one-time Login Items approval, then none | root `SMAppService` daemon supervises kanata (experimental — see note below) |
 
@@ -183,12 +183,16 @@ If kanata is already running when kanata-bar launches, the app detects it
 automatically and connects without starting a new instance (Stop is hidden in this
 case — the app only manages instances it started).
 
-> **Zero-prompt on a locked-down Mac.** With full SIP, the XPC helper needs a paid
-> Apple Developer ID to launch, so it is not yet a shipping option. A passwordless
-> `sudoers` rule (`services.kanata.sudoers = true` in the Nix module) makes
-> `sudo + PAM` prompt-free instead — but it is a **local privilege-escalation risk**
-> (kanata's `cmd` actions can run arbitrary commands as root), so treat it as opt-in,
-> not a default.
+> **No free zero-prompt path at full SIP yet.** With full SIP the XPC helper needs a
+> paid Apple Developer ID to launch, so it is not yet a shipping option. The
+> `services.kanata.sudoers = true` Nix rule does **not** currently make Start
+> prompt-free either: it grants `NOPASSWD` to `kanata` and `pkill`, but kanata-bar
+> launches kanata through a root shell wrapper (`sudo /bin/sh …`, needed so Stop can
+> reap kanata without a second prompt), which that rule doesn't cover. The only rule
+> that would silence Start today is `NOPASSWD: /bin/sh` — i.e. unrestricted root, a
+> serious **local privilege-escalation risk** (and kanata's `cmd` actions can already
+> run arbitrary commands as root), so it is not recommended. On full SIP, expect a
+> TouchID / password prompt on every Start.
 
 ### Recommended: enable sudo TouchID
 
