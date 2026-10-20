@@ -268,17 +268,49 @@ final class HudStateTests: XCTestCase {
         XCTAssertFalse(state.isPressed("a"))
     }
 
-    func testModifierHoldEndsWhenFlagClears() {
-        state.input(.modifier(keycode: 59, down: true, deviceFlags: KeyNames.lctlBit))
+    func testModifierHoldEndsOnReleaseAfterPress() {
         state.holdActivated(tcpKey: "a")
+        state.input(.modifier(keycode: 59, down: true, deviceFlags: KeyNames.lctlBit))
         XCTAssertTrue(state.isHoldActive("a"))
-        XCTAssertTrue(state.isPressed("lctl"))
-        // Release evidence inside the grace window is ignored.
-        state.input(.modifier(keycode: 59, down: false, deviceFlags: 0))
-        XCTAssertTrue(state.isHoldActive("a"))
-        clock += 0.1
+        // The held cap lights, the native modifier cap doesn't.
+        XCTAssertTrue(state.isPressed("a"))
+        XCTAssertFalse(state.isPressed("lctl"))
         state.input(.modifier(keycode: 59, down: false, deviceFlags: 0))
         XCTAssertFalse(state.isHoldActive("a"))
+        XCTAssertFalse(state.isPressed("a"))
+    }
+
+    func testModifierHoldEndsWhenReleaseWasInsideGrace() {
+        // Instant press+release right after HoldActivated: no later evidence.
+        state.holdActivated(tcpKey: "a")
+        state.input(.modifier(keycode: 59, down: true, deviceFlags: KeyNames.lctlBit))
+        state.input(.modifier(keycode: 59, down: false, deviceFlags: 0))
+        XCTAssertFalse(state.isHoldActive("a"))
+    }
+
+    func testReleaseWithoutPressIsIgnoredInsideGrace() {
+        state.input(.modifier(keycode: 59, down: true, deviceFlags: KeyNames.lctlBit))
+        state.holdActivated(tcpKey: "a")
+        state.input(.modifier(keycode: 61, down: false, deviceFlags: 0))  // unrelated, flag already clear
+        XCTAssertTrue(state.isHoldActive("a"))
+        clock += Timing.hudHoldGrace + 0.01
+        state.tick()
+        XCTAssertFalse(state.isHoldActive("a"))
+    }
+
+    func testPhysicalModifierLightsItself() {
+        state.input(.modifier(keycode: 56, down: true, deviceFlags: KeyNames.lsftBit))
+        XCTAssertTrue(state.isPressed("lsft"))
+        XCTAssertFalse(state.isPressed("f"))  // f's hold produces lsft, but no hold is active
+    }
+
+    func testRemappedOutputLightsThePhysicalCap() {
+        state.setLayer("nav")
+        state.input(.keyDown(keycode: 59))  // lctl, produced by `a` on nav
+        XCTAssertTrue(state.isPressed("a"))
+        XCTAssertFalse(state.isPressed("lctl"))
+        state.input(.keyDown(keycode: 115))  // home, produced by `q` on nav
+        XCTAssertTrue(state.isPressed("q"))
     }
 
     func testLayerHoldEndsWhenLayerLeaves() {

@@ -29,9 +29,7 @@ final class HudPanel: NSPanel {
         effect.material = .hudWindow
         effect.blendingMode = .behindWindow
         effect.state = .active
-        effect.wantsLayer = true
-        effect.layer?.cornerRadius = 12
-        effect.layer?.masksToBounds = true
+        effect.maskImage = Self.roundedMask(radius: 12)
         view.frame = effect.bounds
         view.autoresizingMask = [.width, .height]
         effect.addSubview(view)
@@ -40,6 +38,21 @@ final class HudPanel: NSPanel {
         setFrameAutosaveName(Self.autosaveName)
         if !setFrameUsingName(Self.autosaveName) { center() }
         setContentSize(size)
+    }
+
+    /// Resizable rounded-rect mask; `capInsets` keep the corners intact when the
+    /// view is resized. Masking the effect view (not its layer) also rounds the
+    /// window's shadow.
+    private static func roundedMask(radius: CGFloat) -> NSImage {
+        let size = radius * 2 + 1
+        let image = NSImage(size: NSSize(width: size, height: size), flipped: false) { rect in
+            NSColor.black.setFill()
+            NSBezierPath(roundedRect: rect, xRadius: radius, yRadius: radius).fill()
+            return true
+        }
+        image.capInsets = NSEdgeInsets(top: radius, left: radius, bottom: radius, right: radius)
+        image.resizingMode = .stretch
+        return image
     }
 
     // A borderless panel can't become key by default; we don't want key status

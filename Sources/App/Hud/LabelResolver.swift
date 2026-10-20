@@ -45,13 +45,13 @@ struct LabelResolver {
             if layout.blockUnmappedKeys { return .empty }
             return KeyLabel(main: systemGlyph(key), secondary: nil, kind: .plain, detail: nil)
         }
-        let action = resolveTransparent(key: key, layout: layout, layer: layer)
+        let action = effectiveAction(for: key, layout: layout, layer: layer)
         return label(forAction: action, key: key)
     }
 
-    /// Follows `_` down to the base layer (or the first layer with
-    /// `delegate-to-first-layer`), then to the key itself.
-    private func resolveTransparent(key: String, layout: KanataLayout, layer: String) -> KanataAction {
+    /// The action `key` has on `layer`, following `_` down to the base layer
+    /// (or the first layer with `delegate-to-first-layer`), then to the key itself.
+    func effectiveAction(for key: String, layout: KanataLayout, layer: String) -> KanataAction {
         var action = layout.action(layer: layer, key: key) ?? .transparent
         if action == .transparent, let base = layout.firstLayer, base != layer {
             action = layout.action(layer: base, key: key) ?? .transparent

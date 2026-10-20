@@ -16,7 +16,8 @@ final class HudState {
     struct Hold: Equatable {
         let end: HoldEnd
         let since: Date
-        /// For `.layer`: whether the LayerChange to the target was seen yet.
+        /// `.layer`: the LayerChange to the target was seen. `.modifier`: the
+        /// modifier was seen down — its next release ends the hold.
         var armed: Bool
     }
 
@@ -31,6 +32,16 @@ final class HudState {
     private(set) var tapFlashes: [String: Date] = [:]
     /// Labels per kanata key name for the current layer and input source.
     private(set) var labels: [String: KeyLabel] = [:]
+    /// Output key name → caps whose current-layer action produces it (inverse
+    /// map, so an output `down` lights the physical `j` that is mapped to it).
+    private var producers: [String: [Producer]] = [:]
+    private var lastFlags: UInt64 = 0
+
+    private struct Producer: Equatable {
+        let cap: String
+        /// Produced by a tap-hold's hold branch: counts only while that hold is active.
+        let viaHold: Bool
+    }
 
     var resolver: LabelResolver
     var geometry: KeyboardGeometry
@@ -108,13 +119,18 @@ final class HudState {
             pressed.remove(keycode)
         case .modifier(let keycode, let down, let flags):
             if down { pressed.insert(keycode) } else { pressed.remove(keycode) }
-            // Modifier holds end when their device flag is gone (after a short
-            // grace: kanata's modifier DOWN and HoldActivated can arrive in either order).
+            lastFlags = flags
+            // A modifier hold ends on the release that follows its press. kanata's
+            // modifier DOWN and HoldActivated arrive in either order ~20 ms apart,
+            // so a release without a seen press only counts after a grace period.
             let t = now()
             for (key, hold) in holds {
-                guard case .modifier(let bit) = hold.end, flags & bit == 0,
-                      t.timeIntervalSince(hold.since) > Timing.hudHoldGrace else { continue }
-                holds[key] = nil
+                guard case .modifier(let bit) = hold.end else { continue }
+                if flags & bit != 0 {
+                    holds[key]?.armed = true
+                } else if hold.armed || t.timeIntervalSince(hold.since) > Timing.hudHoldGrace {
+                    holds[key] = nil
+                }
             }
         }
         onChange?()
@@ -129,8 +145,17 @@ final class HudState {
         let holdsBefore = holds.count
         holds = holds.filter { _, hold in
             let age = t.timeIntervalSince(hold.since)
-            if case .timeout = hold.end { return age < Timing.hudHoldFallback }
-            return age < Timing.hudHoldHardLimit
+            switch hold.end {
+            case .timeout:
+                return age < Timing.hudHoldFallback
+            case .modifier(let bit):
+                // Press+release both inside the grace window leave no later
+                // evidence: once the grace is over, a modifier that isn't down is released.
+                if age > Timing.hudHoldGrace, lastFlags & bit == 0 { return false }
+                return age < Timing.hudHoldHardLimit
+            case .layer:
+                return age < Timing.hudHoldHardLimit
+            }
         }
         let changed = flashesBefore != tapFlashes.count || holdsBefore != holds.count
         if changed { onChange?() }
@@ -139,18 +164,58 @@ final class HudState {
 
     func relabel() {
         var out: [String: KeyLabel] = [:]
+        var prod: [String: [Producer]] = [:]
         for cap in geometry.caps {
             guard let name = cap.name else { continue }
             out[name] = resolver.label(for: name, layout: layout, layer: layer)
+            if let layout, let layer, layout.sourceKeys.contains(name) {
+                let action = resolver.effectiveAction(for: name, layout: layout, layer: layer)
+                for (output, viaHold) in Self.outputs(of: action) where output != name {
+                    prod[output, default: []].append(Producer(cap: name, viaHold: viaHold))
+                }
+            }
         }
         labels = out
+        producers = prod
         onChange?()
+    }
+
+    /// Key names an action can emit, flagged when they come from a hold branch.
+    static func outputs(of action: KanataAction, viaHold: Bool = false) -> [(String, Bool)] {
+        switch action {
+        case .key(let name, _):
+            return [(name, viaHold)]
+        case .tapHold(let tap, let hold):
+            return outputs(of: tap, viaHold: viaHold) + outputs(of: hold, viaHold: true)
+        case .oneShot(let inner):
+            return outputs(of: inner, viaHold: viaHold)
+        case .fork(let a, let b):
+            return outputs(of: a, viaHold: viaHold) + outputs(of: b, viaHold: viaHold)
+        case .multi(let list), .tapDance(let list):
+            return list.flatMap { outputs(of: $0, viaHold: viaHold) }
+        default:
+            return []
+        }
     }
 
     // MARK: - Queries for the view
 
+    /// Whether the cap should draw as pressed. Pressed state comes from kanata's
+    /// *output*; a cap lights when it produces a pressed output in the current
+    /// layer (physical `j` for an output `down` in a nav layer), and the output
+    /// key's own cap lights only when no remapped cap claims it. A modifier
+    /// emitted by an active home-row hold lights the held cap, not the modifier.
     func isPressed(_ key: String) -> Bool {
-        guard let code = KeyNames.byName[key]?.keycode else { return false }
+        for (output, list) in producers where isOutputDown(output) {
+            for p in list where p.cap == key && (!p.viaHold || holds[key] != nil) { return true }
+        }
+        guard isOutputDown(key) else { return false }
+        let claimed = producers[key]?.contains { !$0.viaHold || holds[$0.cap] != nil } ?? false
+        return !claimed
+    }
+
+    private func isOutputDown(_ key: String) -> Bool {
+        guard let code = KeyNames.byName[key]?.keycode, code >= 0 else { return false }
         return pressed.contains(code)
     }
 

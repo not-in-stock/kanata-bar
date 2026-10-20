@@ -8,7 +8,7 @@ final class HudKeyboardView: NSView {
     let state: HudState
     var unit: CGFloat = 44
     let padding: CGFloat = 10
-    private let gap: CGFloat = 3
+    private let gap: CGFloat = 5
     private var lastDrawn: [String: Snapshot] = [:]
 
     private struct Snapshot: Equatable {
@@ -42,10 +42,17 @@ final class HudKeyboardView: NSView {
             guard let name = cap.name else { continue }
             if snapshot(name) != lastDrawn[name] {
                 setNeedsDisplay(rect(for: cap).insetBy(dx: -1, dy: -1))
+                if let extra = cap.extra { setNeedsDisplay(extraRect(extra).insetBy(dx: -1, dy: -1)) }
                 any = true
             }
         }
         if !any && lastDrawn.isEmpty { needsDisplay = true }
+        // Draw now rather than on the next run-loop pass: one key's worth of work.
+        displayIfNeeded()
+    }
+
+    private func extraRect(_ r: KeyRect) -> NSRect {
+        NSRect(x: padding + r.x * unit, y: padding + r.y * unit, width: r.width * unit, height: r.height * unit)
     }
 
     private func snapshot(_ name: String) -> Snapshot {
@@ -64,10 +71,7 @@ final class HudKeyboardView: NSView {
         for cap in state.geometry.caps {
             let r = rect(for: cap)
             var hit = r.intersects(dirtyRect)
-            if let extra = cap.extra {
-                hit = hit || NSRect(x: padding + extra.x * unit, y: padding + extra.y * unit,
-                                    width: extra.width * unit, height: extra.height * unit).intersects(dirtyRect)
-            }
+            if let extra = cap.extra { hit = hit || extraRect(extra).intersects(dirtyRect) }
             guard hit else { continue }
             drawCap(cap, in: r)
             if let name = cap.name { lastDrawn[name] = snapshot(name) }
@@ -109,8 +113,7 @@ final class HudKeyboardView: NSView {
             return NSBezierPath(roundedRect: inset, xRadius: radius, yRadius: radius)
         }
         // ISO return: union of the two rects, drawn as one rounded shape.
-        let lower = NSRect(x: padding + extra.x * unit, y: padding + extra.y * unit,
-                           width: extra.width * unit, height: extra.height * unit).insetBy(dx: gap / 2, dy: gap / 2)
+        let lower = extraRect(extra).insetBy(dx: gap / 2, dy: gap / 2)
         let path = NSBezierPath()
         let r = radius
         // Clockwise from top-left of the upper rect.

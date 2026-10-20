@@ -42,4 +42,7 @@ extension Timing {
 
     /// Housekeeping tick while flashes or holds are live.
     static let hudTick: TimeInterval = 0.05
+
+    /// Poll interval for the Accessibility grant before installing the HUD's event tap.
+    static let hudTapRetry: TimeInterval = 2.0
 }

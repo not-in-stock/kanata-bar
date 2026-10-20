@@ -14,6 +14,7 @@ final class HudController {
     private var panel: HudPanel?
     private let tap = InputTap()
     private var tickTimer: Timer?
+    private var tapRetryTimer: Timer?
     private var configPath: String
     private var tapWarned = false
 
@@ -47,15 +48,7 @@ final class HudController {
         }
         reloadConfig()
         panel?.orderFrontRegardless()
-        if !tap.start() {
-            if !tapWarned {
-                tapWarned = true
-                Logging.log("HUD: event tap refused — Accessibility not granted?")
-            }
-        } else {
-            tap.onEvent = { [weak self] event in self?.state.input(event) }
-            tap.onDisabled = { Logging.log("HUD: event tap was disabled by the system, re-enabled") }
-        }
+        startTapWhenTrusted()
         startTicking()
         UserDefaults.standard.set(true, forKey: Self.visibleDefaultsKey)
     }
@@ -63,8 +56,40 @@ final class HudController {
     func hide() {
         panel?.orderOut(nil)
         tap.stop()
+        tapRetryTimer?.invalidate()
+        tapRetryTimer = nil
         stopTicking()
         UserDefaults.standard.set(false, forKey: Self.visibleDefaultsKey)
+    }
+
+    /// A tap created before Accessibility is granted stays crippled for its
+    /// lifetime (it only sees events aimed at this app), so wait for the grant
+    /// and only then create it. Always a fresh tap per show().
+    private func startTapWhenTrusted() {
+        tap.stop()
+        guard TCCPermissions.isGranted(.accessibility) else {
+            if !tapWarned {
+                tapWarned = true
+                Logging.log("HUD: waiting for Accessibility before installing the event tap")
+            }
+            tapRetryTimer?.invalidate()
+            tapRetryTimer = Timer.scheduledTimer(withTimeInterval: Timing.hudTapRetry, repeats: true) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    guard let self, TCCPermissions.isGranted(.accessibility) else { return }
+                    self.tapRetryTimer?.invalidate()
+                    self.tapRetryTimer = nil
+                    self.startTapWhenTrusted()
+                }
+            }
+            return
+        }
+        tap.onEvent = { [weak self] event in self?.state.input(event) }
+        tap.onDisabled = { Logging.log("HUD: event tap was disabled by the system, re-enabled") }
+        if tap.start() {
+            Logging.log("HUD: event tap installed")
+        } else {
+            Logging.log("HUD: event tap refused by the system")
+        }
     }
 
     func toggle() {
