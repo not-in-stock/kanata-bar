@@ -36,7 +36,8 @@ final class HudState {
     /// map, so an output `down` lights the physical `j` that is mapped to it).
     private var producers: [String: [Producer]] = [:]
     private var lastFlags: UInt64 = 0
-    /// Caps Lock is a lock, not a key you hold: shown as an indicator, never as pressed.
+    /// Caps Lock is a lock, not a key you hold — and macOS keeps one state per
+    /// keyboard, so there is no single truth to show. Never drawn as pressed.
     private(set) var capsLockOn = false
 
     private struct Producer: Equatable {

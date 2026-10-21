@@ -16,7 +16,6 @@ final class HudKeyboardView: NSView {
         let pressed: Bool
         let hold: Bool
         let flash: Bool
-        var locked = false
     }
 
     init(state: HudState) {
@@ -58,8 +57,7 @@ final class HudKeyboardView: NSView {
 
     private func snapshot(_ name: String) -> Snapshot {
         Snapshot(label: state.labels[name] ?? .empty, pressed: state.isPressed(name),
-                 hold: state.isHoldActive(name), flash: state.isTapFlashing(name),
-                 locked: name == "caps" && state.capsLockOn)
+                 hold: state.isHoldActive(name), flash: state.isTapFlashing(name))
     }
 
     private func rect(for cap: KeyCap) -> NSRect {
@@ -106,13 +104,6 @@ final class HudKeyboardView: NSView {
 
         guard cap.name != nil else { return }
         drawLabels(snap, cap: cap, rect: rect)
-        if snap.locked {
-            // Caps Lock "LED": a small dot in the top-left corner, like the hardware.
-            let d = max(3, unit * 0.09)
-            let dot = NSRect(x: rect.minX + gap / 2 + d, y: rect.minY + gap / 2 + d, width: d, height: d)
-            NSColor.controlAccentColor.setFill()
-            NSBezierPath(ovalIn: dot).fill()
-        }
     }
 
     private func capPath(_ cap: KeyCap, _ rect: NSRect) -> NSBezierPath {
