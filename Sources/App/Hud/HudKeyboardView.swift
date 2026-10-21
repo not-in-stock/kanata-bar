@@ -152,7 +152,9 @@ final class HudKeyboardView: NSView {
         let mainAttrs: [NSAttributedString.Key: Any] = [.font: mainFont, .foregroundColor: color, .paragraphStyle: para]
         let mainText = NSAttributedString(string: label.main, attributes: mainAttrs)
         let mainHeight = mainText.size().height
-        let mainY = hasSecondary ? rect.midY - mainHeight * 0.75 : rect.midY - mainHeight / 2
+        // The main legend always sits in the same centered slot, whether or not
+        // the cap has a secondary one — so rows stay level across keys and layers.
+        let mainY = rect.midY - mainHeight / 2
         mainText.draw(in: NSRect(x: rect.minX + 2, y: mainY, width: rect.width - 4, height: mainHeight))
 
         if hasSecondary, let secondary = label.secondary {
@@ -161,7 +163,11 @@ final class HudKeyboardView: NSView {
             let secAttrs: [NSAttributedString.Key: Any] = [.font: secFont, .foregroundColor: secColor, .paragraphStyle: para]
             let secText = NSAttributedString(string: secondary, attributes: secAttrs)
             let h = secText.size().height
-            secText.draw(in: NSRect(x: rect.minX + 2, y: rect.maxY - h - unit * 0.1, width: rect.width - 4, height: h))
+            // Centered in the strip between the main slot and the cap's bottom edge.
+            let stripTop = mainY + mainHeight
+            let stripBottom = rect.maxY - gap / 2
+            let y = stripTop + max(0, (stripBottom - stripTop - h) / 2)
+            secText.draw(in: NSRect(x: rect.minX + 2, y: y, width: rect.width - 4, height: h))
         }
     }
 }
