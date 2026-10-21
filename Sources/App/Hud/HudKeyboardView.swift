@@ -142,7 +142,9 @@ final class HudKeyboardView: NSView {
         case .plain: color = NSColor.labelColor.withAlphaComponent(0.45)
         case .blocked: color = .clear
         }
-        let mainSize = cap.height < 0.8 ? unit * 0.22 : (label.main.count > 2 ? unit * 0.24 : unit * 0.34)
+        // Inner padding keeps legends off the cap edge; both legends give up 1pt for it.
+        let inner: CGFloat = 1
+        let mainSize = (cap.height < 0.8 ? unit * 0.22 : (label.main.count > 2 ? unit * 0.24 : unit * 0.34)) - 1
         let mainFont = NSFont.systemFont(ofSize: mainSize, weight: .regular)
         let para = NSMutableParagraphStyle()
         para.alignment = .center
@@ -155,19 +157,19 @@ final class HudKeyboardView: NSView {
         // The main legend always sits in the same centered slot, whether or not
         // the cap has a secondary one — so rows stay level across keys and layers.
         let mainY = rect.midY - mainHeight / 2
-        mainText.draw(in: NSRect(x: rect.minX + 2, y: mainY, width: rect.width - 4, height: mainHeight))
+        mainText.draw(in: NSRect(x: rect.minX + 2 + inner, y: mainY, width: rect.width - 4 - inner * 2, height: mainHeight))
 
         if hasSecondary, let secondary = label.secondary {
             let secColor = snap.hold ? NSColor.controlAccentColor : color
-            let secFont = NSFont.systemFont(ofSize: unit * 0.2, weight: snap.hold ? .semibold : .regular)
+            let secFont = NSFont.systemFont(ofSize: unit * 0.2 - 1, weight: snap.hold ? .semibold : .regular)
             let secAttrs: [NSAttributedString.Key: Any] = [.font: secFont, .foregroundColor: secColor, .paragraphStyle: para]
             let secText = NSAttributedString(string: secondary, attributes: secAttrs)
             let h = secText.size().height
             // Centered in the strip between the main slot and the cap's bottom edge.
             let stripTop = mainY + mainHeight
-            let stripBottom = rect.maxY - gap / 2
+            let stripBottom = rect.maxY - gap / 2 - inner
             let y = stripTop + max(0, (stripBottom - stripTop - h) / 2)
-            secText.draw(in: NSRect(x: rect.minX + 2, y: y, width: rect.width - 4, height: h))
+            secText.draw(in: NSRect(x: rect.minX + 2 + inner, y: y, width: rect.width - 4 - inner * 2, height: h))
         }
     }
 }
