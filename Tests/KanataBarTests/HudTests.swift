@@ -13,6 +13,7 @@ struct FakeGlyphs: KeyGlyphSource {
         case ";": return shifted ? ":" : ";"
         case "grv": return shifted ? "~" : "`"
         case "102d": return shifted ? "±" : "§"
+        case "-": return shifted ? "?" : "ß"   // German layout: ß sits on the minus key
         default:
             return info.name.count == 1 ? (shifted ? info.name.uppercased() : info.name) : info.name
         }
@@ -200,6 +201,12 @@ final class LabelResolverTests: XCTestCase {
     func testKanataStoppedGivesSystemLabels() {
         XCTAssertEqual(resolver.label(for: "a", layout: nil, layer: nil), KeyLabel(main: "A", secondary: nil, kind: .plain, detail: nil))
         XCTAssertEqual(resolver.label(for: "lsft", layout: layout, layer: nil).main, "⇧")
+    }
+
+    func testSharpSIsNotUppercasedToSS() {
+        XCTAssertEqual(resolver.label(for: "-", layout: nil, layer: nil).main, "ß")
+        XCTAssertEqual(resolver.label(for: "a", layout: nil, layer: nil).main, "A")
+        XCTAssertEqual(resolver.label(for: "1", layout: nil, layer: nil).main, "1")
     }
 
     func testTapHoldShowsBothLegends() {

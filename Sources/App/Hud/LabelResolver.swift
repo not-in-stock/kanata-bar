@@ -119,11 +119,23 @@ struct LabelResolver {
     func keyGlyph(_ key: String, shifted: Bool) -> String {
         guard let info = KeyNames.byName[key] else { return key }
         if let glyph = info.glyph { return glyph }
-        if info.keycode >= 0, let ch = glyphs.character(keycode: info.keycode, shifted: shifted),
-           !ch.isEmpty, ch.unicodeScalars.allSatisfy({ !CharacterSet.controlCharacters.contains($0) }) {
-            return shifted ? ch : ch.uppercased()
+        if info.keycode >= 0, let ch = glyphs.character(keycode: info.keycode, shifted: shifted), Self.isPrintable(ch) {
+            return shifted ? ch : capLegend(ch, keycode: info.keycode)
         }
         return info.name
+    }
+
+    /// Keycap legend for an unshifted character: letters show as their shifted
+    /// form (`a` → `A`), everything else as-is. Uses the layout's own shifted
+    /// character instead of `uppercased()`, which turns `ß` into `SS`.
+    private func capLegend(_ ch: String, keycode: Int) -> String {
+        guard let up = glyphs.character(keycode: keycode, shifted: true), Self.isPrintable(up),
+              up.count == 1, up != ch, up.lowercased() == ch else { return ch }
+        return up
+    }
+
+    private static func isPrintable(_ s: String) -> Bool {
+        !s.isEmpty && s.unicodeScalars.allSatisfy { !CharacterSet.controlCharacters.contains($0) }
     }
 
     private func modifierPrefix(_ mods: Set<String>) -> String {
