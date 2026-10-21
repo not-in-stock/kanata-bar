@@ -305,6 +305,14 @@ final class HudStateTests: XCTestCase {
         XCTAssertFalse(state.isHoldActive("a"))
     }
 
+    func testCapsLockIsAnIndicatorNotAPress() {
+        state.input(.modifier(keycode: 57, down: true, deviceFlags: KeyNames.capsBit))
+        XCTAssertFalse(state.isPressed("caps"))
+        XCTAssertTrue(state.capsLockOn)
+        state.input(.modifier(keycode: 57, down: false, deviceFlags: 0))
+        XCTAssertFalse(state.capsLockOn)
+    }
+
     func testPhysicalModifierLightsItself() {
         state.input(.modifier(keycode: 56, down: true, deviceFlags: KeyNames.lsftBit))
         XCTAssertTrue(state.isPressed("lsft"))

@@ -36,6 +36,8 @@ final class HudState {
     /// map, so an output `down` lights the physical `j` that is mapped to it).
     private var producers: [String: [Producer]] = [:]
     private var lastFlags: UInt64 = 0
+    /// Caps Lock is a lock, not a key you hold: shown as an indicator, never as pressed.
+    private(set) var capsLockOn = false
 
     private struct Producer: Equatable {
         let cap: String
@@ -118,8 +120,11 @@ final class HudState {
         case .keyUp(let keycode):
             pressed.remove(keycode)
         case .modifier(let keycode, let down, let flags):
-            if down { pressed.insert(keycode) } else { pressed.remove(keycode) }
+            if KeyNames.byKeycode[keycode]?.name != "caps" {
+                if down { pressed.insert(keycode) } else { pressed.remove(keycode) }
+            }
             lastFlags = flags
+            capsLockOn = flags & KeyNames.capsBit != 0
             // A modifier hold ends on the release that follows its press. kanata's
             // modifier DOWN and HoldActivated arrive in either order ~20 ms apart,
             // so a release without a seen press only counts after a grace period.
