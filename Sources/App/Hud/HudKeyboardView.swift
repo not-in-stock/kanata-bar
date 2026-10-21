@@ -144,32 +144,50 @@ final class HudKeyboardView: NSView {
         }
         // Inner padding keeps legends off the cap edge; both legends give up 1pt for it.
         let inner: CGFloat = 1
+        let edge = gap / 2 + inner
+        let content = rect.insetBy(dx: edge, dy: edge)
         let mainSize = (cap.height < 0.8 ? unit * 0.22 : (label.main.count > 2 ? unit * 0.24 : unit * 0.34)) - 1
         let mainFont = NSFont.systemFont(ofSize: mainSize, weight: .regular)
-        let para = NSMutableParagraphStyle()
-        para.alignment = .center
-        para.lineBreakMode = .byTruncatingTail
-
         let hasSecondary = label.secondary != nil && !(label.secondary?.isEmpty ?? true) && cap.height >= 0.8
-        let mainAttrs: [NSAttributedString.Key: Any] = [.font: mainFont, .foregroundColor: color, .paragraphStyle: para]
-        let mainText = NSAttributedString(string: label.main, attributes: mainAttrs)
-        let mainHeight = mainText.size().height
-        // The main legend always sits in the same centered slot, whether or not
-        // the cap has a secondary one — so rows stay level across keys and layers.
-        let mainY = rect.midY - mainHeight / 2
-        mainText.draw(in: NSRect(x: rect.minX + 2 + inner, y: mainY, width: rect.width - 4 - inner * 2, height: mainHeight))
 
-        if hasSecondary, let secondary = label.secondary {
-            let secColor = snap.hold ? NSColor.controlAccentColor : color
-            let secFont = NSFont.systemFont(ofSize: unit * 0.2 - 1, weight: snap.hold ? .semibold : .regular)
-            let secAttrs: [NSAttributedString.Key: Any] = [.font: secFont, .foregroundColor: secColor, .paragraphStyle: para]
-            let secText = NSAttributedString(string: secondary, attributes: secAttrs)
-            let h = secText.size().height
-            // Centered in the strip between the main slot and the cap's bottom edge.
-            let stripTop = mainY + mainHeight
-            let stripBottom = rect.maxY - gap / 2 - inner
-            let y = stripTop + max(0, (stripBottom - stripTop - h) / 2)
-            secText.draw(in: NSRect(x: rect.minX + 2 + inner, y: y, width: rect.width - 4 - inner * 2, height: h))
+        let mainText = attributed(label.main, font: mainFont, color: color, alignment: cap.alignment)
+        let mainHeight = mainText.size().height
+        let mainY: CGFloat
+        switch cap.alignment {
+        case .center: mainY = rect.midY - mainHeight / 2   // fixed slot; rows stay level
+        case .bottomLeft, .bottomRight: mainY = content.maxY - mainHeight
+        case .topRight: mainY = content.minY
         }
+        mainText.draw(in: NSRect(x: content.minX, y: mainY, width: content.width, height: mainHeight))
+
+        guard hasSecondary, let secondary = label.secondary else { return }
+        drawSecondary(secondary, hold: snap.hold, color: color, cap: cap, content: content, mainBottom: mainY + mainHeight)
+    }
+
+    private func drawSecondary(_ text: String, hold: Bool, color: NSColor, cap: KeyCap, content: NSRect, mainBottom: CGFloat) {
+        let secColor = hold ? NSColor.controlAccentColor : color
+        let secFont = NSFont.systemFont(ofSize: unit * 0.2 - 1, weight: hold ? .semibold : .regular)
+        // Opposite bottom corner for corner-aligned mains; centered strip otherwise.
+        let secAlignment: LegendAlignment
+        switch cap.alignment {
+        case .bottomLeft: secAlignment = .bottomRight
+        case .bottomRight: secAlignment = .bottomLeft
+        case .center, .topRight: secAlignment = .center
+        }
+        let secText = attributed(text, font: secFont, color: secColor, alignment: secAlignment)
+        let h = secText.size().height
+        let y = cap.alignment == .center ? mainBottom + max(0, (content.maxY - mainBottom - h) / 2) : content.maxY - h
+        secText.draw(in: NSRect(x: content.minX, y: y, width: content.width, height: h))
+    }
+
+    private func attributed(_ text: String, font: NSFont, color: NSColor, alignment: LegendAlignment) -> NSAttributedString {
+        let para = NSMutableParagraphStyle()
+        switch alignment {
+        case .center: para.alignment = .center
+        case .bottomLeft: para.alignment = .left
+        case .bottomRight, .topRight: para.alignment = .right
+        }
+        para.lineBreakMode = .byTruncatingTail
+        return NSAttributedString(string: text, attributes: [.font: font, .foregroundColor: color, .paragraphStyle: para])
     }
 }

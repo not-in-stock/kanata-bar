@@ -14,6 +14,14 @@ struct KeyRect: Equatable {
     let height: Double
 }
 
+/// Where a cap's main legend sits, as printed on the physical keyboard.
+enum LegendAlignment: Equatable {
+    case center
+    case bottomLeft
+    case bottomRight
+    case topRight
+}
+
 /// One keycap in a geometry: where it sits (in key units, origin top-left) and
 /// which kanata key it is. `name` is nil for caps kanata can't address (power).
 struct KeyCap: Equatable {
@@ -25,14 +33,17 @@ struct KeyCap: Equatable {
     /// ISO return is L-shaped: the lower part is a second rect that is drawn as
     /// one cap with the main rect.
     let extra: KeyRect?
+    let alignment: LegendAlignment
 
-    init(_ name: String?, x: Double, y: Double, width: Double, height: Double = 1, extra: KeyRect? = nil) {
+    init(_ name: String?, x: Double, y: Double, width: Double, height: Double = 1, extra: KeyRect? = nil,
+         alignment: LegendAlignment = .center) {
         self.name = name
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.extra = extra
+        self.alignment = alignment
     }
 }
 
@@ -49,12 +60,23 @@ struct KeyboardGeometry: Equatable {
     static let fnRowHeight = 0.6
     static let rowWidth = 14.5
 
+    /// Magic Keyboard legend placement for the wide keys; everything else is centered.
+    static func alignment(for name: String?, kind: KeyboardLayoutKind) -> LegendAlignment {
+        switch name {
+        case "esc", "tab", "caps", "lsft", "fn": return .bottomLeft
+        case "bspc", "rsft": return .bottomRight
+        case "ret": return kind == .iso ? .topRight : .bottomRight
+        case "lctl", "lalt", "lmet", "rmet", "ralt", "rctl": return .topRight
+        default: return .center
+        }
+    }
+
     static func make(_ kind: KeyboardLayoutKind) -> KeyboardGeometry {
         var caps: [KeyCap] = []
         func row(_ y: Double, _ items: [(String?, Double)], height: Double = 1) {
             var x = 0.0
             for (name, width) in items {
-                caps.append(KeyCap(name, x: x, y: y, width: width, height: height))
+                caps.append(KeyCap(name, x: x, y: y, width: width, height: height, alignment: alignment(for: name, kind: kind)))
                 x += width
             }
         }
@@ -91,7 +113,7 @@ struct KeyboardGeometry: Equatable {
             row(y1 + 2, homeRow)
             // ISO return: 1u wide on the tab row, 0.75u on the home row, joined.
             caps.append(KeyCap("ret", x: 13.5, y: y1 + 1, width: 1, height: 1,
-                               extra: KeyRect(x: 13.75, y: y1 + 2, width: 0.75, height: 1)))
+                               extra: KeyRect(x: 13.75, y: y1 + 2, width: 0.75, height: 1), alignment: .topRight))
         }
 
         // Shift row. ISO has the grave key (kVK 50) next to left shift.
