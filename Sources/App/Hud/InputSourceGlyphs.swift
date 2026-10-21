@@ -6,10 +6,17 @@ import Foundation
 @MainActor
 final class InputSourceGlyphs: KeyGlyphSource {
     private var layoutData: Data?
-    private let keyboardType: UInt32
+    /// Keyboard type handed to `UCKeyTranslate`. It decides the ISO swap of
+    /// `§`/`` ` `` (kVK 10 vs 50), so it must follow the *physical* geometry —
+    /// `LMGetKbdType()` would report Karabiner's virtual keyboard (ANSI) under kanata.
+    var keyboardType: UInt32 = Self.ansiType
 
-    init() {
-        keyboardType = UInt32(LMGetKbdType())
+    /// IOHIDFamily's handler ids for USB keyboards by HID country code.
+    static let ansiType: UInt32 = 40
+    static let isoType: UInt32 = 41
+
+    init(kind: KeyboardLayoutKind) {
+        keyboardType = kind == .iso ? Self.isoType : Self.ansiType
         reload()
     }
 
@@ -42,7 +49,12 @@ final class InputSourceGlyphs: KeyGlyphSource {
                                             keyboardType, OptionBits(kUCKeyTranslateNoDeadKeysMask),
                                             &deadKeyState, chars.count, &length, &chars)
                 guard status == noErr, length > 0 else { return nil }
-                return String(utf16CodeUnits: chars, count: length)
+                let text = String(utf16CodeUnits: chars, count: length)
+                // A dead key may come back as a bare combining mark; give it a base.
+                if text.unicodeScalars.allSatisfy({ $0.properties.generalCategory == .nonspacingMark }) {
+                    return "\u{25CC}" + text
+                }
+                return text
             }
         }
     }

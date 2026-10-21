@@ -26,8 +26,8 @@ final class HudController {
 
     init(configPath: String, geometry: KeyboardLayoutKind?) {
         self.configPath = configPath
-        glyphs = InputSourceGlyphs()
         let kind = geometry ?? Self.detectGeometry()
+        glyphs = InputSourceGlyphs(kind: kind)
         state = HudState(geometry: .make(kind), resolver: LabelResolver(glyphs: glyphs))
         view = HudKeyboardView(state: state)
         state.onChange = { [weak self] in self?.view.refresh() }
@@ -163,8 +163,9 @@ final class HudController {
     // MARK: - Geometry detection
 
     /// ISO when any attached physical keyboard reports HID country code 13
-    /// (ISO); ANSI otherwise. Karabiner's virtual keyboard is skipped — it always
-    /// claims ANSI regardless of the physical board.
+    /// (ISO); ANSI otherwise, including JIS (15), which has no geometry yet.
+    /// Karabiner's virtual keyboard is skipped — it always claims ANSI
+    /// regardless of the physical board.
     static func detectGeometry() -> KeyboardLayoutKind {
         let manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
         IOHIDManagerSetDeviceMatching(manager, [
@@ -177,6 +178,7 @@ final class HudController {
             if product.lowercased().contains("karabiner") { continue }
             guard let code = IOHIDDeviceGetProperty(device, kIOHIDCountryCodeKey as CFString) as? Int else { continue }
             if code == 13 { return .iso }
+            if code == 15 { Logging.log("HUD: JIS keyboard detected (\(product)) — no JIS geometry yet, using ANSI") }
         }
         return .ansi
     }
