@@ -136,12 +136,7 @@ final class HudKeyboardView: NSView {
 
     private func drawLabels(_ snap: Snapshot, cap: KeyCap, rect: NSRect) {
         let label = snap.label
-        let color: NSColor
-        switch label.kind {
-        case .remapped: color = .labelColor
-        case .plain: color = NSColor.labelColor.withAlphaComponent(0.45)
-        case .blocked: color = .clear
-        }
+        let color = Self.legendColor(label.kind)
         // Inner padding keeps legends off the cap edge; both legends give up 1pt for it.
         let inner: CGFloat = 1
         let edge = gap / 2 + inner
@@ -161,12 +156,20 @@ final class HudKeyboardView: NSView {
         mainText.draw(in: NSRect(x: content.minX, y: mainY, width: content.width, height: mainHeight))
 
         guard hasSecondary, let secondary = label.secondary else { return }
-        drawSecondary(secondary, hold: snap.hold, color: color, cap: cap, content: content, mainBottom: mainY + mainHeight)
+        drawSecondary(secondary, snap: snap, cap: cap, content: content, mainBottom: mainY + mainHeight)
     }
 
-    private func drawSecondary(_ text: String, hold: Bool, color: NSColor, cap: KeyCap, content: NSRect, mainBottom: CGFloat) {
-        let secColor = hold ? NSColor.controlAccentColor : color
-        let secFont = NSFont.systemFont(ofSize: unit * 0.2 - 1, weight: hold ? .semibold : .regular)
+    private static func legendColor(_ kind: KeyLabel.Kind) -> NSColor {
+        switch kind {
+        case .remapped: return .labelColor
+        case .plain: return NSColor.labelColor.withAlphaComponent(0.45)
+        case .blocked: return .clear
+        }
+    }
+
+    private func drawSecondary(_ text: String, snap: Snapshot, cap: KeyCap, content: NSRect, mainBottom: CGFloat) {
+        let secColor = snap.hold ? NSColor.controlAccentColor : Self.legendColor(snap.label.kind)
+        let secFont = NSFont.systemFont(ofSize: unit * 0.2 - 1, weight: snap.hold ? .semibold : .regular)
         // Opposite bottom corner for corner-aligned mains; centered strip otherwise.
         let secAlignment: LegendAlignment
         switch cap.alignment {
