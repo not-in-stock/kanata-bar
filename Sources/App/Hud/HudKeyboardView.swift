@@ -137,8 +137,9 @@ final class HudKeyboardView: NSView {
     private func drawLabels(_ snap: Snapshot, cap: KeyCap, rect: NSRect) {
         let label = snap.label
         let color = Self.legendColor(label.kind)
-        // Inner padding keeps legends off the cap edge; both legends give up 1pt for it.
-        let inner: CGFloat = 1
+        // Inner padding keeps legends off the cap edge; both legends give up 1pt
+        // for it. Corner-aligned legends touch two edges and get 2pt.
+        let inner: CGFloat = cap.alignment == .center ? 1 : 2
         let edge = gap / 2 + inner
         let content = rect.insetBy(dx: edge, dy: edge)
         let mainSize = (cap.height < 0.8 ? unit * 0.22 : (label.main.count > 2 ? unit * 0.24 : unit * 0.34)) - 1
