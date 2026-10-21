@@ -9,7 +9,7 @@ final class InputSourceGlyphs: KeyGlyphSource {
     /// Keyboard type handed to `UCKeyTranslate`. It decides the ISO swap of
     /// `§`/`` ` `` (kVK 10 vs 50), so it must follow the *physical* geometry —
     /// `LMGetKbdType()` would report Karabiner's virtual keyboard (ANSI) under kanata.
-    var keyboardType: UInt32 = Self.ansiType
+    var keyboardType: UInt32 = InputSourceGlyphs.ansiType
 
     /// IOHIDFamily's handler ids for USB keyboards by HID country code.
     static let ansiType: UInt32 = 40
