@@ -286,22 +286,11 @@ extension AppDelegate {
 
     @objc func doGrantPermissions() {
         NSApp.activate(ignoringOtherApps: true)
-        // Re-surface a dialog/row for anything still missing before we show the
-        // checklist (no-op for grants already held).
-        for kind in TCCPermissions.missing { TCCPermissions.request(kind) }
-
-        let status = TCCPermissions.Kind.allCases.map { kind -> String in
-            "\(TCCPermissions.isGranted(kind) ? "✅" : "❌") \(TCCPermissions.label(kind))"
-        }.joined(separator: "\n")
-
-        let alert = NSAlert()
-        alert.messageText = NSLocalizedString("permissions.alert.title", comment: "")
-        alert.informativeText = NSLocalizedString("permissions.alert.body", comment: "") + "\n\n" + status
-        alert.addButton(withTitle: NSLocalizedString("permissions.openAccessibility", comment: ""))
-        alert.addButton(withTitle: NSLocalizedString("permissions.done", comment: ""))
-        if alert.runModal() == .alertFirstButtonReturn {
-            TCCPermissions.openSettings(for: .accessibility)
-        }
+        // Accessibility is the only grant kanata needs (task 17), and the launch-time
+        // preflight already registered the app in the Accessibility list and surfaced
+        // the system prompt. So skip the intermediate alert and drop the user straight
+        // onto the toggle in System Settings.
+        TCCPermissions.openSettings(for: .accessibility)
         updateMenuState()
     }
 

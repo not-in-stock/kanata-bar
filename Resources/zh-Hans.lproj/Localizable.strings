@@ -48,16 +48,10 @@
 /* ----- 权限 ----- */
 
 "menu.grantPermissions" = "授予权限\U2026";
-"menu.start.permissionsNeeded" = "请先允许「输入监控」和「辅助功能」";
-"permissions.inputMonitoring" = "输入监控";
+"menu.start.permissionsNeeded" = "请先允许「辅助功能」";
 "permissions.accessibility" = "辅助功能";
-"permissions.alert.title" = "Kanata 需要两项权限";
-"permissions.alert.body" = "kanata 以提升的权限运行，无法自行请求这些权限，因此由 Kanata Bar 代为请求。请在系统设置中同时授予这两项，然后点按「开始」。";
-"permissions.openInputMonitoring" = "打开「输入监控」\U2026";
-"permissions.openAccessibility" = "打开「辅助功能」\U2026";
-"permissions.done" = "完成";
 "notification.permissionsNeeded.title" = "需要权限";
-"notification.permissionsNeeded.body" = "打开 Kanata Bar 以授予「输入监控」和「辅助功能」";
+"notification.permissionsNeeded.body" = "打开 Kanata Bar 以授予「辅助功能」";
 
 /* ----- Keyboard HUD ----- */
 

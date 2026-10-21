@@ -48,16 +48,10 @@
 /* ----- Berechtigungen ----- */
 
 "menu.grantPermissions" = "Berechtigungen erteilen\U2026";
-"menu.start.permissionsNeeded" = "Zuerst Eingabeüberwachung und Bedienungshilfen erlauben";
-"permissions.inputMonitoring" = "Eingabeüberwachung";
+"menu.start.permissionsNeeded" = "Zuerst Bedienungshilfen erlauben";
 "permissions.accessibility" = "Bedienungshilfen";
-"permissions.alert.title" = "Kanata benötigt zwei Berechtigungen";
-"permissions.alert.body" = "kanata läuft mit erhöhten Rechten und kann diese nicht selbst anfordern, daher fordert Kanata Bar sie stellvertretend an. Erteile beide in den Systemeinstellungen und klicke dann auf Start.";
-"permissions.openInputMonitoring" = "Eingabeüberwachung öffnen\U2026";
-"permissions.openAccessibility" = "Bedienungshilfen öffnen\U2026";
-"permissions.done" = "Fertig";
 "notification.permissionsNeeded.title" = "Berechtigungen erforderlich";
-"notification.permissionsNeeded.body" = "Öffne Kanata Bar, um Eingabeüberwachung und Bedienungshilfen zu erlauben";
+"notification.permissionsNeeded.body" = "Öffne Kanata Bar, um Bedienungshilfen zu erlauben";
 
 /* ----- Keyboard HUD ----- */
 

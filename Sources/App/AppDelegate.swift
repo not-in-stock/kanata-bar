@@ -468,9 +468,9 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
 
     // MARK: - Permissions
 
-    /// Request the TCC grants kanata needs (Input Monitoring, Accessibility) from
-    /// this user-session app, so a root-launched kanata inherits them. Only
-    /// prompts for grants that are actually missing — a no-op once both are held.
+    /// Request the TCC grant kanata needs (Accessibility) from this user-session app,
+    /// so a root-launched kanata inherits it. Only prompts when it's actually
+    /// missing — a no-op once it's held.
     func preflightPermissions() {
         let missing = TCCPermissions.missing
         guard !missing.isEmpty else { return }

@@ -97,20 +97,12 @@
 "menu.grantPermissions" = "Выдать разрешения\U2026";
 
 /* Подсказка на неактивном «Запустить», пока не выданы разрешения */
-"menu.start.permissionsNeeded" = "Сначала выдайте «Мониторинг ввода» и «Универсальный доступ»";
+"menu.start.permissionsNeeded" = "Сначала выдайте «Универсальный доступ»";
 
-/* Имя разрешения — как в Системных настройках */
-"permissions.inputMonitoring" = "Мониторинг ввода";
 "permissions.accessibility" = "Универсальный доступ";
 
-"permissions.alert.title" = "Kanata нужны два разрешения";
-"permissions.alert.body" = "kanata работает с повышенными привилегиями и не может запросить их сама, поэтому Kanata Bar запрашивает их за неё. Выдайте оба в Системных настройках и нажмите «Запустить».";
-"permissions.openInputMonitoring" = "Открыть «Мониторинг ввода»\U2026";
-"permissions.openAccessibility" = "Открыть «Универсальный доступ»\U2026";
-"permissions.done" = "Готово";
-
 "notification.permissionsNeeded.title" = "Нужны разрешения";
-"notification.permissionsNeeded.body" = "Откройте Kanata Bar, чтобы выдать «Мониторинг ввода» и «Универсальный доступ»";
+"notification.permissionsNeeded.body" = "Откройте Kanata Bar, чтобы выдать «Универсальный доступ»";
 
 /* ----- Keyboard HUD ----- */
 

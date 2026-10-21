@@ -3,7 +3,7 @@ import Shared
 
 extension AppDelegate {
     /// Reset TCC permissions when the app binary or install location changes.
-    /// This ensures macOS re-prompts for Input Monitoring after updates.
+    /// This ensures macOS re-prompts for Accessibility after updates.
     func resetTCCIfSourceChanged() {
         let currentSource = installFingerprint()
         let previousSource = UserDefaults.standard.string(forKey: "installSource")
