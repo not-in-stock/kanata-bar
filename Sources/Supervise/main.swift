@@ -86,6 +86,9 @@ installSignalHandlers()
 let logHandle: FileHandle?
 if let logPath = spec.logPath {
     FileManager.default.createFile(atPath: logPath, contents: nil)
+    // We run as root; keep the log owned by the invoking user (parity with the
+    // old wrapper, where the app created the file) so they can read/delete it.
+    chown(logPath, uid, pw.pointee.pw_gid)
     logHandle = FileHandle(forWritingAtPath: logPath)
 } else {
     logHandle = nil
