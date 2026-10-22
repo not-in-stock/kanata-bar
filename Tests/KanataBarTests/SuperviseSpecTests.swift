@@ -97,4 +97,14 @@ final class SuperviseSpecTests: XCTestCase {
             XCTAssertEqual(error as? SuperviseSpec.ParseError, .missing("KANATA_BIN"))
         }
     }
+
+    // Locks the stop-sentinel path formula: the app (StopSentinel, user side) and
+    // the root supervisor (deriving it from $SUDO_UID's home) must agree byte for
+    // byte, or Stop/reap silently breaks. This value must not change without a
+    // migration — existing running wrappers poll the old path.
+    func testStopSentinelPathFormula() {
+        XCTAssertEqual(
+            Constants.stopSentinelPath(home: "/Users/x"),
+            "/Users/x/Library/Caches/com.kanata-bar/kanata-stop.sentinel")
+    }
 }
