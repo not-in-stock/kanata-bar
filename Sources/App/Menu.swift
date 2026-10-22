@@ -111,11 +111,6 @@ extension AppDelegate {
         menu.addItem(startItem)
         menu.addItem(stopItem)
         menu.addItem(reloadItem)
-
-        permissionsItem = NSMenuItem(title: NSLocalizedString("menu.grantPermissions", comment: ""),
-                                     action: #selector(doGrantPermissions), keyEquivalent: "")
-        permissionsItem.isHidden = true
-        menu.addItem(permissionsItem)
     }
 
     private func addSettings(to menu: NSMenu) {
@@ -157,19 +152,21 @@ extension AppDelegate {
         startingLeading?.constant = leading
         (layerItem?.view as? LayerRollerView)?.updateLeading(leading)
 
-        // Permissions gate only surfaces while stopped; hide by default and let
-        // the .stopped case decide.
-        permissionsItem?.isHidden = true
-
         switch appState {
         case .stopped:
             startingItem?.isHidden = true
             layerItem?.isHidden = true
             let granted = TCCPermissions.allGranted
             startItem?.isHidden = false
-            startItem?.isEnabled = granted
+            // Missing grant: keep Start actionable (clicking it routes to the
+            // Accessibility pane via doStart) and flag the extra step with a badge
+            // instead of a separate menu item. menuWillOpen refines enablement for
+            // the granted-but-binary-missing case.
+            startItem?.isEnabled = true
             startItem?.toolTip = granted ? nil : NSLocalizedString("menu.start.permissionsNeeded", comment: "")
-            permissionsItem?.isHidden = granted
+            if #available(macOS 14.0, *) {
+                startItem?.badge = granted ? nil : NSMenuItemBadge(string: NSLocalizedString("menu.start.permissionNeeded.badge", comment: ""))
+            }
             stopItem?.isHidden = true
             reloadItem?.isHidden = true
 
@@ -232,9 +229,13 @@ extension AppDelegate {
         updateStartAtLoginState()
         guard appState == .stopped, !isExternal else { return }
         let granted = TCCPermissions.allGranted
-        permissionsItem?.isHidden = granted
         let accessible = Config.isBinaryAccessible(kanataProcess.binaryPath)
-        startItem?.isEnabled = granted && accessible
+        // Ungranted → keep Start actionable (click opens the Accessibility pane via
+        // doStart) and badge it; granted → enabled only once the kanata binary resolves.
+        startItem?.isEnabled = granted ? accessible : true
+        if #available(macOS 14.0, *) {
+            startItem?.badge = granted ? nil : NSMenuItemBadge(string: NSLocalizedString("menu.start.permissionNeeded.badge", comment: ""))
+        }
         if !granted {
             startItem?.toolTip = NSLocalizedString("menu.start.permissionsNeeded", comment: "")
         } else {

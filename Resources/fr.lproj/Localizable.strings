@@ -47,8 +47,8 @@
 
 /* ----- Autorisations ----- */
 
-"menu.grantPermissions" = "Accorder les autorisations\U2026";
 "menu.start.permissionsNeeded" = "Autorisez d’abord l’Accessibilité";
+"menu.start.permissionNeeded.badge" = "Autorisation requise";
 "permissions.accessibility" = "Accessibilité";
 "notification.permissionsNeeded.title" = "Autorisations requises";
 "notification.permissionsNeeded.body" = "Ouvrez Kanata Bar pour accorder l’Accessibilité";

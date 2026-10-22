@@ -50,7 +50,6 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
     var kanataSectionItem: NSMenuItem!
     var startAtLoginItem: NSMenuItem!
     var kanataLogsItem: NSMenuItem!
-    var permissionsItem: NSMenuItem!
     var hudItem: NSMenuItem!
     var hudController: HudController?
     var hudGeometry: KeyboardLayoutKind?

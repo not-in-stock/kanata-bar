@@ -47,8 +47,8 @@
 
 /* ----- 권한 ----- */
 
-"menu.grantPermissions" = "권한 부여\U2026";
 "menu.start.permissionsNeeded" = "먼저 손쉬운 사용을 허용하세요";
+"menu.start.permissionNeeded.badge" = "권한 필요";
 "permissions.accessibility" = "손쉬운 사용";
 "notification.permissionsNeeded.title" = "권한 필요";
 "notification.permissionsNeeded.body" = "Kanata Bar를 열어 손쉬운 사용을 허용하세요";

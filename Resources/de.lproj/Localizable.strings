@@ -47,8 +47,8 @@
 
 /* ----- Berechtigungen ----- */
 
-"menu.grantPermissions" = "Berechtigungen erteilen\U2026";
 "menu.start.permissionsNeeded" = "Zuerst Bedienungshilfen erlauben";
+"menu.start.permissionNeeded.badge" = "Berechtigung erforderlich";
 "permissions.accessibility" = "Bedienungshilfen";
 "notification.permissionsNeeded.title" = "Berechtigungen erforderlich";
 "notification.permissionsNeeded.body" = "Öffne Kanata Bar, um Bedienungshilfen zu erlauben";

@@ -47,8 +47,8 @@
 
 /* ----- Machtigingen ----- */
 
-"menu.grantPermissions" = "Machtigingen verlenen\U2026";
 "menu.start.permissionsNeeded" = "Sta eerst Toegankelijkheid toe";
+"menu.start.permissionNeeded.badge" = "Toestemming vereist";
 "permissions.accessibility" = "Toegankelijkheid";
 "notification.permissionsNeeded.title" = "Machtigingen vereist";
 "notification.permissionsNeeded.body" = "Open Kanata Bar om Toegankelijkheid toe te staan";

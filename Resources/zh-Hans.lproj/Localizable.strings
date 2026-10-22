@@ -47,8 +47,8 @@
 
 /* ----- 权限 ----- */
 
-"menu.grantPermissions" = "授予权限\U2026";
 "menu.start.permissionsNeeded" = "请先允许「辅助功能」";
+"menu.start.permissionNeeded.badge" = "需要权限";
 "permissions.accessibility" = "辅助功能";
 "notification.permissionsNeeded.title" = "需要权限";
 "notification.permissionsNeeded.body" = "打开 Kanata Bar 以授予「辅助功能」";

@@ -47,8 +47,8 @@
 
 /* ----- アクセス許可 ----- */
 
-"menu.grantPermissions" = "アクセス許可を付与\U2026";
 "menu.start.permissionsNeeded" = "先に「アクセシビリティ」を許可してください";
+"menu.start.permissionNeeded.badge" = "許可が必要";
 "permissions.accessibility" = "アクセシビリティ";
 "notification.permissionsNeeded.title" = "アクセス許可が必要です";
 "notification.permissionsNeeded.body" = "Kanata Bar を開いて「アクセシビリティ」を許可してください";

@@ -119,12 +119,11 @@
 
 /* ----- Permissions ----- */
 
-/* Menu item shown while stopped when kanata's required macOS permissions are
-   missing. Opens a checklist with links to the relevant Settings panes. */
-"menu.grantPermissions" = "Grant Permissions\U2026";
-
 /* Tooltip on a disabled Start item when permissions are not yet granted. */
 "menu.start.permissionsNeeded" = "Grant Accessibility first";
+
+/* Badge on the Start menu item when the Accessibility grant is still missing (macOS 14+). Keep it short — it renders as a small pill. */
+"menu.start.permissionNeeded.badge" = "Permission needed";
 
 /* Name of the Accessibility permission (matches the System Settings pane).
    Do NOT translate loosely — mirror Apple's wording for this pane. */
