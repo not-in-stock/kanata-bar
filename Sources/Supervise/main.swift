@@ -49,14 +49,24 @@ private func parentPID(of pid: pid_t) -> pid_t? {
 }
 
 // 1. Read the root-owned spec (what to run). Missing → nix hasn't set us up.
-guard let specContents = try? String(contentsOfFile: Constants.superviseSpecPath, encoding: .utf8) else {
-    fail("cannot read spec \(Constants.superviseSpecPath)")
+//    The path is fixed; `KANATA_BAR_SUPERVISE_SPEC` overrides it ONLY when not
+//    running as root, for the non-root self-test (scripts/supervise-selftest.sh).
+//    In production the supervisor runs as root (euid 0) so the override is ignored
+//    — and sudo's env_reset would strip it anyway — meaning root always reads /etc.
+let specPath: String
+if geteuid() != 0, let override = ProcessInfo.processInfo.environment["KANATA_BAR_SUPERVISE_SPEC"], !override.isEmpty {
+    specPath = override
+} else {
+    specPath = Constants.superviseSpecPath
+}
+guard let specContents = try? String(contentsOfFile: specPath, encoding: .utf8) else {
+    fail("cannot read spec \(specPath)")
 }
 let spec: SuperviseSpec
 do {
     spec = try SuperviseSpec.parse(specContents)
 } catch {
-    fail("invalid spec \(Constants.superviseSpecPath): \(error)")
+    fail("invalid spec \(specPath): \(error)")
 }
 // Defense in depth: the root-owned spec is the real boundary, but still refuse to
 // launch anything not named `kanata` (mirrors the XPC helper's basename guard).
