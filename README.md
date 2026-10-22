@@ -183,16 +183,19 @@ If kanata is already running when kanata-bar launches, the app detects it
 automatically and connects without starting a new instance (Stop is hidden in this
 case — the app only manages instances it started).
 
-> **No free zero-prompt path at full SIP yet.** With full SIP the XPC helper needs a
-> paid Apple Developer ID to launch, so it is not yet a shipping option. The
-> `services.kanata.sudoers = true` Nix rule does **not** currently make Start
-> prompt-free either: it grants `NOPASSWD` to `kanata` and `pkill`, but kanata-bar
-> launches kanata through a root shell wrapper (`sudo /bin/sh …`, needed so Stop can
-> reap kanata without a second prompt), which that rule doesn't cover. The only rule
-> that would silence Start today is `NOPASSWD: /bin/sh` — i.e. unrestricted root, a
-> serious **local privilege-escalation risk** (and kanata's `cmd` actions can already
-> run arbitrary commands as root), so it is not recommended. On full SIP, expect a
-> TouchID / password prompt on every Start.
+> **Prompt-free Start on Nix (`services.kanata.sudoers = true`).** The kanata-darwin
+> module makes Start prompt-free by pinning a **SHA-256 digest** of the bundled
+> no-args supervisor (`kanata-bar-supervise`) in a `NOPASSWD` sudoers rule — the
+> approach yabai uses for `--load-sa`. The grant is scoped to that one hash-pinned
+> command with no arguments, **not** a broad `NOPASSWD: /bin/sh` (which would be
+> unrestricted root and a serious local privilege-escalation risk), and Stop stays
+> prompt-free via the stop-sentinel. This is a **Nix-only** convenience: Homebrew and
+> manual installs don't ship a sudoers rule, so they prompt (TouchID / password) on
+> each Start, and if the rule isn't present the app falls back to that prompt path
+> automatically.
+>
+> The full-SIP **XPC helper** path still needs a paid Apple Developer ID to launch,
+> so the zero-setup helper is not yet a shipping option.
 
 ### Recommended: enable sudo TouchID
 
