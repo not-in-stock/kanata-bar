@@ -24,7 +24,7 @@ Shows the current keyboard layer in the menu bar and manages the kanata process 
 - Connects to an already running kanata automatically
 - Crash notifications via macOS Notification Center
 - Launch at Login (integrates with System Settings)
-- Guided first-run permission: requests Accessibility and gates Start until it's granted
+- Guided first-run permission: requests Accessibility; Start shows a "Permission needed" badge until it's granted
 - Auto-reset the permission when the install source changes
 - TOML config file with CLI override support
 
@@ -40,6 +40,10 @@ Shows the current keyboard layer in the menu bar and manages the kanata process 
 | Xcode CLT | Only for building from source (`xcode-select --install`) |
 
 ## Install
+
+### Download
+
+Grab the latest `.dmg` or `.zip` from the [Releases page](https://github.com/not-in-stock/kanata-bar/releases/latest) and move **Kanata Bar.app** to `/Applications`.
 
 ### Homebrew
 
@@ -148,15 +152,11 @@ If no icon is found for a layer, the menu bar shows the layer name abbreviation.
 
 ## Permissions
 
-kanata needs the **Accessibility** TCC permission on macOS, and kanata-bar holds it
-itself so the root-launched kanata inherits it. On modern macOS Accessibility also
-covers input capture, so **Input Monitoring is not required** (Karabiner-Elements has
-behaved the same since 16.0.0).
+kanata needs the **Accessibility** permission; kanata-bar requests it on first run and
+holds it so the root-launched kanata inherits it.
 
-On first run the app requests Accessibility and keeps **Start** disabled until it's
-granted; use **Grant Permissions…** in the menu for a direct link to the right System
-Settings pane. Accessibility applies live (no "Quit & Reopen") and isn't sensitive to
-how the app is launched.
+Until it's granted, **Start** carries a "Permission needed" badge and, when clicked,
+opens the right System Settings pane instead of starting kanata.
 
 When the install source changes (e.g. a rebuild with a new code signature) the old
 grant no longer applies, so kanata-bar resets it and re-requests.
@@ -172,6 +172,12 @@ it several ways:
 | **AuthExec** | `pam_touchid = "false"` | macOS password dialog each start | `AuthorizationExecuteWithPrivileges` (deprecated since 10.7) |
 | **XPC helper** | `launcher = "helper"` | one-time Login Items approval, then none | root `SMAppService` daemon supervises kanata (experimental — see note below) |
 
+**Recommended:** **sudo + PAM with TouchID** (`pam_touchid = "auto"` + the
+`enable-pam-tid.sh` helper below) — no signing, no standing privilege, a quick tap each
+Start. On a Mac **without** Touch ID, use **AuthExec** (`pam_touchid = "false"`). Nix
+users can get prompt-free Start via the
+[kanata-darwin](https://github.com/not-in-stock/kanata-darwin) module.
+
 The default (sudo / AuthExec) starts kanata in the **user session** so the macOS
 permission dialogs appear against kanata-bar. The app stops kanata via a
 **stop-sentinel**: a small root wrapper watches a user-owned file and SIGKILLs kanata
@@ -182,20 +188,6 @@ real-time layer-change events.
 If kanata is already running when kanata-bar launches, the app detects it
 automatically and connects without starting a new instance (Stop is hidden in this
 case — the app only manages instances it started).
-
-> **Prompt-free Start on Nix (`services.kanata.sudoers = true`).** The kanata-darwin
-> module makes Start prompt-free by pinning a **SHA-256 digest** of the bundled
-> no-args supervisor (`kanata-bar-supervise`) in a `NOPASSWD` sudoers rule — the
-> approach yabai uses for `--load-sa`. The grant is scoped to that one hash-pinned
-> command with no arguments, **not** a broad `NOPASSWD: /bin/sh` (which would be
-> unrestricted root and a serious local privilege-escalation risk), and Stop stays
-> prompt-free via the stop-sentinel. This is a **Nix-only** convenience: Homebrew and
-> manual installs don't ship a sudoers rule, so they prompt (TouchID / password) on
-> each Start, and if the rule isn't present the app falls back to that prompt path
-> automatically.
->
-> The full-SIP **XPC helper** path still needs a paid Apple Developer ID to launch,
-> so the zero-setup helper is not yet a shipping option.
 
 ### Recommended: enable sudo TouchID
 
@@ -209,9 +201,8 @@ The script creates `/etc/pam.d/sudo_local` with `pam_tid.so` (survives macOS upd
 
 ## Notifications
 
-kanata-bar sends macOS notifications for config reloads, crashes, and auto-restart events.
-
-Since the app is ad-hoc signed (no Apple Developer ID), macOS creates the notification entry with banners **disabled** by default. To receive notifications, enable them manually:
+kanata-bar posts macOS notifications for config reloads, crashes, and auto-restarts.
+They arrive **off by default** (the app isn't notarized), so enable them to see them:
 
 **System Settings → Notifications → Kanata Bar → Allow Notifications**
 
