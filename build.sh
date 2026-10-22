@@ -155,6 +155,7 @@ swift build -c release
 
 cp .build/release/kanata-bar "$BUNDLE/Contents/MacOS/"
 cp .build/release/kanata-bar-helper "$BUNDLE/Contents/MacOS/"
+cp .build/release/kanata-bar-supervise "$BUNDLE/Contents/MacOS/"
 
 # --- Sign ---
 
@@ -171,6 +172,10 @@ else
   echo "Signing (identity: $SIGN_ID)..."
 fi
 codesign -s "$SIGN_ID" -f --identifier "$HELPER_BUNDLE_ID" "$BUNDLE/Contents/MacOS/kanata-bar-helper"
+# Sign the supervisor before the bundle (inside-out). Its final signed bytes are
+# what the nix activation hashes for the sudo `sha256:` digest rule (task 18/2b),
+# so it must be signed here, not re-signed later.
+codesign -s "$SIGN_ID" -f --identifier "$BUNDLE_ID.supervise" "$BUNDLE/Contents/MacOS/kanata-bar-supervise"
 codesign -s "$SIGN_ID" -f --identifier "$BUNDLE_ID" "$BUNDLE"
 
 echo ""

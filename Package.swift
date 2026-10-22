@@ -34,6 +34,11 @@ let package = Package(
             path: "Sources/KanataBar"
         ),
         .executableTarget(
+            name: "kanata-bar-supervise",
+            dependencies: ["Shared"],
+            path: "Sources/Supervise"
+        ),
+        .executableTarget(
             name: "kanata-bar-helper",
             dependencies: ["Shared"],
             path: "Sources/Helper",

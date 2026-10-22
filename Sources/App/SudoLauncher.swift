@@ -1,4 +1,5 @@
 import Foundation
+import Shared
 
 /// Launches kanata via `sudo -S` with PAM/TouchID support.
 ///
@@ -49,35 +50,52 @@ class SudoLauncher: KanataLauncher {
         let extraArgs = extraArgs
         let logURL = logURL
 
+        // When the root-owned supervise spec exists, the nix module has set up the
+        // digest-pinned NOPASSWD path (task 18 / 2b): run the compiled no-args
+        // supervisor instead of `sudo /bin/sh -c <wrapper>`, so the passwordless
+        // grant is scoped to one hash-pinned command. Otherwise keep the shell
+        // wrapper (prompt path — brew/manual/sudoers=off, where the TouchID prompt
+        // is the boundary and there's no standing grant to abuse).
+        let useSupervise = FileManager.default.fileExists(atPath: Constants.superviseSpecPath)
+        let supervisePath = Self.superviseBinaryPath
+
         Task.detached { [weak self] in
             killLeftoverKanata()
 
-            let kanataArgs = ([binaryPath, "-c", configPath, "--port", "\(port)"] + extraArgs)
-                .map(AuthExecLauncher.shellEscape)
-                .joined(separator: " ")
-            let logRedirect: String
-            if let logURL {
-                FileManager.default.createFile(atPath: logURL.path, contents: nil)
-                logRedirect = " > \(AuthExecLauncher.shellEscape(logURL.path)) 2>&1"
-            } else {
-                logRedirect = ""
-            }
-
-            // Create the stop sentinel the wrapper polls (see StopSentinel) so Stop
-            // can reap kanata by deleting it — no second sudo call.
+            // Create the stop sentinel the root launcher polls (see StopSentinel) so
+            // Stop can reap kanata by deleting it — no second sudo call. Both paths
+            // share this contract; the supervisor derives the same path from $SUDO_UID.
             StopSentinel.create()
 
-            // The wrapper reports kanata's pid, then self-cleans: its EXIT trap
-            // SIGKILLs kanata whenever it exits, and the poll loop ends when kanata
-            // dies, the app dies (crash/quit), or the stop sentinel is deleted
-            // (explicit Stop). Shared verbatim with AuthExecLauncher.
-            let appPID = ProcessInfo.processInfo.processIdentifier
-            let script = AuthExecLauncher.makeWrapperScript(
-                kanataCommand: "\(kanataArgs)\(logRedirect)", appPID: appPID, sentinelPath: StopSentinel.path)
+            let sudoArgs: [String]
+            if useSupervise {
+                // `-n`: non-interactive. With the digest rule it runs silently; if the
+                // rule doesn't match it fails fast instead of blocking on a prompt.
+                sudoArgs = ["-n", supervisePath]
+            } else {
+                let kanataArgs = ([binaryPath, "-c", configPath, "--port", "\(port)"] + extraArgs)
+                    .map(AuthExecLauncher.shellEscape)
+                    .joined(separator: " ")
+                let logRedirect: String
+                if let logURL {
+                    FileManager.default.createFile(atPath: logURL.path, contents: nil)
+                    logRedirect = " > \(AuthExecLauncher.shellEscape(logURL.path)) 2>&1"
+                } else {
+                    logRedirect = ""
+                }
+                // The wrapper reports kanata's pid, then self-cleans: its EXIT trap
+                // SIGKILLs kanata whenever it exits, and the poll loop ends when kanata
+                // dies, the app dies (crash/quit), or the stop sentinel is deleted
+                // (explicit Stop). Shared verbatim with AuthExecLauncher.
+                let appPID = ProcessInfo.processInfo.processIdentifier
+                let script = AuthExecLauncher.makeWrapperScript(
+                    kanataCommand: "\(kanataArgs)\(logRedirect)", appPID: appPID, sentinelPath: StopSentinel.path)
+                sudoArgs = ["-S", "/bin/sh", "-c", script]
+            }
 
             let p = Process()
             p.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
-            p.arguments = ["-S", "/bin/sh", "-c", script]
+            p.arguments = sudoArgs
 
             let stdinPipe = Pipe()
             stdinPipe.fileHandleForWriting.closeFile()
@@ -189,6 +207,16 @@ class SudoLauncher: KanataLauncher {
     }
 
     // MARK: - Helpers
+
+    /// Absolute path of the supervisor binary shipped next to the app executable
+    /// (`<App.app>/Contents/MacOS/kanata-bar-supervise`). This is what the nix
+    /// activation hashes for the sudo digest rule, so the app and the rule agree.
+    nonisolated static var superviseBinaryPath: String {
+        let macOSDir = (Bundle.main.executableURL ?? URL(fileURLWithPath: CommandLine.arguments[0]))
+            .resolvingSymlinksInPath()
+            .deletingLastPathComponent()
+        return macOSDir.appendingPathComponent(Constants.superviseBinaryName).path
+    }
 
     /// Read the first newline-terminated line from `handle` and parse it as a pid.
     /// Blocks until data arrives or the pipe closes (EOF → returns nil).

@@ -32,7 +32,9 @@ protocol KanataLauncher: AnyObject {
 /// between the two.
 enum StopSentinel {
     static var path: String {
-        NSHomeDirectory() + "/Library/Caches/com.kanata-bar/kanata-stop.sentinel"
+        // Formula lives in Constants so the root supervisor (which runs as root,
+        // and derives the path from the invoking user's home) can't drift from it.
+        Constants.stopSentinelPath(home: NSHomeDirectory())
     }
 
     /// Create the sentinel (and its directory) before launching the wrapper.
