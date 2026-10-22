@@ -12,6 +12,16 @@ enum Notifications {
         UNUserNotificationCenter.current().add(request)
     }
 
+    /// Auto-reload could not apply the saved config; kanata keeps the previous one.
+    /// Sent once per transition into the error state, not per failing save.
+    static func sendAutoReloadError(body: String) {
+        let content = UNMutableNotificationContent()
+        content.title = NSLocalizedString("notification.autoReload.error.title", comment: "")
+        content.body = body
+        let request = UNNotificationRequest(identifier: "kanata-auto-reload-error", content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
+    }
+
     static func sendCrash() {
         let content = UNMutableNotificationContent()
         content.title = NSLocalizedString("notification.crash.title", comment: "")

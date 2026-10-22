@@ -61,3 +61,19 @@
 
 /* VoiceOver label for the Keyboard HUD toggle. */
 "accessibility.keyboardHud" = "Zwevende toetsenbord-HUD tonen";
+
+/* ----- Auto-reload (task 23) ----- */
+
+"menu.autoReload" = "Herladen bij opslaan";
+
+"menu.autoReload.tooltip" = "Kanata Bar herlaadt de kanata-configuratie telkens als het bestand wordt opgeslagen (alleen deze sessie; hulpmiddel bij debuggen)";
+
+"accessibility.autoReload" = "Kanata-configuratie automatisch herladen bij opslaan van het bestand";
+
+"menu.autoReload.badge" = "auto";
+
+"menu.autoReload.notApplied" = "Niet toegepast — kanata draait nog met de vorige configuratie";
+
+"notification.autoReload.error.title" = "Configuratie niet toegepast";
+
+"notification.autoReload.failed.body" = "kanata kon de opgeslagen configuratie niet toepassen; de vorige blijft actief";

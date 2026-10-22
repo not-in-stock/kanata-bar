@@ -61,3 +61,19 @@
 
 /* VoiceOver label for the Keyboard HUD toggle. */
 "accessibility.keyboardHud" = "플로팅 키보드 HUD 표시";
+
+/* ----- Auto-reload (task 23) ----- */
+
+"menu.autoReload" = "저장 시 자동 다시 불러오기";
+
+"menu.autoReload.tooltip" = "파일을 저장할 때마다 Kanata Bar가 kanata 설정을 다시 불러옵니다 (이번 세션만, 디버깅용)";
+
+"accessibility.autoReload" = "파일 저장 시 Kanata 설정을 자동으로 다시 불러오기";
+
+"menu.autoReload.badge" = "자동";
+
+"menu.autoReload.notApplied" = "적용되지 않음 — kanata는 이전 설정으로 계속 실행 중입니다";
+
+"notification.autoReload.error.title" = "설정이 적용되지 않음";
+
+"notification.autoReload.failed.body" = "kanata가 저장된 설정을 적용하지 못했습니다. 이전 설정이 계속 활성화되어 있습니다";

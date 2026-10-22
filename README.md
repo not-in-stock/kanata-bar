@@ -19,7 +19,7 @@ Shows the current keyboard layer in the menu bar and manages the kanata process 
 ## Features
 
 - Menu bar icon with current layer name (or custom per-layer PNG icons with animated transitions)
-- Start / Stop / Reload kanata from the menu
+- Start / Stop / Reload kanata from the menu; optional auto-reload on save (validated with `kanata --check` first)
 - Auto-restart on crash (with rate limiting)
 - Connects to an already running kanata automatically
 - Crash notifications via macOS Notification Center
@@ -113,6 +113,11 @@ autostart_kanata = false
 
 # Restart kanata automatically if it crashes (disabled after 3 crashes in 60s)
 autorestart_kanata = false
+
+# Initial state of the session-only "Auto-reload on save" menu toggle (a debugging
+# aid): on save, the config is validated with `kanata --check` and, if valid,
+# reloaded over TCP. Invalid saves are flagged in the menu and on the tray icon.
+auto_reload = false
 
 # Directory with per-layer PNG icons (e.g. nav.png, base.png)
 icons_dir = "~/.config/kanata-bar/icons"

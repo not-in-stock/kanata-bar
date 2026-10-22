@@ -111,6 +111,13 @@ extension AppDelegate {
         menu.addItem(startItem)
         menu.addItem(stopItem)
         menu.addItem(reloadItem)
+
+        // Session-only toggle; the config option only seeds its initial state.
+        autoReloadItem = NSMenuItem(title: NSLocalizedString("menu.autoReload", comment: ""),
+                                    action: #selector(doToggleAutoReload), keyEquivalent: "")
+        autoReloadItem.toolTip = NSLocalizedString("menu.autoReload.tooltip", comment: "")
+        autoReloadItem.setAccessibilityTitle(NSLocalizedString("accessibility.autoReload", comment: ""))
+        menu.addItem(autoReloadItem)
     }
 
     private func addSettings(to menu: NSMenu) {
@@ -133,21 +140,14 @@ extension AppDelegate {
     }
 
     func updateMenuState() {
-        if #available(macOS 14.0, *) {
-            reloadItem?.badge = isExternal ? NSMenuItemBadge(string: NSLocalizedString("menu.external", comment: "")) : nil
-        }
-        if isExternal && externalPID > 0 {
-            reloadItem?.toolTip = "PID \(externalPID)"
-        } else {
-            reloadItem?.toolTip = nil
-        }
+        updateReloadItems()
         kanataLogsItem?.isHidden = isExternal
         updateStartAtLoginState()
 
         // Align custom views with standard menu items.
         // When any item has a checkmark, macOS adds ~11px for the check column.
         hudItem?.state = (hudController?.isVisible ?? false) ? .on : .off
-        let hasCheck = startAtLoginItem?.state == .on || hudItem?.state == .on
+        let hasCheck = startAtLoginItem?.state == .on || hudItem?.state == .on || autoReloadItem?.state == .on
         let leading: CGFloat = hasCheck ? 25 : 14
         startingLeading?.constant = leading
         (layerItem?.view as? LayerRollerView)?.updateLeading(leading)
@@ -169,6 +169,7 @@ extension AppDelegate {
             }
             stopItem?.isHidden = true
             reloadItem?.isHidden = true
+            autoReloadItem?.isHidden = true
 
         case .starting:
             let startingText = NSLocalizedString(
@@ -184,6 +185,7 @@ extension AppDelegate {
             stopItem?.isHidden = isExternal
             stopItem?.isEnabled = !isExternal
             reloadItem?.isHidden = true
+            autoReloadItem?.isHidden = true
 
         case .running(let layer):
             startingItem?.isHidden = true
@@ -194,6 +196,7 @@ extension AppDelegate {
             stopItem?.isHidden = isExternal
             reloadItem?.isHidden = false
             reloadItem?.isEnabled = true
+            autoReloadItem?.isHidden = false
 
         case .restarting:
             startingItem?.isHidden = true
@@ -202,6 +205,48 @@ extension AppDelegate {
             stopItem?.isHidden = false
             stopItem?.isEnabled = true
             reloadItem?.isHidden = true
+            autoReloadItem?.isHidden = true
+        }
+    }
+
+    /// Badge + tooltip on `Reload config` carry the External flag and the live
+    /// auto-reload status; the check item mirrors the toggle.
+    private func updateReloadItems() {
+        let status = autoReloader?.status ?? .off
+        autoReloadItem?.state = (autoReloader?.isEnabled ?? false) ? .on : .off
+
+        var badge: [String] = []
+        if isExternal { badge.append(NSLocalizedString("menu.external", comment: "")) }
+        if let auto = Self.autoBadge(for: status) { badge.append(auto) }
+        if #available(macOS 14.0, *) {
+            reloadItem?.badge = badge.isEmpty ? nil : NSMenuItemBadge(string: badge.joined(separator: " · "))
+        }
+
+        var tips: [String] = []
+        if isExternal && externalPID > 0 { tips.append("PID \(externalPID)") }
+        switch status {
+        case .invalid(let summary):
+            tips.append(NSLocalizedString("menu.autoReload.notApplied", comment: ""))
+            tips.append(summary)
+        case .reloadFailed:
+            tips.append(NSLocalizedString("menu.autoReload.notApplied", comment: ""))
+        default:
+            break
+        }
+        reloadItem?.toolTip = tips.isEmpty ? nil : tips.joined(separator: "\n")
+    }
+
+    /// `auto` / `auto …` / `auto ✓ 12:03` / `auto ⚠`, or nil when off.
+    static func autoBadge(for status: AutoReloader.Status,
+                          label auto: String = NSLocalizedString("menu.autoReload.badge", comment: "")) -> String? {
+        switch status {
+        case .off: return nil
+        case .armed: return auto
+        case .checking, .reloading: return "\(auto) …"
+        case .reloaded(let date):
+            let time = date.formatted(Date.FormatStyle(date: .omitted, time: .shortened))
+            return "\(auto) ✓ \(time)"
+        case .invalid, .reloadFailed: return "\(auto) ⚠"
         }
     }
 
@@ -283,6 +328,12 @@ extension AppDelegate {
 
     @objc func doReload() {
         kanataClient.sendReload()
+    }
+
+    @objc func doToggleAutoReload() {
+        guard let autoReloader else { return }
+        autoReloader.setEnabled(!autoReloader.isEnabled)
+        updateMenuState()
     }
 
     @objc func doGrantPermissions() {

@@ -61,3 +61,19 @@
 
 /* VoiceOver label for the Keyboard HUD toggle. */
 "accessibility.keyboardHud" = "Afficher le HUD clavier flottant";
+
+/* ----- Auto-reload (task 23) ----- */
+
+"menu.autoReload" = "Recharger à l'enregistrement";
+
+"menu.autoReload.tooltip" = "Kanata Bar recharge la configuration de kanata à chaque enregistrement du fichier (cette session seulement ; aide au débogage)";
+
+"accessibility.autoReload" = "Recharger automatiquement la configuration de Kanata à l'enregistrement du fichier";
+
+"menu.autoReload.badge" = "auto";
+
+"menu.autoReload.notApplied" = "Non appliquée — kanata utilise toujours la configuration précédente";
+
+"notification.autoReload.error.title" = "Configuration non appliquée";
+
+"notification.autoReload.failed.body" = "kanata n'a pas pu appliquer la configuration enregistrée ; la précédente reste active";

@@ -16,6 +16,12 @@ final class ConfigTests: XCTestCase {
         XCTAssertFalse(config.kanataBar.autorestartKanata)
     }
 
+    func testAutoReloadDefaultsOffAndDecodes() {
+        XCTAssertFalse(Config.default.kanataBar.autoReload)
+        XCTAssertTrue(Config.decode("[kanata_bar]\nauto_reload = true\n").kanataBar.autoReload)
+        XCTAssertFalse(Config.decode("[kanata_bar]\nauto_reload = \"yes\"\n").kanataBar.autoReload, "bad type falls back to default")
+    }
+
     func testLoadNonexistentFileReturnsDefaults() {
         let config = Config.load(from: "/nonexistent/path/config.toml")
         XCTAssertEqual(config.kanata.port, Config.default.kanata.port)

@@ -61,3 +61,19 @@
 
 /* VoiceOver label for the Keyboard HUD toggle. */
 "accessibility.keyboardHud" = "显示悬浮键盘 HUD";
+
+/* ----- Auto-reload (task 23) ----- */
+
+"menu.autoReload" = "保存时自动重新加载";
+
+"menu.autoReload.tooltip" = "每次保存文件时，Kanata Bar 都会重新加载 kanata 配置（仅本次会话；调试辅助）";
+
+"accessibility.autoReload" = "保存文件时自动重新加载 Kanata 配置";
+
+"menu.autoReload.badge" = "自动";
+
+"menu.autoReload.notApplied" = "未应用 — kanata 仍在运行之前的配置";
+
+"notification.autoReload.error.title" = "配置未应用";
+
+"notification.autoReload.failed.body" = "kanata 无法应用已保存的配置；之前的配置仍然有效";

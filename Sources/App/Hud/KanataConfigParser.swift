@@ -157,6 +157,36 @@ struct KanataConfigParser {
 
     // MARK: - Includes
 
+    /// Every file `include`d by `configPath`, recursively, in order of appearance.
+    /// Missing or unparsable files are listed anyway (so a watcher can still
+    /// pick them up once they appear) but not descended into.
+    static func includedPaths(configPath: String, fileReader: ((String) -> String?)? = nil) -> [String] {
+        var parser = KanataConfigParser()
+        if let fileReader { parser.fileReader = fileReader }
+        var out: [String] = []
+        var seen: Set<String> = []
+        func visit(_ path: String) {
+            guard let text = parser.fileReader(path), let forms = try? tokenize(text) else { return }
+            let baseDir = (path as NSString).deletingLastPathComponent
+            for form in forms {
+                guard let list = form.list, list.first?.atom == "include", list.count >= 2,
+                      let inc = list[1].atom else { continue }
+                let resolved = resolveInclude(inc, baseDir: baseDir)
+                guard seen.insert(resolved).inserted else { continue }
+                out.append(resolved)
+                visit(resolved)
+            }
+        }
+        visit(configPath)
+        return out
+    }
+
+    private static func resolveInclude(_ path: String, baseDir: String?) -> String {
+        if path.hasPrefix("/") { return path }
+        if let baseDir { return baseDir + "/" + path }
+        return path
+    }
+
     private func expandIncludes(_ forms: [SExpr], baseDir: String?) -> [SExpr] {
         var out: [SExpr] = []
         for form in forms {
@@ -165,14 +195,7 @@ struct KanataConfigParser {
                 out.append(form)
                 continue
             }
-            let resolved: String
-            if path.hasPrefix("/") {
-                resolved = path
-            } else if let baseDir {
-                resolved = baseDir + "/" + path
-            } else {
-                resolved = path
-            }
+            let resolved = Self.resolveInclude(path, baseDir: baseDir)
             if let text = fileReader(resolved), let sub = try? Self.tokenize(text) {
                 out += expandIncludes(sub, baseDir: baseDir)
             }

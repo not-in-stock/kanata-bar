@@ -110,3 +110,19 @@
 
 /* VoiceOver label for the Keyboard HUD toggle. */
 "accessibility.keyboardHud" = "Показать плавающую HUD-клавиатуру";
+
+/* ----- Auto-reload (task 23) ----- */
+
+"menu.autoReload" = "Перечитывать при сохранении";
+
+"menu.autoReload.tooltip" = "Kanata Bar перечитывает настройки kanata при каждом сохранении файла (только в этом сеансе; для отладки)";
+
+"accessibility.autoReload" = "Автоматически перечитывать настройки Kanata при сохранении файла";
+
+"menu.autoReload.badge" = "авто";
+
+"menu.autoReload.notApplied" = "Не применено — kanata продолжает работать с прежними настройками";
+
+"notification.autoReload.error.title" = "Настройки не применены";
+
+"notification.autoReload.failed.body" = "kanata не смогла применить сохранённые настройки; прежние остаются в силе";

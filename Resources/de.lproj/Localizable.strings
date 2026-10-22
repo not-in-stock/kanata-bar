@@ -61,3 +61,19 @@
 
 /* VoiceOver label for the Keyboard HUD toggle. */
 "accessibility.keyboardHud" = "Schwebendes Tastatur-HUD anzeigen";
+
+/* ----- Auto-reload (task 23) ----- */
+
+"menu.autoReload" = "Beim Speichern neu laden";
+
+"menu.autoReload.tooltip" = "Kanata Bar lädt die kanata-Konfiguration bei jedem Speichern der Datei neu (nur diese Sitzung; Debughilfe)";
+
+"accessibility.autoReload" = "Kanata-Konfiguration beim Speichern der Datei automatisch neu laden";
+
+"menu.autoReload.badge" = "auto";
+
+"menu.autoReload.notApplied" = "Nicht übernommen — kanata läuft weiter mit der vorherigen Konfiguration";
+
+"notification.autoReload.error.title" = "Konfiguration nicht übernommen";
+
+"notification.autoReload.failed.body" = "kanata konnte die gespeicherte Konfiguration nicht übernehmen; die vorherige bleibt aktiv";

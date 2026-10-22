@@ -45,6 +45,8 @@ struct KanataBarConfig: Codable {
     var iconsDir: String?
     var iconTransition: IconTransition?
     var hudGeometry: String  // "auto", "ansi" or "iso"
+    /// Initial state of the session-only "Auto-reload" menu toggle (debug aid).
+    var autoReload: Bool
 
     enum CodingKeys: String, CodingKey {
         case autostartKanata = "autostart_kanata"
@@ -54,6 +56,7 @@ struct KanataBarConfig: Codable {
         case iconsDir = "icons_dir"
         case iconTransition = "icon_transition"
         case hudGeometry = "hud_geometry"
+        case autoReload = "auto_reload"
     }
 
     static let `default` = KanataBarConfig(
@@ -63,11 +66,12 @@ struct KanataBarConfig: Codable {
         launcher: "auto",
         iconsDir: nil,
         iconTransition: nil,
-        hudGeometry: "auto"
+        hudGeometry: "auto",
+        autoReload: false
     )
 
     init(autostartKanata: Bool, autorestartKanata: Bool, pamTouchid: String, launcher: String, iconsDir: String?,
-         iconTransition: IconTransition?, hudGeometry: String = "auto") {
+         iconTransition: IconTransition?, hudGeometry: String = "auto", autoReload: Bool = false) {
         self.autostartKanata = autostartKanata
         self.autorestartKanata = autorestartKanata
         self.pamTouchid = pamTouchid
@@ -75,6 +79,7 @@ struct KanataBarConfig: Codable {
         self.iconsDir = iconsDir
         self.iconTransition = iconTransition
         self.hudGeometry = hudGeometry
+        self.autoReload = autoReload
     }
 
     init(from decoder: Decoder) throws {
@@ -87,6 +92,7 @@ struct KanataBarConfig: Codable {
         iconsDir = try? c.decode(String.self, forKey: .iconsDir)
         iconTransition = try? c.decode(IconTransition.self, forKey: .iconTransition)
         hudGeometry = (try? c.decode(String.self, forKey: .hudGeometry)) ?? d.hudGeometry
+        autoReload = (try? c.decode(Bool.self, forKey: .autoReload)) ?? d.autoReload
     }
 
     /// Explicit HUD geometry from config, or nil for auto-detection.

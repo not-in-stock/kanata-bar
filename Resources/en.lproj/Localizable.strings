@@ -166,3 +166,27 @@
 
 /* VoiceOver label for the Keyboard HUD toggle. */
 "accessibility.keyboardHud" = "Show the floating keyboard HUD";
+
+/* ----- Auto-reload (task 23) ----- */
+
+/* Check item under "Reload config": reload kanata's config whenever the file is saved.
+   Session-only; the config option only sets the initial state. */
+"menu.autoReload" = "Auto-reload on save";
+
+/* Tooltip for the Auto-reload item. Names who does the reloading. */
+"menu.autoReload.tooltip" = "Kanata Bar reloads kanata's config whenever the file is saved (this session only; a debugging aid)";
+
+/* VoiceOver label for the Auto-reload toggle. */
+"accessibility.autoReload" = "Automatically reload the Kanata config when the file is saved";
+
+/* Badge prefix on "Reload config" while auto-reload is on: "auto", "auto ✓ 12:03", "auto ⚠". Keep it short. */
+"menu.autoReload.badge" = "auto";
+
+/* Tooltip on "Reload config" when the saved config failed validation or the reload failed. */
+"menu.autoReload.notApplied" = "Not applied — kanata is still running the previous config";
+
+/* Notification title when auto-reload could not apply the saved config (sent once, on entering the error state). */
+"notification.autoReload.error.title" = "Config not applied";
+
+/* Notification body when kanata accepted the reload request but the live reload failed. */
+"notification.autoReload.failed.body" = "kanata could not apply the saved config; the previous one is still active";

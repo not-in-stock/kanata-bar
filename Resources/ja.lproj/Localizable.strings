@@ -61,3 +61,19 @@
 
 /* VoiceOver label for the Keyboard HUD toggle. */
 "accessibility.keyboardHud" = "フローティングキーボードHUDを表示";
+
+/* ----- Auto-reload (task 23) ----- */
+
+"menu.autoReload" = "保存時に自動再読み込み";
+
+"menu.autoReload.tooltip" = "ファイルを保存するたびに Kanata Bar が kanata の設定を再読み込みします（このセッションのみ・デバッグ用）";
+
+"accessibility.autoReload" = "ファイル保存時に Kanata の設定を自動的に再読み込み";
+
+"menu.autoReload.badge" = "自動";
+
+"menu.autoReload.notApplied" = "未適用 — kanata は以前の設定のまま動作しています";
+
+"notification.autoReload.error.title" = "設定は適用されていません";
+
+"notification.autoReload.failed.body" = "kanata は保存した設定を適用できませんでした。以前の設定が引き続き有効です";

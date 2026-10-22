@@ -139,6 +139,20 @@ final class KanataConfigParserTests: XCTestCase {
         XCTAssertEqual(layout.layerNames, ["base", "other"])
     }
 
+    func testIncludedPathsAreCollectedRecursively() {
+        let files: [String: String] = [
+            "/cfg/kanata.kbd": "(defcfg)\n(include \"extra.kbd\")\n(include \"/abs/other.kbd\")\n(defsrc a)",
+            "/cfg/extra.kbd": "(include \"nested/deep.kbd\")\n(defalias x a)",
+            "/cfg/nested/deep.kbd": "(include \"../extra.kbd\")", // cycle back: listed once
+        ]
+        let paths = KanataConfigParser.includedPaths(configPath: "/cfg/kanata.kbd") { files[$0] }
+        XCTAssertEqual(paths, ["/cfg/extra.kbd", "/cfg/nested/deep.kbd", "/cfg/nested/../extra.kbd", "/abs/other.kbd"])
+    }
+
+    func testIncludedPathsOfUnreadableConfigIsEmpty() {
+        XCTAssertEqual(KanataConfigParser.includedPaths(configPath: "/nope") { _ in nil }, [])
+    }
+
     func testIncludeIsExpandedRelativeToBaseDir() throws {
         var parser = KanataConfigParser()
         parser.fileReader = { path in

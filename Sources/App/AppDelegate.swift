@@ -17,8 +17,10 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
             updateMenuState()
             if case .running(let layer) = appState {
                 hudController?.layerChanged(layer)
+                autoReloader?.setKanataRunning(true)
             } else {
                 hudController?.kanataStopped()
+                autoReloader?.setKanataRunning(false)
             }
 
             if case .starting = appState, !isExternal {
@@ -53,6 +55,8 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
     var hudItem: NSMenuItem!
     var hudController: HudController?
     var hudGeometry: KeyboardLayoutKind?
+    var autoReloadItem: NSMenuItem!
+    var autoReloader: AutoReloader?
 
     public func applicationDidFinishLaunching(_ notification: Notification) {
         guard !isAlreadyRunning() else { return }
@@ -66,6 +70,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
         setupKanataProcess(config)
         setupNotificationPermission()
         setupTCPClient(port: config.kanata.port)
+        setupAutoReloader(initiallyEnabled: config.kanataBar.autoReload)
         setupMenuBar(config)
 
         // The XPC helper is opt-in (`launcher = "helper"`). Only register its
@@ -253,8 +258,17 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
         kanataClient = KanataClient(port: port)
         kanataClient.onConfigReload = { [weak self] in
             Logging.log("config reloaded")
-            Notifications.sendReload()
+            // An auto-reload the user just triggered by saving gets the badge, not a banner.
+            let automatic = self?.autoReloader?.status == .reloading
+            self?.autoReloader?.configReloaded()
+            if !automatic { Notifications.sendReload() }
             self?.hudController?.reloadConfig()
+        }
+        kanataClient.onReloadResult = { [weak self] ok, timedOut in
+            self?.autoReloader?.reloadResult(ok: ok, timedOut: timedOut)
+        }
+        kanataClient.onError = { msg in
+            Logging.log("kanata error: \(msg)")
         }
         kanataClient.onLayerChange = { [weak self] layer in
             guard let self else { return }

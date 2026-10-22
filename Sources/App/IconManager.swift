@@ -13,6 +13,8 @@ class IconManager {
 
     var iconsDir: String?
     var transitionConfig: IconTransition?
+    /// Draw a corner dot on every icon (auto-reload: saved config not applied).
+    var errorMarker = false
     private var cache: [String: NSImage] = [:]
     private var oldOverlay: NSImageView?
     private var newOverlay: NSImageView?
@@ -60,15 +62,15 @@ class IconManager {
         switch state {
         case .stopped, .starting, .restarting:
             if let image = loadPlaceholder() {
-                button.image = image
+                button.image = decorate(image)
             } else {
-                button.image = makeTextBadge(NSLocalizedString("status.placeholder", comment: ""))
+                button.image = decorate(makeTextBadge(NSLocalizedString("status.placeholder", comment: "")))
             }
         case .running(let layer):
             if let dir = iconsDir, let image = loadIcon(layer: layer, from: dir) {
-                button.image = image
+                button.image = decorate(image)
             } else {
-                button.image = makeTextBadge(String(layer.prefix(1)).uppercased())
+                button.image = decorate(makeTextBadge(String(layer.prefix(1)).uppercased()))
             }
         }
     }
@@ -76,11 +78,33 @@ class IconManager {
     func nextImage(for state: AppState) -> NSImage? {
         switch state {
         case .stopped, .starting, .restarting:
-            return loadPlaceholder()
+            return loadPlaceholder().map(decorate)
         case .running(let layer):
-            if let dir = iconsDir { return loadIcon(layer: layer, from: dir) }
+            if let dir = iconsDir { return loadIcon(layer: layer, from: dir).map(decorate) }
             return nil
         }
+    }
+
+    /// Applies the error marker: a small filled dot in the bottom-right corner,
+    /// drawn as part of the template image so it inverts with the menu bar.
+    private func decorate(_ image: NSImage) -> NSImage {
+        guard errorMarker else { return image }
+        let size = image.size
+        let dot: CGFloat = 6
+        let marked = NSImage(size: size, flipped: false) { rect in
+            image.draw(in: rect)
+            // Clear a ring around the dot so it reads against dark icon pixels.
+            let ring = NSRect(x: size.width - dot - 0.5, y: -0.5, width: dot + 1, height: dot + 1)
+            NSGraphicsContext.current?.cgContext.setBlendMode(.clear)
+            NSBezierPath(ovalIn: ring.insetBy(dx: -1, dy: -1)).fill()
+            NSGraphicsContext.current?.cgContext.setBlendMode(.normal)
+            NSColor.black.setFill()
+            NSBezierPath(ovalIn: NSRect(x: size.width - dot, y: 0, width: dot, height: dot)).fill()
+            return true
+        }
+        marked.isTemplate = true
+        marked.accessibilityDescription = image.accessibilityDescription
+        return marked
     }
 
     // MARK: - Animation
