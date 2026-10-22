@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="doc/images/icon.png" width="128" alt="kanata-bar icon">
+  <img src="Resources/icon/kanata-bar-icon-macos.svg" width="128" alt="kanata-bar icon">
 </p>
 
 <h1 align="center">kanata-bar</h1>
