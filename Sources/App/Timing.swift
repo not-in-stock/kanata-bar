@@ -22,6 +22,12 @@ enum Timing {
 
     /// TCP receive buffer size in bytes.
     static let tcpBufferSize = 4096
+
+    /// Kill `kanata --check` if it has not exited by then.
+    static let configCheckTimeout: TimeInterval = 10
+
+    /// Debounce window for config-file saves before auto-reload.
+    static let configWatchDebounce: TimeInterval = 0.3
 }
 
 // MARK: - HUD keyboard

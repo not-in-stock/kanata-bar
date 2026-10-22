@@ -251,6 +251,46 @@ final class KanataClientTests: XCTestCase {
         XCTAssertEqual(received, "{\"Reload\":{}}\n")
     }
 
+    func testSendReloadWithWait() throws {
+        let server = try MockTCPServer()
+        defer { server.stop() }
+
+        let client = KanataClient(port: server.port)
+        var connected = false
+        var result: (Bool, Bool)?
+        client.onConnectionChange = { connected = $0 }
+        client.onReloadResult = { result = ($0, $1) }
+        client.start()
+        defer { client.stop() }
+
+        waitUntil { connected }
+        client.sendReload(wait: true)
+        XCTAssertEqual(server.receive(), "{\"Reload\":{\"wait\":true}}\n")
+
+        server.send("\"Ok\"\n" + #"{"ReloadResult":{"ok":false}}"# + "\n")
+        waitUntil { result != nil }
+        XCTAssertEqual(result?.0, false)
+        XCTAssertEqual(result?.1, false)
+    }
+
+    func testErrorCallback() throws {
+        let server = try MockTCPServer()
+        defer { server.stop() }
+
+        let client = KanataClient(port: server.port)
+        var connected = false
+        var error: String?
+        client.onConnectionChange = { connected = $0 }
+        client.onError = { error = $0 }
+        client.start()
+        defer { client.stop() }
+
+        waitUntil { connected }
+        server.send(#"{"Error":{"msg":"boom"}}"# + "\n")
+        waitUntil { error != nil }
+        XCTAssertEqual(error, "boom")
+    }
+
     // MARK: - Reconnect
 
     func testReconnectsAfterServerClose() throws {

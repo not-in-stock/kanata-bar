@@ -42,6 +42,33 @@ final class KanataEventTests: XCTestCase {
         XCTAssertEqual(event, .configReload)
     }
 
+    // MARK: - ReloadResult / Error
+
+    func testReloadResultOk() {
+        XCTAssertEqual(KanataEvent.parse(#"{"ReloadResult":{"ok":true}}"#), .reloadResult(ok: true, timedOut: false))
+    }
+
+    func testReloadResultFailed() {
+        XCTAssertEqual(KanataEvent.parse(#"{"ReloadResult":{"ok":false}}"#), .reloadResult(ok: false, timedOut: false))
+    }
+
+    func testReloadResultTimedOut() {
+        XCTAssertEqual(KanataEvent.parse(#"{"ReloadResult":{"ok":true,"timeout_ms":5000}}"#),
+                       .reloadResult(ok: true, timedOut: true))
+    }
+
+    func testReloadResultMissingOk() {
+        XCTAssertNil(KanataEvent.parse(#"{"ReloadResult":{}}"#))
+    }
+
+    func testErrorMessage() {
+        XCTAssertEqual(KanataEvent.parse(#"{"Error":{"msg":"unknown layer"}}"#), .error("unknown layer"))
+    }
+
+    func testBareOkResponseIsIgnored() {
+        XCTAssertNil(KanataEvent.parse(#""Ok""#))
+    }
+
     // MARK: - Unknown / Invalid
 
     func testUnknownEvent() {

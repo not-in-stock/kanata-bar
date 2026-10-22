@@ -17,6 +17,9 @@ class KanataClient {
     var onConfigReload: (() -> Void)?
     var onHoldActivated: ((String) -> Void)?
     var onTapActivated: ((String) -> Void)?
+    /// `(ok, timedOut)` for a reload sent with `wait: true`.
+    var onReloadResult: ((Bool, Bool) -> Void)?
+    var onError: ((String) -> Void)?
     var onConnectionChange: ((Bool) -> Void)?
 
     init(host: String = Constants.defaultHost, port: UInt16 = Constants.defaultPort) {
@@ -37,9 +40,11 @@ class KanataClient {
         connection = nil
     }
 
-    func sendReload() {
+    /// Asks kanata to reload its config. With `wait`, kanata answers with a
+    /// `ReloadResult` once the reload completes (or times out, 5 s by default).
+    func sendReload(wait: Bool = false) {
         guard let conn = connection, conn.state == .ready else { return }
-        let message = "{\"Reload\":{}}\n"
+        let message = wait ? "{\"Reload\":{\"wait\":true}}\n" : "{\"Reload\":{}}\n"
         let data = message.data(using: .utf8)!
         conn.send(content: data, completion: .contentProcessed { error in
             if let error {
@@ -122,6 +127,10 @@ class KanataClient {
             onHoldActivated?(key)
         case .tapActivated(let key):
             onTapActivated?(key)
+        case .reloadResult(let ok, let timedOut):
+            onReloadResult?(ok, timedOut)
+        case .error(let msg):
+            onError?(msg)
         }
     }
 
