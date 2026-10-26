@@ -74,6 +74,9 @@
 
 "menu.autoReload.notApplied" = "未应用 — kanata 仍在运行之前的配置";
 
+/* Tooltip on "Reload config" after a successful auto-reload. %@ is the time, e.g. "12:03". */
+"menu.autoReload.lastReload" = "上次自动重载 %@";
+
 "notification.autoReload.error.title" = "配置未应用";
 
 "notification.autoReload.failed.body" = "kanata 无法应用已保存的配置；之前的配置仍然有效";

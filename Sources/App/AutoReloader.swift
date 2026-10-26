@@ -45,6 +45,10 @@ final class AutoReloader {
 
     private(set) var isEnabled = false
     private(set) var kanataRunning = false
+    /// True from when we send `Reload` until a `ConfigFileReload` consumes it, so
+    /// the caller can tell an auto-driven reload from a manual one regardless of
+    /// whether `ReloadResult` or `ConfigFileReload` arrives first.
+    private var drivingReload = false
     private(set) var status: Status = .off {
         didSet {
             guard status != oldValue else { return }
@@ -155,34 +159,46 @@ final class AutoReloader {
     }
 
     private func requestReload() {
+        drivingReload = true
         status = .reloading
         deps.reload()
         reloadTimeout = Task { [weak self] in
             try? await Task.sleep(nanoseconds: UInt64(Self.reloadResultTimeout * 1_000_000_000))
             guard !Task.isCancelled, let self, self.status == .reloading else { return }
+            self.drivingReload = false
             self.log("auto-reload: no reload result from kanata")
             self.status = .reloadFailed
         }
     }
 
-    /// `ReloadResult` from kanata (only meaningful while we wait for one).
+    /// `ReloadResult` from kanata (only meaningful while we wait for one). Keeps
+    /// `drivingReload` set on success so `configReloaded()` — which may arrive
+    /// before or after this — still reports the reload as automatic.
     func reloadResult(ok: Bool, timedOut: Bool) {
         guard status == .reloading else { return }
         reloadTimeout?.cancel()
         if ok {
             finishReload()
         } else {
+            drivingReload = false
             log("auto-reload: kanata reported reload failure\(timedOut ? " (timed out)" : "")")
             status = .reloadFailed
         }
     }
 
     /// `ConfigFileReload` from kanata — also a success signal, and the point
-    /// where the include list may have changed.
-    func configReloaded() {
-        guard status == .reloading else { return }
-        reloadTimeout?.cancel()
-        finishReload()
+    /// where the include list may have changed. Returns whether auto-reload
+    /// drove this reload (so the caller suppresses the manual "reloaded" banner).
+    /// kanata emits this for manual reloads too, where `drivingReload` is false.
+    @discardableResult
+    func configReloaded() -> Bool {
+        let wasAutomatic = drivingReload
+        drivingReload = false
+        if status == .reloading {
+            reloadTimeout?.cancel()
+            finishReload()
+        }
+        return wasAutomatic
     }
 
     private func finishReload() {
@@ -196,6 +212,7 @@ final class AutoReloader {
         inFlight = nil
         reloadTimeout?.cancel()
         reloadTimeout = nil
+        drivingReload = false
     }
 
     // MARK: - Wiring

@@ -123,6 +123,9 @@
 
 "menu.autoReload.notApplied" = "Не применено — kanata продолжает работать с прежними настройками";
 
+/* Tooltip on "Reload config" after a successful auto-reload. %@ is the time, e.g. "12:03". */
+"menu.autoReload.lastReload" = "Последняя авто-перезагрузка %@";
+
 "notification.autoReload.error.title" = "Настройки не применены";
 
 "notification.autoReload.failed.body" = "kanata не смогла применить сохранённые настройки; прежние остаются в силе";

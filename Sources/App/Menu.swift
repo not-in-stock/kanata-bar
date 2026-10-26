@@ -230,22 +230,23 @@ extension AppDelegate {
             tips.append(summary)
         case .reloadFailed:
             tips.append(NSLocalizedString("menu.autoReload.notApplied", comment: ""))
+        case .reloaded(let date):
+            let time = date.formatted(Date.FormatStyle(date: .omitted, time: .shortened))
+            tips.append(String(format: NSLocalizedString("menu.autoReload.lastReload", comment: ""), time))
         default:
             break
         }
         reloadItem?.toolTip = tips.isEmpty ? nil : tips.joined(separator: "\n")
     }
 
-    /// `auto` / `auto …` / `auto ✓ 12:03` / `auto ⚠`, or nil when off.
+    /// Steady `auto` while on, `auto ⚠` when the saved config didn't apply, or nil
+    /// when off. Success is silent — the reloaded keymap is its own confirmation and
+    /// a transient badge just flickers; the last-reload time lives in the tooltip.
     static func autoBadge(for status: AutoReloader.Status,
                           label auto: String = NSLocalizedString("menu.autoReload.badge", comment: "")) -> String? {
         switch status {
         case .off: return nil
-        case .armed: return auto
-        case .checking, .reloading: return "\(auto) …"
-        case .reloaded(let date):
-            let time = date.formatted(Date.FormatStyle(date: .omitted, time: .shortened))
-            return "\(auto) ✓ \(time)"
+        case .armed, .checking, .reloading, .reloaded: return auto
         case .invalid, .reloadFailed: return "\(auto) ⚠"
         }
     }

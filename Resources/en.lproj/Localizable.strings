@@ -179,11 +179,14 @@
 /* VoiceOver label for the Auto-reload toggle. */
 "accessibility.autoReload" = "Automatically reload the Kanata config when the file is saved";
 
-/* Badge prefix on "Reload config" while auto-reload is on: "auto", "auto ✓ 12:03", "auto ⚠". Keep it short. */
+/* Badge prefix on "Reload config" while auto-reload is on: steady "auto", or "auto ⚠" when the saved config didn't apply. Keep it short. */
 "menu.autoReload.badge" = "auto";
 
 /* Tooltip on "Reload config" when the saved config failed validation or the reload failed. */
 "menu.autoReload.notApplied" = "Not applied — kanata is still running the previous config";
+
+/* Tooltip on "Reload config" after a successful auto-reload. %@ is the time, e.g. "12:03". */
+"menu.autoReload.lastReload" = "Last auto-reload %@";
 
 /* Notification title when auto-reload could not apply the saved config (sent once, on entering the error state). */
 "notification.autoReload.error.title" = "Config not applied";

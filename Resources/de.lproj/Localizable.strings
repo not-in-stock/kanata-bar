@@ -74,6 +74,9 @@
 
 "menu.autoReload.notApplied" = "Nicht übernommen — kanata läuft weiter mit der vorherigen Konfiguration";
 
+/* Tooltip on "Reload config" after a successful auto-reload. %@ is the time, e.g. "12:03". */
+"menu.autoReload.lastReload" = "Letztes automatisches Neuladen %@";
+
 "notification.autoReload.error.title" = "Konfiguration nicht übernommen";
 
 "notification.autoReload.failed.body" = "kanata konnte die gespeicherte Konfiguration nicht übernehmen; die vorherige bleibt aktiv";

@@ -74,6 +74,9 @@
 
 "menu.autoReload.notApplied" = "未適用 — kanata は以前の設定のまま動作しています";
 
+/* Tooltip on "Reload config" after a successful auto-reload. %@ is the time, e.g. "12:03". */
+"menu.autoReload.lastReload" = "最後の自動リロード %@";
+
 "notification.autoReload.error.title" = "設定は適用されていません";
 
 "notification.autoReload.failed.body" = "kanata は保存した設定を適用できませんでした。以前の設定が引き続き有効です";

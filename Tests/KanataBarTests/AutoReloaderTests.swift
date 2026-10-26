@@ -216,12 +216,35 @@ final class AutoReloaderTests: XCTestCase {
 
     func testAutoBadgeText() {
         XCTAssertNil(AppDelegate.autoBadge(for: .off, label: "auto"))
-        XCTAssertEqual(AppDelegate.autoBadge(for: .armed, label: "auto"), "auto")
-        XCTAssertEqual(AppDelegate.autoBadge(for: .checking, label: "auto"), "auto …")
         XCTAssertEqual(AppDelegate.autoBadge(for: .invalid(summary: "x"), label: "auto"), "auto ⚠")
         XCTAssertEqual(AppDelegate.autoBadge(for: .reloadFailed, label: "auto"), "auto ⚠")
-        let reloaded = AppDelegate.autoBadge(for: .reloaded(Date()), label: "auto") ?? ""
-        XCTAssertTrue(reloaded.hasPrefix("auto ✓ "), reloaded)
-        XCTAssertGreaterThan(reloaded.count, "auto ✓ ".count, "time must follow the check mark")
+        // Steady `auto` on every non-error state — success is silent, no transient flicker.
+        for status: AutoReloader.Status in [.armed, .checking, .reloading, .reloaded(Date())] {
+            XCTAssertEqual(AppDelegate.autoBadge(for: status, label: "auto"), "auto", "\(status)")
+        }
+    }
+
+    // MARK: - Banner suppression (ReloadResult vs ConfigFileReload order)
+
+    func testConfigReloadedReportsAutomaticRegardlessOfEventOrder() async {
+        // ReloadResult lands before ConfigFileReload (the order seen on real hardware).
+        let a = enabledRunning()
+        a.save(); await a.settle()
+        XCTAssertEqual(a.reloader.status, .reloading)
+        a.reloader.reloadResult(ok: true, timedOut: false)
+        XCTAssertTrue(a.reloader.configReloaded(),
+                      "auto reload must read as automatic even when ReloadResult landed first")
+
+        // ConfigFileReload lands before ReloadResult.
+        let b = enabledRunning()
+        b.save(); await b.settle()
+        XCTAssertEqual(b.reloader.status, .reloading)
+        XCTAssertTrue(b.reloader.configReloaded(),
+                      "auto reload must read as automatic when ConfigFileReload landed first")
+
+        // A manual reload (no auto cycle in flight) must keep its banner.
+        let c = enabledRunning()
+        XCTAssertEqual(c.reloader.status, .armed)
+        XCTAssertFalse(c.reloader.configReloaded(), "a manual reload while armed is not suppressed")
     }
 }

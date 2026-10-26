@@ -258,9 +258,10 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
         kanataClient = KanataClient(port: port)
         kanataClient.onConfigReload = { [weak self] in
             Logging.log("config reloaded")
-            // An auto-reload the user just triggered by saving gets the badge, not a banner.
-            let automatic = self?.autoReloader?.status == .reloading
-            self?.autoReloader?.configReloaded()
+            // An auto-reload the user just triggered by saving gets the badge, not a
+            // banner; a manual reload keeps it. configReloaded() reports which, and is
+            // order-independent — ReloadResult and ConfigFileReload race either way.
+            let automatic = self?.autoReloader?.configReloaded() ?? false
             if !automatic { Notifications.sendReload() }
             self?.hudController?.reloadConfig()
         }
