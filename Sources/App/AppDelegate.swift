@@ -371,7 +371,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
         startingTimeoutTask = Task {
             try? await Task.sleep(for: Timing.tcpConnectTimeout)
             guard !Task.isCancelled, appState == .starting, !isExternal else { return }
-            Logging.log("TCP not connected after 10s, port \(port) may be in use")
+            Logging.log("TCP not connected within startup timeout, port \(port) may be in use")
             Notifications.sendPortConflict(port: port)
         }
     }

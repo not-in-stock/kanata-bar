@@ -6,7 +6,10 @@ enum Timing {
     static let cleanupGracePeriod: useconds_t = 500_000 // microseconds
 
     /// How long to wait for TCP connection before warning about port conflict.
-    static let tcpConnectTimeout: Duration = .seconds(10)
+    /// Generous because kanata's cold start waits on the Karabiner VHID daemon
+    /// (~11 s observed here); a shorter window warns about a port that isn't
+    /// actually taken, moments before the connection succeeds.
+    static let tcpConnectTimeout: Duration = .seconds(20)
 
     /// How long to wait for external kanata to respond before giving up.
     static let externalKanataTimeout: Duration = .seconds(5)
