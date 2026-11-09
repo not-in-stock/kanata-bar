@@ -118,8 +118,8 @@ final class AutoReloader {
             return
         }
         watcher?.stop()
-        let w = deps.makeWatcher(paths) { change in
-            Task { @MainActor [weak self] in self?.fileChanged(change) }
+        let w = deps.makeWatcher(paths) { [weak self] change in
+            Task { @MainActor in self?.fileChanged(change) }
         }
         watcher = w
         w.start()
