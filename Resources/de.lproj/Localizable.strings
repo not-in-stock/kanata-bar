@@ -80,3 +80,8 @@
 "notification.autoReload.error.title" = "Konfiguration nicht übernommen";
 
 "notification.autoReload.failed.body" = "kanata konnte die gespeicherte Konfiguration nicht übernehmen; die vorherige bleibt aktiv";
+
+/* Notification when kanata was denied device access although Accessibility looks granted — a stale csreq after a rebuild/move. The app has already reset + re-requested it; prompt the user to re-enable and relaunch. */
+"notification.permissionStale.title" = "Bedienungshilfen erneut erteilen";
+
+"notification.permissionStale.body" = "Die Bedienungshilfen-Berechtigung von Kanata Bar ist veraltet. Aktiviere Kanata Bar in den Einstellungen erneut und starte die App neu.";

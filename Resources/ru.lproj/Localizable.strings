@@ -129,3 +129,8 @@
 "notification.autoReload.error.title" = "Настройки не применены";
 
 "notification.autoReload.failed.body" = "kanata не смогла применить сохранённые настройки; прежние остаются в силе";
+
+/* Notification when kanata was denied device access although Accessibility looks granted — a stale csreq after a rebuild/move. The app has already reset + re-requested it; prompt the user to re-enable and relaunch. */
+"notification.permissionStale.title" = "Выдайте «Универсальный доступ» заново";
+
+"notification.permissionStale.body" = "Разрешение «Универсальный доступ» для Kanata Bar устарело. Снова включите Kanata Bar в настройках, затем завершите и снова откройте приложение.";

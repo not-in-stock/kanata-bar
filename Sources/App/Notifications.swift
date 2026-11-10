@@ -81,6 +81,20 @@ enum Notifications {
         UNUserNotificationCenter.current().add(request)
     }
 
+    /// kanata was denied device access although the app believes Accessibility is
+    /// granted — i.e. the grant's csreq went stale after a rebuild/move. The app has
+    /// already reset + re-requested it; this tells the user to flip the toggle and
+    /// relaunch so a fresh csreq takes effect.
+    static func sendPermissionStale() {
+        let content = UNMutableNotificationContent()
+        content.title = NSLocalizedString("notification.permissionStale.title", comment: "")
+        content.body = NSLocalizedString("notification.permissionStale.body", comment: "")
+        content.sound = .default
+
+        let request = UNNotificationRequest(identifier: "kanata-permission-stale", content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
+    }
+
     static func sendBinaryNotFound() {
         let content = UNMutableNotificationContent()
         content.title = NSLocalizedString("notification.binaryNotFound.title", comment: "")

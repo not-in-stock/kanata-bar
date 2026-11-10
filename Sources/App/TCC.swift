@@ -10,21 +10,30 @@ extension AppDelegate {
 
         if let previous = previousSource, previous != currentSource {
             Logging.log("install source changed (\(previous) → \(currentSource)), resetting TCC")
-            let bundleID = Bundle.main.bundleIdentifier ?? Constants.bundleID
-            // Reset the Accessibility grant: its csreq is pinned to the *old* cdhash, so
-            // after a rebuild/move the toggle may still show ON while `AXIsProcessTrusted()`
-            // returns false, and toggling off/on won't fix it — you'd have to remove+re-add
-            // the row by hand. Deleting it makes the next request a clean re-grant. See the
-            // TCC-regrant gotcha. (Input Monitoring is no longer requested — Accessibility
-            // covers input capture on modern macOS.)
-            let tccutil = Process()
-            tccutil.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
-            tccutil.arguments = ["reset", "Accessibility", bundleID]
-            try? tccutil.run()
-            tccutil.waitUntilExit()
+            resetAccessibilityGrant()
         }
 
         UserDefaults.standard.set(currentSource, forKey: "installSource")
+    }
+
+    /// Delete kanata-bar's Accessibility grant so the next `request` writes a fresh one.
+    ///
+    /// The grant's csreq is pinned to the cdhash that was current when it was granted,
+    /// so after a rebuild/move the row can linger with the *old* cdhash: the toggle
+    /// still shows ON but the HID layer rejects it, and on macOS 27 kanata then fails
+    /// at its first gate and misreports "Input Monitoring denied". Toggling off/on
+    /// won't fix it — only a remove+re-add rewrites the csreq, which is what deleting
+    /// the row and re-requesting achieves. See the wiki gotchas
+    /// "tcc-regrant-after-cdhash-change" and "stale-accessibility-csreq-looks-like-im-denied".
+    /// (Input Monitoring is never requested — Accessibility covers input capture on
+    /// modern macOS.)
+    func resetAccessibilityGrant() {
+        let bundleID = Bundle.main.bundleIdentifier ?? Constants.bundleID
+        let tccutil = Process()
+        tccutil.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
+        tccutil.arguments = ["reset", "Accessibility", bundleID]
+        try? tccutil.run()
+        tccutil.waitUntilExit()
     }
 
     // MARK: - Private Helpers

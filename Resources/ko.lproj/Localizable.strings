@@ -80,3 +80,8 @@
 "notification.autoReload.error.title" = "설정이 적용되지 않음";
 
 "notification.autoReload.failed.body" = "kanata가 저장된 설정을 적용하지 못했습니다. 이전 설정이 계속 활성화되어 있습니다";
+
+/* Notification when kanata was denied device access although Accessibility looks granted — a stale csreq after a rebuild/move. The app has already reset + re-requested it; prompt the user to re-enable and relaunch. */
+"notification.permissionStale.title" = "손쉬운 사용 다시 허용";
+
+"notification.permissionStale.body" = "Kanata Bar의 손쉬운 사용 권한이 만료되었습니다. 설정에서 Kanata Bar를 다시 켠 후 앱을 종료했다가 다시 여세요.";

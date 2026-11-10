@@ -124,3 +124,8 @@
 "notification.autoReload.error.title" = "Configuração não aplicada";
 
 "notification.autoReload.failed.body" = "O kanata não conseguiu aplicar a configuração salva; a anterior continua ativa";
+
+/* Notification when kanata was denied device access although Accessibility looks granted — a stale csreq after a rebuild/move. The app has already reset + re-requested it; prompt the user to re-enable and relaunch. */
+"notification.permissionStale.title" = "Conceder Acessibilidade novamente";
+
+"notification.permissionStale.body" = "A permissão de Acessibilidade do Kanata Bar ficou desatualizada. Ative o Kanata Bar novamente nos Ajustes e saia e reabra o app.";

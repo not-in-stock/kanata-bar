@@ -36,6 +36,9 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
     var externalTimeoutTask: Task<Void, Never>?
     var autostart = false
     var autorestart = false
+    /// Guards the Accessibility auto-reset to once per app session, so repeated
+    /// Start attempts can't loop reset → relaunch → reset.
+    var didAutoHealPermissions = false
     var crashRateLimiter = CrashRateLimiter()
     var restartTask: Task<Void, Never>?
     var startingTimeoutTask: Task<Void, Never>?
@@ -197,9 +200,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @prec
             Notifications.sendStartFailure()
         }
         kanataProcess.onEarlyExit = { [weak self] exitCode in
-            Logging.log("kanata exited immediately (exit code \(exitCode))")
-            self?.appState = .stopped
-            Notifications.sendCrash()
+            self?.handleEarlyExit(exitCode: exitCode)
         }
         kanataProcess.onCrash = { [weak self] exitCode in
             Logging.log("kanata crashed (exit code \(exitCode))")

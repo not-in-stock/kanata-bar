@@ -193,3 +193,8 @@
 
 /* Notification body when kanata accepted the reload request but the live reload failed. */
 "notification.autoReload.failed.body" = "kanata could not apply the saved config; the previous one is still active";
+
+/* Notification when kanata was denied device access although Accessibility looks granted — a stale csreq after a rebuild/move. The app has already reset + re-requested it; prompt the user to re-enable and relaunch. */
+"notification.permissionStale.title" = "Re-grant Accessibility after an update";
+
+"notification.permissionStale.body" = "Kanata Bar's Accessibility permission went stale. Turn Kanata Bar on again under Accessibility, then quit and reopen it.";
